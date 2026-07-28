@@ -38,3 +38,7 @@ uploads/*
 
 # Alembic
 backend/alembic/versions/*.pyc
+
+# Changelog images
+changelog/**/*.png
+changelog/**/*.jpg
