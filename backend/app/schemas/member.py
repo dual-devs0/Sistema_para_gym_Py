@@ -16,7 +16,7 @@ class MemberResponse(BaseModel):
     photo_url: str | None = None
     notes: str | None = None
     status: str
-    registered_at: datetime | None = None
+    created_at: datetime | None = None
     updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
