@@ -37,3 +37,8 @@ class UserInvite(BaseModel):
     email: EmailStr
     full_name: str
     role: str = "trainer"
+
+
+class InviteResponse(BaseModel):
+    user: UserResponse
+    temporary_password: str
