@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.endpoints import attendance, auth, gym, members, memberships, payments, plans, users
+from app.api.v1.endpoints import attendance, auth, dashboard, gym, members, memberships, payments, plans, users
 from app.core.config import settings
 
 
@@ -30,6 +30,7 @@ app.include_router(plans.router, prefix="/api/v1")
 app.include_router(memberships.router, prefix="/api/v1")
 app.include_router(attendance.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
 
 
 @app.get("/health")
