@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.deps import get_current_gym_id, require_role
 from app.core.database import get_db
-from app.schemas.payment import DashboardSummary, RevenueChart
+from app.schemas.dashboard import AttendanceChart, DashboardSummary, RevenueChart
 from app.services.dashboard_service import DashboardService
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -18,7 +18,8 @@ async def summary(
     user=Depends(require_role("owner", "admin")),
 ):
     service = DashboardService(db)
-    return await service.get_summary(gym_id)
+    data = await service.get_summary(gym_id)
+    return DashboardSummary(**data)
 
 
 @router.get("/revenue", response_model=RevenueChart)
@@ -29,10 +30,11 @@ async def revenue(
     user=Depends(require_role("owner", "admin")),
 ):
     service = DashboardService(db)
-    return await service.get_revenue_chart(gym_id, days)
+    data = await service.get_revenue_chart(gym_id, days)
+    return RevenueChart(**data)
 
 
-@router.get("/attendance")
+@router.get("/attendance", response_model=AttendanceChart)
 async def attendance(
     days: int = Query(7, ge=1, le=90),
     gym_id: uuid.UUID = Depends(get_current_gym_id),
@@ -40,7 +42,8 @@ async def attendance(
     user=Depends(require_role("owner", "admin")),
 ):
     service = DashboardService(db)
-    return await service.get_attendance_chart(gym_id, days)
+    data = await service.get_attendance_chart(gym_id, days)
+    return AttendanceChart(**data)
 
 
 @router.get("/expiring")

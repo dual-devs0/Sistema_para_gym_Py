@@ -1,26 +1,23 @@
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException, NotFoundException
 from app.models.attendance import AttendanceLog
-from app.models.member import Member
-from app.models.membership import MemberMembership
 from app.repositories.attendance_repository import AttendanceLogRepository
+from app.repositories.member_repository import MemberRepository
+from app.repositories.membership_repository import MemberMembershipRepository
 
 
 class AttendanceService:
     def __init__(self, db: AsyncSession):
         self.repo = AttendanceLogRepository(db)
-        self.db = db
+        self.member_repo = MemberRepository(db)
+        self.membership_repo = MemberMembershipRepository(db)
 
     async def check_in(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> AttendanceLog:
-        result = await self.db.execute(
-            select(Member).where(Member.id == member_id, Member.gym_id == gym_id, Member.deleted_at.is_(None))
-        )
-        member = result.scalar_one_or_none()
+        member = await self.member_repo.get_by_id(member_id, gym_id)
         if not member:
             raise NotFoundException("Member", str(member_id))
 
@@ -28,14 +25,7 @@ class AttendanceService:
         if existing:
             raise AppException("Member already checked in today", status_code=409)
 
-        result = await self.db.execute(
-            select(MemberMembership).where(
-                MemberMembership.member_id == member_id,
-                MemberMembership.status == "active",
-                MemberMembership.end_date >= date.today(),
-            )
-        )
-        active_membership = result.scalar_one_or_none()
+        active_membership = await self.membership_repo.get_active_by_member(member_id)
         membership_id = active_membership.id if active_membership else None
 
         log = AttendanceLog(member_id=member_id, member_membership_id=membership_id)
@@ -51,10 +41,8 @@ class AttendanceService:
         if not log:
             raise NotFoundException("AttendanceLog", str(log_id))
 
-        result = await self.db.execute(
-            select(Member).where(Member.id == log.member_id, Member.gym_id == gym_id)
-        )
-        if not result.scalar_one_or_none():
+        member = await self.member_repo.get_by_id(log.member_id, gym_id)
+        if not member:
             raise NotFoundException("AttendanceLog", str(log_id))
 
         if log.check_out:

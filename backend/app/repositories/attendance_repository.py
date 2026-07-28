@@ -63,6 +63,22 @@ class AttendanceLogRepository:
         active = sum(1 for log in logs if log.check_out is None)
         return total, active
 
+    async def count_today_by_gym(self, gym_id: uuid.UUID) -> int:
+        today_start = datetime.combine(date.today(), time.min, tzinfo=timezone.utc)
+        from sqlalchemy import func
+        result = await self.db.execute(
+            select(func.count()).select_from(AttendanceLog)
+            .join(Member)
+            .where(Member.gym_id == gym_id, AttendanceLog.check_in >= today_start)
+        )
+        return result.scalar() or 0
+
+    async def list_since(self, since: datetime) -> list[AttendanceLog]:
+        result = await self.db.execute(
+            select(AttendanceLog).where(AttendanceLog.check_in >= since)
+        )
+        return list(result.scalars().all())
+
     async def create(self, log: AttendanceLog) -> AttendanceLog:
         self.db.add(log)
         await self.db.flush()

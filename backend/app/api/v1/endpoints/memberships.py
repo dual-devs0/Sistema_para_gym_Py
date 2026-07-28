@@ -32,18 +32,6 @@ async def list_member_memberships(
     return await service.list_by_member(member_id)
 
 
-@router.post("/assign/{member_id}", response_model=MemberMembershipResponse, status_code=201)
-async def assign_plan(
-    member_id: uuid.UUID,
-    body: AssignPlanRequest,
-    gym_id: uuid.UUID = Depends(get_current_gym_id),
-    db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
-):
-    service = MemberMembershipService(db)
-    return await service.assign(member_id, uuid.UUID(body.plan_id), gym_id, body.model_dump())
-
-
 @router.put("/{membership_id}/cancel", response_model=MemberMembershipResponse)
 async def cancel_membership(
     membership_id: uuid.UUID,

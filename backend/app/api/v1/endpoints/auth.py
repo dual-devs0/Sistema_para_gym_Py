@@ -8,12 +8,27 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     RefreshRequest,
+    RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
 )
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/register", response_model=TokenResponse, status_code=201)
+async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    from app.models.gym import Gym
+    from uuid import uuid4
+    service = AuthService(db)
+    gym_id = uuid4()
+    gym = Gym(id=gym_id, name=f"{body.full_name}'s Gym")
+    db.add(gym)
+    await db.flush()
+    await service.register_owner(body.email, body.password, body.full_name, gym_id)
+    access_token, refresh_token, _ = await service.login(body.email, body.password)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post("/login", response_model=TokenResponse)

@@ -1,12 +1,11 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException, NotFoundException
-from app.models.member import Member
 from app.models.payment import Invoice, Payment
+from app.repositories.member_repository import MemberRepository
 from app.repositories.payment_repository import InvoiceRepository, PaymentRepository
 from app.schemas.payment import PaymentResponse
 
@@ -15,10 +14,14 @@ class PaymentService:
     def __init__(self, db: AsyncSession):
         self.repo = PaymentRepository(db)
         self.invoice_repo = InvoiceRepository(db)
-        self.db = db
+        self.member_repo = MemberRepository(db)
 
     async def list_by_gym(self, gym_id: uuid.UUID) -> list[PaymentResponse]:
         payments = await self.repo.list_by_gym(gym_id)
+        return [await self._to_response(p) for p in payments]
+
+    async def list_by_member(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> list[PaymentResponse]:
+        payments = await self.repo.list_by_member(member_id, gym_id)
         return [await self._to_response(p) for p in payments]
 
     async def register(
@@ -26,10 +29,8 @@ class PaymentService:
         reference: str | None = None, notes: str | None = None,
         member_membership_id: uuid.UUID | None = None,
     ) -> PaymentResponse:
-        result = await self.db.execute(
-            select(Member).where(Member.id == member_id, Member.gym_id == gym_id)
-        )
-        if not result.scalar_one_or_none():
+        member = await self.member_repo.get_by_id(member_id, gym_id)
+        if not member:
             raise NotFoundException("Member", str(member_id))
 
         payment = Payment(
@@ -67,8 +68,7 @@ class PaymentService:
         return invoice
 
     async def _generate_invoice_number(self, payment: Payment) -> None:
-        count = await self.db.execute(select(func.count()).select_from(Invoice))
-        total = count.scalar() or 0
+        total = await self.repo.count_all()
         invoice = Invoice(
             payment_id=payment.id,
             invoice_number=f"INV-{datetime.now().year}-{total + 1:05d}",

@@ -28,16 +28,3 @@ class RegisterPaymentRequest(BaseModel):
     reference: str | None = None
     notes: str | None = None
 
-
-class DashboardSummary(BaseModel):
-    revenue_today: float
-    revenue_month: float
-    active_members: int
-    new_members_month: int
-    checkins_today: int
-    members_expiring_soon: int
-
-
-class RevenueChart(BaseModel):
-    labels: list[str]
-    data: list[float]

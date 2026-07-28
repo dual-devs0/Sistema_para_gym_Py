@@ -1,79 +1,41 @@
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.attendance import AttendanceLog
-from app.models.member import Member
-from app.models.membership import MemberMembership
-from app.models.payment import Payment
+from app.repositories.attendance_repository import AttendanceLogRepository
+from app.repositories.member_repository import MemberRepository
+from app.repositories.membership_repository import MemberMembershipRepository
 from app.repositories.payment_repository import PaymentRepository
-from app.schemas.payment import DashboardSummary, RevenueChart
 
 
 class DashboardService:
     def __init__(self, db: AsyncSession):
-        self.db = db
+        self.member_repo = MemberRepository(db)
         self.payment_repo = PaymentRepository(db)
+        self.attendance_repo = AttendanceLogRepository(db)
+        self.membership_repo = MemberMembershipRepository(db)
 
-    async def get_summary(self, gym_id: uuid.UUID) -> DashboardSummary:
+    async def get_summary(self, gym_id: uuid.UUID) -> dict:
         revenue_today = await self.payment_repo.get_revenue_today(gym_id)
         revenue_month = await self.payment_repo.get_revenue_month(gym_id)
+        active_members = await self.member_repo.count_active(gym_id)
+        new_members = await self.member_repo.count_new_this_month(gym_id)
+        checkins_today = await self.attendance_repo.count_today_by_gym(gym_id)
+        expiring = await self.membership_repo.count_expiring_soon(gym_id)
 
-        result = await self.db.execute(
-            select(func.count()).select_from(Member).where(Member.gym_id == gym_id, Member.status == "active", Member.deleted_at.is_(None))
-        )
-        active_members = result.scalar() or 0
+        return {
+            "revenue_today": revenue_today,
+            "revenue_month": revenue_month,
+            "active_members": active_members,
+            "new_members_month": new_members,
+            "checkins_today": checkins_today,
+            "members_expiring_soon": expiring,
+        }
 
-        month_start = date.today().replace(day=1)
-        result = await self.db.execute(
-            select(func.count()).select_from(Member).where(
-                Member.gym_id == gym_id, Member.created_at >= month_start, Member.deleted_at.is_(None)
-            )
-        )
-        new_members = result.scalar() or 0
-
-        today_start = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
-        result = await self.db.execute(
-            select(func.count()).select_from(AttendanceLog)
-            .join(Member)
-            .where(Member.gym_id == gym_id, AttendanceLog.check_in >= today_start)
-        )
-        checkins_today = result.scalar() or 0
-
-        three_days = date.today() + timedelta(days=3)
-        result = await self.db.execute(
-            select(func.count()).select_from(MemberMembership)
-            .join(Member)
-            .where(
-                Member.gym_id == gym_id,
-                MemberMembership.status == "active",
-                MemberMembership.end_date <= three_days,
-                MemberMembership.end_date >= date.today(),
-            )
-        )
-        expiring = result.scalar() or 0
-
-        return DashboardSummary(
-            revenue_today=revenue_today,
-            revenue_month=revenue_month,
-            active_members=active_members,
-            new_members_month=new_members,
-            checkins_today=checkins_today,
-            members_expiring_soon=expiring,
-        )
-
-    async def get_revenue_chart(self, gym_id: uuid.UUID, days: int = 30) -> RevenueChart:
+    async def get_revenue_chart(self, gym_id: uuid.UUID, days: int = 30) -> dict:
         since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=timezone.utc)
-        result = await self.db.execute(
-            select(Payment).where(
-                Payment.gym_id == gym_id,
-                Payment.status == "paid",
-                Payment.paid_at >= since,
-            ).order_by(Payment.paid_at.asc())
-        )
-        payments = result.scalars().all()
+        payments = await self.payment_repo.list_paid_since(gym_id, since)
 
         daily = {}
         for i in range(days):
@@ -85,16 +47,11 @@ class DashboardService:
                 key = p.paid_at.date().isoformat()
                 daily[key] = daily.get(key, 0) + float(p.amount)
 
-        return RevenueChart(labels=list(daily.keys()), data=list(daily.values()))
+        return {"labels": list(daily.keys()), "data": list(daily.values())}
 
     async def get_attendance_chart(self, gym_id: uuid.UUID, days: int = 7) -> dict:
         since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=timezone.utc)
-        result = await self.db.execute(
-            select(AttendanceLog)
-            .join(Member)
-            .where(Member.gym_id == gym_id, AttendanceLog.check_in >= since)
-        )
-        logs = result.scalars().all()
+        logs = await self.attendance_repo.list_since(since)
 
         daily = {}
         for i in range(days):
@@ -108,18 +65,7 @@ class DashboardService:
         return {"labels": list(daily.keys()), "data": list(daily.values())}
 
     async def get_expiring(self, gym_id: uuid.UUID) -> list[dict]:
-        three_days = date.today() + timedelta(days=3)
-        result = await self.db.execute(
-            select(MemberMembership)
-            .join(Member)
-            .where(
-                Member.gym_id == gym_id,
-                MemberMembership.status == "active",
-                MemberMembership.end_date <= three_days,
-                MemberMembership.end_date >= date.today(),
-            )
-        )
-        memberships = result.scalars().all()
+        memberships = await self.membership_repo.list_expiring_soon(gym_id)
         return [
             {
                 "membership_id": str(m.id),

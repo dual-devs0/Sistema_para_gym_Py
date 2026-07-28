@@ -53,6 +53,30 @@ class PaymentRepository:
         payments = result.scalars().all()
         return sum(float(p.amount) for p in payments)
 
+    async def list_by_member(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> list[Payment]:
+        result = await self.db.execute(
+            select(Payment)
+            .where(Payment.member_id == member_id, Payment.gym_id == gym_id)
+            .options(selectinload(Payment.member))
+            .order_by(Payment.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def count_all(self) -> int:
+        from sqlalchemy import func
+        result = await self.db.execute(select(func.count()).select_from(Payment))
+        return result.scalar() or 0
+
+    async def list_paid_since(self, gym_id: uuid.UUID, since: datetime) -> list[Payment]:
+        result = await self.db.execute(
+            select(Payment).where(
+                Payment.gym_id == gym_id,
+                Payment.status == "paid",
+                Payment.paid_at >= since,
+            ).order_by(Payment.paid_at.asc())
+        )
+        return list(result.scalars().all())
+
     async def create(self, payment: Payment) -> Payment:
         self.db.add(payment)
         await self.db.flush()

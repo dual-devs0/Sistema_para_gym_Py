@@ -72,6 +72,49 @@ class MemberMembershipRepository:
         )
         return list(result.scalars().all())
 
+    async def get_active_by_member(self, member_id: uuid.UUID) -> MemberMembership | None:
+        result = await self.db.execute(
+            select(MemberMembership).where(
+                MemberMembership.member_id == member_id,
+                MemberMembership.status == "active",
+                MemberMembership.end_date >= date.today(),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def count_expiring_soon(self, gym_id: uuid.UUID, days: int = 3) -> int:
+        from datetime import timedelta
+        from sqlalchemy import func
+        from app.models.member import Member
+        end = date.today() + timedelta(days=days)
+        result = await self.db.execute(
+            select(func.count()).select_from(MemberMembership)
+            .join(Member)
+            .where(
+                Member.gym_id == gym_id,
+                MemberMembership.status == "active",
+                MemberMembership.end_date <= end,
+                MemberMembership.end_date >= date.today(),
+            )
+        )
+        return result.scalar() or 0
+
+    async def list_expiring_soon(self, gym_id: uuid.UUID, days: int = 3) -> list[MemberMembership]:
+        from datetime import timedelta
+        from app.models.member import Member
+        end = date.today() + timedelta(days=days)
+        result = await self.db.execute(
+            select(MemberMembership)
+            .join(Member)
+            .where(
+                Member.gym_id == gym_id,
+                MemberMembership.status == "active",
+                MemberMembership.end_date <= end,
+                MemberMembership.end_date >= date.today(),
+            )
+        )
+        return list(result.scalars().all())
+
     async def create(self, membership: MemberMembership) -> MemberMembership:
         self.db.add(membership)
         await self.db.flush()
