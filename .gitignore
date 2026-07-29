@@ -42,3 +42,7 @@ backend/alembic/versions/*.pyc
 # Changelog images
 changelog/**/*.png
 changelog/**/*.jpg
+
+# Local agent tooling (Claude Code, etc.) — not project source
+.agents/
+.claude/

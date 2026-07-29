@@ -33,9 +33,18 @@ async def test_reset_password_invalid_token(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_register_disabled(client: AsyncClient):
+async def test_register_weak_password_rejected(client: AsyncClient):
     response = await client.post(
         "/api/v1/auth/register",
         json={"email": "test@test.com", "password": "123", "full_name": "Test User"},
     )
-    assert response.status_code == 403
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_register_min_length_password(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "test@test.com", "password": "12345678", "full_name": "Test User"},
+    )
+    assert response.status_code in (201, 409)
