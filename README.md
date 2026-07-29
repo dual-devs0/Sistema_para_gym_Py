@@ -30,7 +30,7 @@ HTTP → FastAPI Router → Service Layer → Repository Layer → PostgreSQL
 
 | Endpoint | Descripción |
 |----------|-------------|
-| `POST /api/v1/auth/register` | Registrar owner (crea gym automático) |
+| `POST /api/v1/auth/register` | **Solo staff de plataforma.** GymPro no tiene auto-registro — cuentas provisionadas manualmente por el equipo GymPro. Endpoint protegido con `require_platform_staff()`. |
 | `POST /api/v1/auth/login` | Login → access + refresh token |
 | `POST /api/v1/auth/refresh` | Refrescar access token |
 | `POST /api/v1/auth/logout` | Cerrar sesión |

@@ -6,8 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.exceptions import ForbiddenException, UnauthorizedException
-from app.core.security import decode_token
+from app.core.permissions import require_permission as _require_permission
+from app.core.redis import get_redis
+from app.core.security import decode_token, TOKEN_TYPE_ACCESS
 from app.models.user import User
+
+
+async def _check_token_blacklist(jti: str) -> None:
+    redis = await get_redis()
+    blacklisted = await redis.get(f"token:blacklist:{jti}")
+    if blacklisted:
+        raise UnauthorizedException("Token has been revoked")
 
 
 async def get_current_user(
@@ -19,8 +28,19 @@ async def get_current_user(
 
     token = authorization.replace("Bearer ", "")
     payload = decode_token(token)
-    user_id = payload.get("sub")
+    error = payload.get("error")
+    if error == "expired":
+        raise UnauthorizedException("Token expired")
+    if not payload:
+        raise UnauthorizedException("Invalid token")
+    if payload.get("type") != TOKEN_TYPE_ACCESS:
+        raise UnauthorizedException("Invalid token type")
 
+    jti = payload.get("jti")
+    if jti:
+        await _check_token_blacklist(jti)
+
+    user_id = payload.get("sub")
     if not user_id:
         raise UnauthorizedException("Invalid token")
 
@@ -42,5 +62,21 @@ def require_role(*roles: str):
     return role_checker
 
 
+
+def require_permission(*permissions: str):
+    async def permission_checker(current_user: User = Depends(get_current_user)) -> User:
+        _require_permission(*permissions)(current_user)
+        return current_user
+    return permission_checker
+
+
+def require_platform_staff():
+    async def platform_checker(current_user: User = Depends(get_current_user)) -> User:
+        if not current_user.is_platform_staff:
+            raise ForbiddenException("This endpoint requires a platform staff account")
+        return current_user
+    return platform_checker
 async def get_current_gym_id(current_user: User = Depends(get_current_user)) -> uuid.UUID:
+    if current_user.gym_id is None:
+        raise ForbiddenException("Platform staff cannot access gym-scoped endpoints")
     return current_user.gym_id
