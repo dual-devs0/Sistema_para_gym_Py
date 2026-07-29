@@ -1,0 +1,79 @@
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useMemo } from "react";
+
+interface RevenueChartProps {
+  data: { day: string; revenue: number }[];
+  title?: React.ReactNode;
+  period: "7d" | "30d" | "90d";
+  onPeriodChange: (period: "7d" | "30d" | "90d") => void;
+}
+
+const customTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length && payload[0].value !== undefined) {
+    return (
+      <div className="bg-surface-container-highest border border-outline-variant/30 p-2 rounded text-[11px] font-data-mono">
+        <p className="text-on-surface-variant">{label}</p>
+        <p className="text-primary font-bold">${payload[0].value.toLocaleString()}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+export default function RevenueChart({ data, title = "Revenue (Last 30 Days)", period, onPeriodChange }: RevenueChartProps) {
+  const chartData = useMemo(
+    () => data.length > 0 ? data : Array.from({ length: period === "7d" ? 7 : 12 }, (_, i) => ({ day: `Day ${i + 1}`, revenue: 0 })),
+    [data, period]
+  );
+
+  return (
+    <div className="bg-surface-container border border-outline-variant rounded-xl p-lg h-80 flex flex-col">
+      <div className="flex justify-between items-center mb-xl">
+        <h3 className="font-headline-sm text-headline-sm text-on-surface">{title}</h3>
+        <div className="flex gap-xs">
+          {(["7d", "30d", "90d"] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => onPeriodChange(p)}
+              className={`px-sm py-1 rounded font-label-caps text-label-caps cursor-pointer transition-colors ${
+                period === p
+                  ? "bg-primary text-on-primary"
+                  : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright"
+              }`}
+            >
+              {p.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 relative flex items-end gap-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="theme('colors.outline-variant')" vertical={false} />
+            <XAxis
+              dataKey="day"
+              tick={{ fill: "theme('colors.on-surface-variant')", fontSize: 10, fontFamily: "Inter" }}
+              axisLine={false}
+              tickLine={false}
+              interval={period === "7d" ? 0 : 2}
+            />
+            <YAxis
+              tick={{ fill: "theme('colors.on-surface-variant')", fontSize: 10, fontFamily: "Inter" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              interval="preserveStartEnd"
+            />
+            <Tooltip content={customTooltip} />
+            <Bar dataKey="revenue" fill="theme('colors.primary')" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex justify-between mt-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
+        <span>Start</span>
+        <span>Mid</span>
+        <span>End</span>
+      </div>
+    </div>
+  );
+}
