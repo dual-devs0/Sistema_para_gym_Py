@@ -25,21 +25,21 @@ const statusConfig = {
     bg: "bg-secondary/10",
     text: "text-secondary",
     icon: CheckCircle,
-    label: "ACTIVE",
+    label: "ACTIVO",
     iconColor: "text-secondary",
   },
   frozen: {
     bg: "bg-primary-container/10",
     text: "text-primary-container",
     icon: PauseCircle,
-    label: "FROZEN",
+    label: "CONGELADO",
     iconColor: "text-primary-container",
   },
   cancelled: {
     bg: "bg-error/10",
     text: "text-error",
     icon: XCircle,
-    label: "CANCELLED",
+    label: "CANCELADO",
     iconColor: "text-error",
   },
 };
@@ -55,14 +55,14 @@ export default function MembersTable({
   onEdit,
   onFreeze,
   loading = false,
-  emptyMessage = "No members found matching your criteria.",
+  emptyMessage = "No se encontraron miembros.",
 }: MembersTableProps) {
   if (loading) {
     return (
       <tbody>
         <tr>
           <td colSpan={6} className="px-lg py-xl text-center text-on-surface-variant">
-            Loading members...
+            Cargando miembros...
           </td>
         </tr>
       </tbody>
@@ -124,7 +124,7 @@ export default function MembersTable({
             <td className="px-lg py-md">
               <p className="font-data-mono text-data-mono text-on-surface-variant">{member.expiration}</p>
               {member.status === "cancelled" && isPastDate(member.expiration) && (
-                <p className="font-data-mono text-data-mono text-error text-[11px] font-bold tracking-tight">EXPIRED</p>
+                <p className="font-data-mono text-data-mono text-error text-[11px] font-bold tracking-tight">VENCIDO</p>
               )}
             </td>
             <td className="px-lg py-md">
@@ -135,21 +135,21 @@ export default function MembersTable({
                 <button
                   onClick={() => onView(member.id)}
                   className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors"
-                  aria-label="View member"
+                  aria-label="Ver miembro"
                 >
                   <Eye className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onEdit(member.id)}
                   className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors"
-                  aria-label="Edit member"
+                  aria-label="Editar miembro"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onFreeze(member.id)}
                   className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors"
-                  aria-label={member.status === "frozen" ? "Unfreeze member" : "Freeze member"}
+                  aria-label={member.status === "frozen" ? "Descongelar miembro" : "Congelar miembro"}
                 >
                   <Snowflake className="w-4 h-4" />
                 </button>

@@ -32,15 +32,15 @@ async def register(
     db.add(gym)
     await db.flush()
     await service.register_owner(body.email, body.password, body.full_name, gym_id)
-    access_token, refresh_token, _ = await service.login(body.email, body.password)
+    access_token, refresh_token, _, _ = await service.login(body.email, body.password)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
-    access_token, refresh_token, _ = await service.login(body.email, body.password)
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+    access_token, refresh_token, _, previous_login = await service.login(body.email, body.password)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token, previous_login=previous_login)
 
 
 @router.post("/refresh", response_model=TokenResponse)

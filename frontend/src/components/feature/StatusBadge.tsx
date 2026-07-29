@@ -10,19 +10,19 @@ const statusConfig = {
     bg: "bg-secondary/10",
     color: "text-secondary",
     icon: "check_circle",
-    label: "ACTIVE",
+    label: "ACTIVO",
   },
   frozen: {
     bg: "bg-primary-container/10",
     color: "text-primary-container",
     icon: "pause_circle",
-    label: "FROZEN",
+    label: "CONGELADO",
   },
   cancelled: {
     bg: "bg-error/10",
     color: "text-error",
     icon: "cancel",
-    label: "CANCELLED",
+    label: "CANCELADO",
   },
 } as const;
 

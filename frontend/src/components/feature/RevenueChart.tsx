@@ -20,7 +20,7 @@ const customTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function RevenueChart({ data, title = "Revenue (Last 30 Days)", period, onPeriodChange }: RevenueChartProps) {
+export default function RevenueChart({ data, title = "Ingresos (Últimos 30 Días)", period, onPeriodChange }: RevenueChartProps) {
   const chartData = useMemo(
     () => data.length > 0 ? data : Array.from({ length: period === "7d" ? 7 : 12 }, (_, i) => ({ day: `Day ${i + 1}`, revenue: 0 })),
     [data, period]
@@ -70,9 +70,9 @@ export default function RevenueChart({ data, title = "Revenue (Last 30 Days)", p
         </ResponsiveContainer>
       </div>
       <div className="flex justify-between mt-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
-        <span>Start</span>
-        <span>Mid</span>
-        <span>End</span>
+        <span>Inicio</span>
+        <span>Medio</span>
+        <span>Final</span>
       </div>
     </div>
   );
