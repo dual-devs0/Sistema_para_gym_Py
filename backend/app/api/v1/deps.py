@@ -68,5 +68,15 @@ def require_permission(*permissions: str):
     return permission_checker
 
 
+def require_platform_staff():
+    async def platform_checker(current_user: User = Depends(get_current_user)) -> User:
+        if not current_user.is_platform_staff:
+            raise ForbiddenException("This endpoint requires a platform staff account")
+        return current_user
+    return platform_checker
+
+
 async def get_current_gym_id(current_user: User = Depends(get_current_user)) -> uuid.UUID:
+    if current_user.gym_id is None:
+        raise ForbiddenException("Platform staff cannot access gym-scoped endpoints")
     return current_user.gym_id

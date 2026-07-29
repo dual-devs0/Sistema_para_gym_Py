@@ -37,8 +37,14 @@ class Perm:
 
     AUDIT_VIEW = "audit.view"
 
+    PLATFORM_MANAGE_GYMS = "platform.manage_gyms"
+
 
 ROLE_PERMISSIONS: dict[str, set[str]] = {
+    "platform": {
+        Perm.PLATFORM_MANAGE_GYMS,
+        Perm.USER_READ, Perm.USER_CREATE, Perm.USER_UPDATE, Perm.USER_DELETE,
+    },
     "owner": {
         Perm.MEMBER_READ, Perm.MEMBER_CREATE, Perm.MEMBER_UPDATE, Perm.MEMBER_DELETE,
         Perm.PAYMENT_READ, Perm.PAYMENT_CREATE, Perm.PAYMENT_REFUND,

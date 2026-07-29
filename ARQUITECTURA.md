@@ -363,7 +363,7 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 ### Fase 2 — Vender (Semana 4)
 
 - Landing page simple (`/landing` en frontend o repo separado)
-- ~~Onboarding: registro de dueño → crear gym → invitar staff~~ — **descartado (2026-07-29)**: GymPro no tiene auto-registro, cuentas provisionadas manualmente por el equipo GymPro. `POST /auth/register` deshabilitado (403), pendiente de decidir modelo de rol de plataforma (`admin` hoy es siempre scoped a un `gym_id`, no hay staff de GymPro) antes de convertirlo en herramienta interna de alta de gyms.
+- ~~Onboarding: registro de dueño → crear gym → invitar staff~~ — **descartado (2026-07-29)**: GymPro no tiene auto-registro, cuentas provisionadas manualmente por el equipo GymPro. `POST /auth/register` ahora es herramienta interna protegida con `require_platform_staff()`. Ver §11.
 - Stripe/MercadoPago para cobro del SaaS (no confundir con pagos del gym)
 - Subida a producción real con dominio
 
@@ -415,27 +415,22 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 
 ---
 
-## 11. Pendiente de Revisión (Backend) — POST /auth/register
+## 11. Resuelto — POST /auth/register + Rol de Plataforma
 
-> **Estado: NO CERRADO.** Fix aplicado como mitigación inmediata, requiere decisión de diseño y revisión del equipo de backend antes de mergear.
+> **Estado: CERRADO (2026-07-29).** Ver `changelog/2026-07-29_platform-role.md`.
 
-**Qué se encontró:** `POST /api/v1/auth/register` no tenía ningún guard de autenticación/autorización. Cualquiera con acceso a la API podía crear un `Gym` + `User` owner nuevo sin estar logueado — self-service signup abierto, contradiciendo la decisión de producto de que GymPro no tiene auto-registro (cuentas provisionadas manualmente por el equipo GymPro).
+**Hallazgo original:** `POST /api/v1/auth/register` no tenía guard de autenticación — self-service signup abierto que contradecía la decisión de producto.
 
-**Qué se hizo (fix inmediato, bajo riesgo):**
-- El endpoint ahora siempre devuelve `403` (`ForbiddenException`) antes de ejecutar cualquier lógica.
-- Se borró la lógica de creación de gym/owner del handler.
-- El endpoint y el schema `RegisterRequest` se conservaron (no se borró la ruta) como base para una futura herramienta interna de alta de gyms.
+**Fix implementado en tres capas:**
 
-**Por qué no se hizo directamente admin-only:** no existe un modelo de rol de plataforma separado del rol scoped-a-gym. Hallazgo técnico concreto:
-- `User.gym_id` es `nullable=False` — todo usuario pertenece obligatoriamente a un gym existente.
-- `require_role()` en `deps.py` chequea `current_user.role`, pero ese rol (`owner`/`admin`/`trainer`/`receptionist`/`member`) siempre está scoped al `gym_id` del usuario.
-- Aplicar `require_role("admin")` tal cual dejaría que el admin de **cualquier** gym cliente cree gyms nuevos ilimitados — trust boundary equivocado, ya que no hay forma de distinguir "admin de un gym cliente" de "staff de GymPro".
+1. **Modelo de plataforma:** `User.gym_id` ahora es `nullable=True` + nuevo flag `User.is_platform_staff` (`Boolean`, default `False`). Los usuarios con `is_platform_staff=True` no pertenecen a ningún gym y pueden gestionar la plataforma.
+2. **Nuevo guard:** `require_platform_staff()` en `deps.py` — chequea explícitamente `current_user.is_platform_staff`, separado del sistema de roles scoped a gym.
+3. **Endpoint reactivado:** `POST /auth/register` ahora está protegido con `require_platform_staff()`, funcionando como herramienta interna para que el equipo GymPro cree nuevos gyms + owners.
 
-**Decisión pendiente (para backend):** diseñar un rol de plataforma (ej. `platform_staff`, o modelo separado sin `gym_id`) antes de reactivar este endpoint como herramienta admin-only de alta de gyms.
+**Permisos asociados:** Se agregó `Perm.PLATFORM_MANAGE_GYMS` y el rol `"platform"` en `ROLE_PERMISSIONS`.
 
-**Estado real de verificación — NO ejecutado:**
-- Tests en `test_api/test_auth.py` actualizados por lectura manual del código (2 tests que dependían del endpoint público reescritos para esperar `403`), **no corridos**.
-- Bloqueo de entorno: única versión de Python disponible es 3.14, sin wheels prebuilt para `asyncpg`/`pydantic-core` (build desde fuente falla, toolchain Rust/MSVC roto). Sin Postgres ni Docker disponibles localmente para levantar `gympro_test`.
-- **Gap adicional encontrado:** este repo no tiene CI configurado (sin `.github/workflows/`, sin equivalente) — no hay forma de validar en automático antes de un merge. Vale la pena que el equipo lo sepa más allá de este PR puntual.
+**Migración:** `alembic/versions/002_platform_staff.py`.
 
-Requiere que alguien con Python 3.11/3.12 + Postgres corra `pytest` antes de mergear.
+**CI resuelto:** Se creó `.github/workflows/ci.yml` con lint (ruff) + tests (pytest + Postgres + Redis service containers).
+
+**Pendiente para CI:** Alguien con Python 3.11/3.12 + Docker debe correr los tests antes del primer merge verde.
