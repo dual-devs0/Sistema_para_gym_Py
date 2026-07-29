@@ -412,3 +412,17 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 5. **El cliente no paga por tu arquitectura, paga por su negocio funcionando.** No sobre-diseñes.
 6. **Pruebas no son opcionales.** Sin tests no hay deploy.
 7. **Deuda técnica negociable.** Si elegiste entre perfecto y funcional, elige funcional. Pero documenta la deuda.
+
+---
+
+## 11. Registro — Fix Login + Baja de Auto-Registro
+
+**Bug encontrado (no era solo el `relative` faltante):** `index.css` define spacing custom con keys `xs/sm/md/lg/xl` (usadas en `px-md`, `gap-lg`, etc). Tailwind v4 resuelve `max-w-{name}` contra `--spacing-{name}` cuando el nombre coincide, así que `max-w-md` compilaba a `max-width: var(--spacing-md)` = 16px en vez de 448px — confirmado viendo la regla CSS generada en runtime. El intento de fix que ya estaba en el archivo (`--max-w-md`, etc.) usaba el nombre de variable equivocado: la key real de Tailwind v4 para esta escala es `--container-*`, no `--max-w-*`.
+
+**Fix aplicado:**
+- Renombrado `--max-w-xs/sm/md/lg/xl/2xl/3xl` → `--container-xs/sm/md/lg/xl/2xl/3xl` en `index.css`. Esto arregla `max-w-2xl`/`max-w-3xl`+ en toda la app (no colisionan con el spacing scale custom).
+- `sm`/`md`/`lg` siguen colisionando (esos nombres SÍ están tomados por el spacing scale custom) — **deuda técnica conocida, fuera de scope**. Renombrar el spacing scale para eliminar la colisión de raíz tocaría cientos de usos (`px-md`, `gap-lg`, `py-xl`...) en toda la app.
+- Workaround puntual en login/forgot-password: `max-w-[28rem]`/`max-w-[24rem]` (valores arbitrarios) en vez de `max-w-md`/`max-w-sm`, para esquivar la colisión sin tocar el token global.
+- Agregado `relative` al wrapper del card (el bug que se había reportado originalmente — real, pero secundario al de arriba).
+
+**Cambio de producto:** GymPro no tiene auto-registro (decisión ya registrada en la sección 11 de la rama `fix/disable-public-register` — no se duplica acá). En el frontend: `RegisterPage.tsx` borrado, ruta `/register` sacada del router, link "Registrate" sacado del login. Se agregó `ForgotPasswordPage.tsx` (placeholder estático, sin flujo de reset real todavía) en `/forgot-password`.
