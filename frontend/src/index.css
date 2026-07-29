@@ -66,14 +66,15 @@
   --spacing-sidebar-collapsed: 64px;
   --spacing-sidebar-width: 240px;
 
-  /* ── Widths & Max-Widths Override (to prevent collision with --spacing) ── */
-  --max-w-xs: 20rem;           /* 320px */
-  --max-w-sm: 24rem;           /* 384px */
-  --max-w-md: 28rem;           /* 448px */
-  --max-w-lg: 32rem;           /* 512px */
-  --max-w-xl: 36rem;           /* 576px */
-  --max-w-2xl: 42rem;          /* 672px */
-  --max-w-3xl: 48rem;          /* 768px */
+  /* ── Widths & Max-Widths Override (Tailwind v4 reads max-w-* from --container-*, not --max-w-*;
+     also restores these names since --spacing-md/lg/xl above shadow the built-in max-w-{md,lg,xl} scale) ── */
+  --container-xs: 20rem;           /* 320px */
+  --container-sm: 24rem;           /* 384px */
+  --container-md: 28rem;           /* 448px */
+  --container-lg: 32rem;           /* 512px */
+  --container-xl: 36rem;           /* 576px */
+  --container-2xl: 42rem;          /* 672px */
+  --container-3xl: 48rem;          /* 768px */
 
   /* ── Font Families ── */
   --font-family-sans: "Inter", sans-serif;
