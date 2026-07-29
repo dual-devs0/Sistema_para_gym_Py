@@ -412,3 +412,30 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 5. **El cliente no paga por tu arquitectura, paga por su negocio funcionando.** No sobre-diseñes.
 6. **Pruebas no son opcionales.** Sin tests no hay deploy.
 7. **Deuda técnica negociable.** Si elegiste entre perfecto y funcional, elige funcional. Pero documenta la deuda.
+
+---
+
+## 11. Pendiente de Revisión (Backend) — POST /auth/register
+
+> **Estado: NO CERRADO.** Fix aplicado como mitigación inmediata, requiere decisión de diseño y revisión del equipo de backend antes de mergear.
+
+**Qué se encontró:** `POST /api/v1/auth/register` no tenía ningún guard de autenticación/autorización. Cualquiera con acceso a la API podía crear un `Gym` + `User` owner nuevo sin estar logueado — self-service signup abierto, contradiciendo la decisión de producto de que GymPro no tiene auto-registro (cuentas provisionadas manualmente por el equipo GymPro).
+
+**Qué se hizo (fix inmediato, bajo riesgo):**
+- El endpoint ahora siempre devuelve `403` (`ForbiddenException`) antes de ejecutar cualquier lógica.
+- Se borró la lógica de creación de gym/owner del handler.
+- El endpoint y el schema `RegisterRequest` se conservaron (no se borró la ruta) como base para una futura herramienta interna de alta de gyms.
+
+**Por qué no se hizo directamente admin-only:** no existe un modelo de rol de plataforma separado del rol scoped-a-gym. Hallazgo técnico concreto:
+- `User.gym_id` es `nullable=False` — todo usuario pertenece obligatoriamente a un gym existente.
+- `require_role()` en `deps.py` chequea `current_user.role`, pero ese rol (`owner`/`admin`/`trainer`/`receptionist`/`member`) siempre está scoped al `gym_id` del usuario.
+- Aplicar `require_role("admin")` tal cual dejaría que el admin de **cualquier** gym cliente cree gyms nuevos ilimitados — trust boundary equivocado, ya que no hay forma de distinguir "admin de un gym cliente" de "staff de GymPro".
+
+**Decisión pendiente (para backend):** diseñar un rol de plataforma (ej. `platform_staff`, o modelo separado sin `gym_id`) antes de reactivar este endpoint como herramienta admin-only de alta de gyms.
+
+**Estado real de verificación — NO ejecutado:**
+- Tests en `test_api/test_auth.py` actualizados por lectura manual del código (2 tests que dependían del endpoint público reescritos para esperar `403`), **no corridos**.
+- Bloqueo de entorno: única versión de Python disponible es 3.14, sin wheels prebuilt para `asyncpg`/`pydantic-core` (build desde fuente falla, toolchain Rust/MSVC roto). Sin Postgres ni Docker disponibles localmente para levantar `gympro_test`.
+- **Gap adicional encontrado:** este repo no tiene CI configurado (sin `.github/workflows/`, sin equivalente) — no hay forma de validar en automático antes de un merge. Vale la pena que el equipo lo sepa más allá de este PR puntual.
+
+Requiere que alguien con Python 3.11/3.12 + Postgres corra `pytest` antes de mergear.
