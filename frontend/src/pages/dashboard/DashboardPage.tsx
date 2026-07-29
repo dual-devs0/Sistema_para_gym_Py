@@ -6,7 +6,7 @@ import MemberStatusDonut from "../../components/feature/MemberStatusDonut";
 import ExpiringTable from "../../components/feature/ExpiringTable";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
-import type { DashboardSummary, DashboardRevenueResponse, DashboardExpiringResponse } from "../../types/api";
+import type { DashboardSummary, DashboardRevenueResponse, DashboardExpiringItem } from "../../types/api";
 
 async function fetchSummary(): Promise<DashboardSummary> {
   const { data } = await api.get("/dashboard/summary");
@@ -14,43 +14,14 @@ async function fetchSummary(): Promise<DashboardSummary> {
 }
 
 async function fetchRevenue(): Promise<DashboardRevenueResponse> {
-  const { data } = await api.get("/dashboard/revenue", { params: { period: "month" } });
+  const { data } = await api.get("/dashboard/revenue", { params: { days: 30 } });
   return data;
 }
 
-async function fetchExpiring(): Promise<DashboardExpiringResponse> {
+async function fetchExpiring(): Promise<DashboardExpiringItem[]> {
   const { data } = await api.get("/dashboard/expiring");
   return data;
 }
-
-// Mock data for development when API is not available
-const mockSummary: DashboardSummary = {
-  revenue_today: 1240.00,
-  revenue_month: 45890.00,
-  active_members: 842,
-  new_members_month: 23,
-  checkins_today: 156,
-  members_expiring_soon: 24,
-};
-
-const mockRevenue: DashboardRevenueResponse = {
-  labels: Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  }),
-  data: [840, 920, 1100, 1340, 1560, 1280, 1890, 2100, 2450, 2780, 3100, 3450, 3890, 4200, 4560, 4890, 5120, 5340, 5670, 5890, 6100, 6340, 6560, 6780, 7000, 7200, 7450, 7680, 7890, 8100],
-};
-
-const mockExpiring: DashboardExpiringResponse = {
-  items: [
-    { member_id: "1", member_name: "Juan Perez", plan_name: "Premium Annual", plan_type: "premium", expiration_date: "Oct 24, 2023", days_remaining: 2 },
-    { member_id: "2", member_name: "Maria Garcia", plan_name: "Monthly Basic", plan_type: "basic", expiration_date: "Oct 25, 2023", days_remaining: 3 },
-    { member_id: "3", member_name: "Ricardo Silva", plan_name: "Student Special", plan_type: "student", expiration_date: "Oct 25, 2023", days_remaining: 3 },
-    { member_id: "4", member_name: "Ana Martinez", plan_name: "Premium Annual", plan_type: "premium", expiration_date: "Oct 26, 2023", days_remaining: 4 },
-    { member_id: "5", member_name: "Carlos Lopez", plan_name: "Monthly Basic", plan_type: "basic", expiration_date: "Oct 26, 2023", days_remaining: 4 },
-  ],
-};
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -61,21 +32,18 @@ export default function DashboardPage() {
     queryKey: ["dashboard-summary"],
     queryFn: fetchSummary,
     staleTime: 5 * 60 * 1000,
-    placeholderData: mockSummary,
   });
 
   const { data: revenue } = useQuery({
     queryKey: ["dashboard-revenue", "month"],
     queryFn: fetchRevenue,
     staleTime: 5 * 60 * 1000,
-    placeholderData: mockRevenue,
   });
 
   const { data: expiring } = useQuery({
     queryKey: ["dashboard-expiring"],
     queryFn: fetchExpiring,
     staleTime: 2 * 60 * 1000,
-    placeholderData: mockExpiring,
   });
 
   const revenueChartData = revenue?.labels.map((label, i) => ({
@@ -150,33 +118,29 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-xl">
-<RevenueChart
+        <RevenueChart
           data={revenueChartData}
           title="Revenue (Last 30 Days)"
           period="30d"
           onPeriodChange={(period) => console.log("Period changed:", period)}
         />
         <MemberStatusDonut
-          total={summary?.active_members ?? 842}
-          active={Math.round((summary?.active_members ?? 842) * 0.85)}
-          frozen={Math.round((summary?.active_members ?? 842) * 0.1)}
-          cancelled={Math.round((summary?.active_members ?? 842) * 0.05)}
+          total={summary?.active_members ?? 0}
+          active={summary?.active_members ?? 0}
+          frozen={0}
+          cancelled={0}
         />
       </div>
 
       <ExpiringTable
-        members={(expiring?.items ?? []).map((m) => ({
+        members={(expiring ?? []).map((m) => ({
           id: m.member_id,
-          name: m.member_name,
-          initials: m.member_name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase(),
-          plan: m.plan_name,
-          planType: m.plan_type as "premium" | "basic" | "student" | "other",
-          expirationDate: m.expiration_date,
-          daysUntilExpiry: m.days_remaining,
+          name: "",
+          initials: "",
+          plan: "",
+          planType: "other" as const,
+          expirationDate: new Date(m.end_date).toLocaleDateString("es-MX"),
+          daysUntilExpiry: Math.ceil((new Date(m.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
         }))}
         onRenew={handleRenew}
       />
