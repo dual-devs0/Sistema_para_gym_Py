@@ -27,7 +27,7 @@ export default function MemberStatusDonut({ total, active, frozen, cancelled, ti
             cy="80"
             r="64"
             fill="none"
-            stroke="theme('colors.surface-container-highest')"
+            stroke="var(--color-surface-container-highest)"
             strokeWidth="12"
           />
           {active > 0 && (
@@ -36,7 +36,7 @@ export default function MemberStatusDonut({ total, active, frozen, cancelled, ti
               cy="80"
               r="64"
               fill="none"
-              stroke="theme('colors.primary')"
+              stroke="var(--color-primary)"
               strokeWidth="12"
               strokeDasharray={`${activeStroke} ${circumference}`}
               strokeLinecap="round"
@@ -48,7 +48,7 @@ export default function MemberStatusDonut({ total, active, frozen, cancelled, ti
               cy="80"
               r="64"
               fill="none"
-              stroke="theme('colors.surface-container-highest')"
+              stroke="var(--color-surface-container-highest)"
               strokeWidth="12"
               strokeDasharray={`${frozenStroke} ${circumference}`}
               strokeDashoffset={activeStroke}
@@ -61,7 +61,7 @@ export default function MemberStatusDonut({ total, active, frozen, cancelled, ti
               cy="80"
               r="64"
               fill="none"
-              stroke="theme('colors.error')"
+              stroke="var(--color-error)"
               strokeWidth="12"
               strokeDasharray={`${(cancelledPct / 100) * circumference} ${circumference}`}
               strokeDashoffset={activeStroke + frozenStroke}

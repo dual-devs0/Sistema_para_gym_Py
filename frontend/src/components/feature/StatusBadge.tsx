@@ -13,8 +13,8 @@ const statusConfig = {
     label: "ACTIVE",
   },
   frozen: {
-    bg: "bg-tertiary/10",
-    color: "text-tertiary",
+    bg: "bg-primary-container/10",
+    color: "text-primary-container",
     icon: "pause_circle",
     label: "FROZEN",
   },

@@ -5,6 +5,7 @@ import RevenueChart from "../../components/feature/RevenueChart";
 import MemberStatusDonut from "../../components/feature/MemberStatusDonut";
 import ExpiringTable from "../../components/feature/ExpiringTable";
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 import type { DashboardSummary, DashboardRevenueResponse, DashboardExpiringResponse } from "../../types/api";
 
 async function fetchSummary(): Promise<DashboardSummary> {
@@ -52,6 +53,10 @@ const mockExpiring: DashboardExpiringResponse = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const firstName = user?.full_name?.split(" ")[0] || "Admin";
+  const gymName = user?.gym?.name || "your gym";
+
   const { data: summary } = useQuery({
     queryKey: ["dashboard-summary"],
     queryFn: fetchSummary,
@@ -122,10 +127,10 @@ export default function DashboardPage() {
     <>
       <div className="mb-xl">
         <h1 className="font-headline-lg text-headline-lg text-on-surface">
-          Welcome back, {summary?.new_members_month ? "Marcus" : "Admin"}.
+          Welcome back, {firstName}.
         </h1>
         <p className="text-on-surface-variant font-body-md text-body-md mt-unit">
-          Here is what is happening at Gold's Gym today.
+          Here is what is happening at {gymName} today.
         </p>
       </div>
 

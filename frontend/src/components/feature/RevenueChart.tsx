@@ -49,23 +49,23 @@ export default function RevenueChart({ data, title = "Revenue (Last 30 Days)", p
       <div className="flex-1 relative flex items-end gap-1">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="theme('colors.outline-variant')" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant)" vertical={false} />
             <XAxis
               dataKey="day"
-              tick={{ fill: "theme('colors.on-surface-variant')", fontSize: 10, fontFamily: "Inter" }}
+              tick={{ fill: "var(--color-on-surface-variant)", fontSize: 10, fontFamily: "Inter" }}
               axisLine={false}
               tickLine={false}
               interval={period === "7d" ? 0 : 2}
             />
             <YAxis
-              tick={{ fill: "theme('colors.on-surface-variant')", fontSize: 10, fontFamily: "Inter" }}
+              tick={{ fill: "var(--color-on-surface-variant)", fontSize: 10, fontFamily: "Inter" }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
               interval="preserveStartEnd"
             />
             <Tooltip content={customTooltip} />
-            <Bar dataKey="revenue" fill="theme('colors.primary')" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="revenue" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

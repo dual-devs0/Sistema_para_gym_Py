@@ -1,4 +1,4 @@
-import { CheckCircle, PauseCircle, XCircle, Eye, Edit, Lock } from "lucide-react";
+import { CheckCircle, PauseCircle, XCircle, Eye, Edit, Snowflake } from "lucide-react";
 
 interface Member {
   id: string;
@@ -29,11 +29,11 @@ const statusConfig = {
     iconColor: "text-secondary",
   },
   frozen: {
-    bg: "bg-tertiary/10",
-    text: "text-tertiary",
+    bg: "bg-primary-container/10",
+    text: "text-primary-container",
     icon: PauseCircle,
     label: "FROZEN",
-    iconColor: "text-tertiary",
+    iconColor: "text-primary-container",
   },
   cancelled: {
     bg: "bg-error/10",
@@ -43,6 +43,11 @@ const statusConfig = {
     iconColor: "text-error",
   },
 };
+
+function isPastDate(dateStr: string): boolean {
+  const parsed = new Date(dateStr);
+  return !Number.isNaN(parsed.getTime()) && parsed < new Date();
+}
 
 export default function MembersTable({
   members,
@@ -118,6 +123,9 @@ export default function MembersTable({
             </td>
             <td className="px-lg py-md">
               <p className="font-data-mono text-data-mono text-on-surface-variant">{member.expiration}</p>
+              {member.status === "cancelled" && isPastDate(member.expiration) && (
+                <p className="font-data-mono text-data-mono text-error text-[11px] font-bold tracking-tight">EXPIRED</p>
+              )}
             </td>
             <td className="px-lg py-md">
               <p className="font-data-mono text-data-mono text-on-surface-variant">{member.lastCheckin}</p>
@@ -143,7 +151,7 @@ export default function MembersTable({
                   className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors"
                   aria-label={member.status === "frozen" ? "Unfreeze member" : "Freeze member"}
                 >
-                  <Lock className="w-4 h-4" />
+                  <Snowflake className="w-4 h-4" />
                 </button>
               </div>
             </td>
