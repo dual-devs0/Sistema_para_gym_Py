@@ -1,9 +1,9 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=1)
 
 
 class TokenResponse(BaseModel):
@@ -22,10 +22,10 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str
+    password: str = Field(..., min_length=8, max_length=128)
 
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str
-    full_name: str
+    password: str = Field(..., min_length=8, max_length=128)
+    full_name: str = Field(..., min_length=1, max_length=200)

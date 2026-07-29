@@ -1,3 +1,4 @@
+import enum
 import uuid
 from datetime import datetime, timezone
 
@@ -23,3 +24,10 @@ class SoftDeleteMixin:
 
 class UUIDMixin:
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+
+class RoleEnum(str, enum.Enum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    TRAINER = "trainer"
+    RECEPTIONIST = "receptionist"

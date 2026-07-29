@@ -3,7 +3,6 @@ import uuid
 import pytest
 
 from app.core.exceptions import NotFoundException
-from app.models.membership import MembershipPlan
 from app.services.membership_service import (
     MemberMembershipService,
     MembershipPlanService,
@@ -67,6 +66,27 @@ async def test_assign_plan(db_session):
     assert membership.member_id == member_id
     assert membership.plan_id == plan.id
     assert membership.status == "active"
+    assert membership.price_paid == 499
+
+
+@pytest.mark.asyncio
+async def test_assign_plan_custom_price(db_session):
+    plan_service = MembershipPlanService(db_session)
+    member_service = MemberMembershipService(db_session)
+    gym_id = uuid.uuid4()
+    plan = await plan_service.create(gym_id, {"name": "Premium", "price": 999, "duration_days": 30})
+    membership = await member_service.assign(uuid.uuid4(), plan.id, gym_id, {"price_paid": 500})
+    assert membership.price_paid == 500
+
+
+@pytest.mark.asyncio
+async def test_assign_plan_zero_price(db_session):
+    plan_service = MembershipPlanService(db_session)
+    member_service = MemberMembershipService(db_session)
+    gym_id = uuid.uuid4()
+    plan = await plan_service.create(gym_id, {"name": "Free", "price": 999, "duration_days": 30})
+    membership = await member_service.assign(uuid.uuid4(), plan.id, gym_id, {"price_paid": 0})
+    assert membership.price_paid == 0
 
 
 @pytest.mark.asyncio

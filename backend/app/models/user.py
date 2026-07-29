@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Boolean, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,6 +17,8 @@ class User(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     role: Mapped[str] = mapped_column(String(30), default="member")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_login: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     gym = relationship("Gym", back_populates="users")
+    audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")

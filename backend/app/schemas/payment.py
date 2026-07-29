@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PaymentResponse(BaseModel):
@@ -23,8 +23,7 @@ class PaymentResponse(BaseModel):
 class RegisterPaymentRequest(BaseModel):
     member_id: str
     member_membership_id: str | None = None
-    amount: float
-    payment_method: str = "efectivo"
-    reference: str | None = None
-    notes: str | None = None
-
+    amount: float = Field(..., gt=0)
+    payment_method: str = Field(default="efectivo", max_length=50)
+    reference: str | None = Field(None, max_length=200)
+    notes: str | None = Field(None, max_length=2000)

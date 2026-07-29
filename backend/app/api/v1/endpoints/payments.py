@@ -3,8 +3,9 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_gym_id, get_current_user, require_role
+from app.api.v1.deps import get_current_gym_id, require_permission
 from app.core.database import get_db
+from app.core.permissions import Perm
 from app.schemas.payment import PaymentResponse, RegisterPaymentRequest
 from app.services.payment_service import PaymentService
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 async def list_payments(
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
+    user=Depends(require_permission(Perm.PAYMENT_READ)),
 ):
     service = PaymentService(db)
     return await service.list_by_gym(gym_id)
@@ -26,7 +27,7 @@ async def register_payment(
     body: RegisterPaymentRequest,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
+    user=Depends(require_permission(Perm.PAYMENT_CREATE)),
 ):
     service = PaymentService(db)
     membership_id = uuid.UUID(body.member_membership_id) if body.member_membership_id else None
@@ -46,7 +47,7 @@ async def refund_payment(
     payment_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.PAYMENT_REFUND)),
 ):
     service = PaymentService(db)
     return await service.refund(payment_id, gym_id)
@@ -57,7 +58,7 @@ async def get_invoice(
     payment_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
+    user=Depends(require_permission(Perm.PAYMENT_READ)),
 ):
     service = PaymentService(db)
     invoice = await service.get_invoice(payment_id, gym_id)

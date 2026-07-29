@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CheckInRequest(BaseModel):
@@ -20,4 +20,3 @@ class AttendanceResponse(BaseModel):
 class AttendanceTodayResponse(BaseModel):
     total_checkins: int
     active_now: int
-    hourly_breakdown: dict | None = None

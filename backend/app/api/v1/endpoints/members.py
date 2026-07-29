@@ -3,11 +3,12 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_gym_id, get_current_user, require_role
+from app.api.v1.deps import get_current_gym_id, get_current_user, require_permission, require_role
 from app.core.database import get_db
+from app.core.permissions import Perm
 from app.schemas.attendance import AttendanceResponse
 from app.schemas.member import MemberCreate, MemberResponse, MemberUpdate
-from app.schemas.membership import MemberMembershipResponse
+from app.schemas.membership import AssignPlanRequest, MemberMembershipResponse
 from app.schemas.payment import PaymentResponse
 from app.services.attendance_service import AttendanceService
 from app.services.member_service import MemberService
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/members", tags=["members"])
 async def list_members(
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.MEMBER_READ)),
 ):
     service = MemberService(db)
     return await service.list_by_gym(gym_id)
@@ -32,7 +33,7 @@ async def get_member(
     member_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.MEMBER_READ)),
 ):
     service = MemberService(db)
     return await service.get_by_id(member_id, gym_id)
@@ -43,7 +44,7 @@ async def create_member(
     body: MemberCreate,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
+    user=Depends(require_permission(Perm.MEMBER_CREATE)),
 ):
     service = MemberService(db)
     return await service.create(gym_id, body.model_dump())
@@ -55,7 +56,7 @@ async def update_member(
     body: MemberUpdate,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
+    user=Depends(require_permission(Perm.MEMBER_UPDATE)),
 ):
     service = MemberService(db)
     return await service.update(member_id, gym_id, body.model_dump(exclude_unset=True))
@@ -66,7 +67,7 @@ async def delete_member(
     member_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.MEMBER_DELETE)),
 ):
     service = MemberService(db)
     await service.delete(member_id, gym_id)
@@ -77,7 +78,7 @@ async def get_member_attendance(
     member_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.ATTENDANCE_READ)),
 ):
     member_service = MemberService(db)
     await member_service.get_by_id(member_id, gym_id)
@@ -90,7 +91,7 @@ async def get_member_payments(
     member_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.PAYMENT_READ)),
 ):
     member_service = MemberService(db)
     await member_service.get_by_id(member_id, gym_id)
@@ -103,7 +104,7 @@ async def get_member_memberships(
     member_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.MEMBERSHIP_READ)),
 ):
     member_service = MemberService(db)
     await member_service.get_by_id(member_id, gym_id)
@@ -114,14 +115,12 @@ async def get_member_memberships(
 @router.post("/{member_id}/memberships", response_model=MemberMembershipResponse, status_code=201)
 async def assign_plan_to_member(
     member_id: uuid.UUID,
-    body: dict,
+    body: AssignPlanRequest,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "receptionist")),
+    user=Depends(require_permission(Perm.MEMBERSHIP_ASSIGN)),
 ):
-    from app.schemas.membership import AssignPlanRequest
-    parsed = AssignPlanRequest(**body)
     member_service = MemberService(db)
     await member_service.get_by_id(member_id, gym_id)
     membership_service = MemberMembershipService(db)
-    return await membership_service.assign(member_id, uuid.UUID(parsed.plan_id), gym_id, parsed.model_dump())
+    return await membership_service.assign(member_id, uuid.UUID(body.plan_id), gym_id, body.model_dump())
