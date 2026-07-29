@@ -363,7 +363,7 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 ### Fase 2 — Vender (Semana 4)
 
 - Landing page simple (`/landing` en frontend o repo separado)
-- Onboarding: registro de dueño → crear gym → invitar staff
+- ~~Onboarding: registro de dueño → crear gym → invitar staff~~ — **descartado (2026-07-29)**: GymPro no tiene auto-registro, cuentas provisionadas manualmente por el equipo GymPro. `POST /auth/register` deshabilitado (403), pendiente de decidir modelo de rol de plataforma (`admin` hoy es siempre scoped a un `gym_id`, no hay staff de GymPro) antes de convertirlo en herramienta interna de alta de gyms.
 - Stripe/MercadoPago para cobro del SaaS (no confundir con pagos del gym)
 - Subida a producción real con dominio
 

@@ -30,7 +30,7 @@ HTTP → FastAPI Router → Service Layer → Repository Layer → PostgreSQL
 
 | Endpoint | Descripción |
 |----------|-------------|
-| `POST /api/v1/auth/register` | Registrar owner (crea gym automático) |
+| `POST /api/v1/auth/register` | **Deshabilitado (403).** GymPro no tiene auto-registro — cuentas provisionadas manualmente por el equipo GymPro. Endpoint queda como base para una futura herramienta interna de alta de gyms, pendiente de diseño de rol de plataforma (ver `deps.py::require_role`, hoy solo roles scoped a `gym_id`). |
 | `POST /api/v1/auth/login` | Login → access + refresh token |
 | `POST /api/v1/auth/refresh` | Refrescar access token |
 | `POST /api/v1/auth/logout` | Cerrar sesión |
