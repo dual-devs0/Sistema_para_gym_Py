@@ -363,7 +363,7 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 ### Fase 2 — Vender (Semana 4)
 
 - Landing page simple (`/landing` en frontend o repo separado)
-- Onboarding: registro de dueño → crear gym → invitar staff
+- ~~Onboarding: registro de dueño → crear gym → invitar staff~~ — **descartado (2026-07-29)**: GymPro no tiene auto-registro, cuentas provisionadas manualmente por el equipo GymPro. `POST /auth/register` ahora es herramienta interna protegida con `require_platform_staff()`. Ver §11.
 - Stripe/MercadoPago para cobro del SaaS (no confundir con pagos del gym)
 - Subida a producción real con dominio
 
@@ -412,3 +412,25 @@ cd frontend && npm install react-router-dom @tanstack/react-query zustand axios 
 5. **El cliente no paga por tu arquitectura, paga por su negocio funcionando.** No sobre-diseñes.
 6. **Pruebas no son opcionales.** Sin tests no hay deploy.
 7. **Deuda técnica negociable.** Si elegiste entre perfecto y funcional, elige funcional. Pero documenta la deuda.
+
+---
+
+## 11. Resuelto — POST /auth/register + Rol de Plataforma
+
+> **Estado: CERRADO (2026-07-29).** Ver `changelog/2026-07-29_platform-role.md`.
+
+**Hallazgo original:** `POST /api/v1/auth/register` no tenía guard de autenticación — self-service signup abierto que contradecía la decisión de producto.
+
+**Fix implementado en tres capas:**
+
+1. **Modelo de plataforma:** `User.gym_id` ahora es `nullable=True` + nuevo flag `User.is_platform_staff` (`Boolean`, default `False`). Los usuarios con `is_platform_staff=True` no pertenecen a ningún gym y pueden gestionar la plataforma.
+2. **Nuevo guard:** `require_platform_staff()` en `deps.py` — chequea explícitamente `current_user.is_platform_staff`, separado del sistema de roles scoped a gym.
+3. **Endpoint reactivado:** `POST /auth/register` ahora está protegido con `require_platform_staff()`, funcionando como herramienta interna para que el equipo GymPro cree nuevos gyms + owners.
+
+**Permisos asociados:** Se agregó `Perm.PLATFORM_MANAGE_GYMS` y el rol `"platform"` en `ROLE_PERMISSIONS`.
+
+**Migración:** `alembic/versions/002_platform_staff.py`.
+
+**CI resuelto:** Se creó `.github/workflows/ci.yml` con lint (ruff) + tests (pytest + Postgres + Redis service containers).
+
+**Pendiente para CI:** Alguien con Python 3.11/3.12 + Docker debe correr los tests antes del primer merge verde.

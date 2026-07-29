@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_user
+from app.api.v1.deps import get_current_user, require_platform_staff
 from app.core.database import get_db
 from app.models.gym import Gym
 from app.models.user import User
@@ -20,8 +20,12 @@ from app.services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@router.post("/register")
+async def register(
+    body: RegisterRequest,
+    db: AsyncSession = Depends(get_db),
+    _staff: User = Depends(require_platform_staff()),
+):
     service = AuthService(db)
     gym_id = uuid.uuid4()
     gym = Gym(id=gym_id, name=f"{body.full_name}'s Gym")
