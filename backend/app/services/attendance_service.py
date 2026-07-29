@@ -1,10 +1,12 @@
 import uuid
 from datetime import date, datetime, timezone
 
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException, NotFoundException
 from app.models.attendance import AttendanceLog
+from app.models.membership import MemberMembership
 from app.repositories.attendance_repository import AttendanceLogRepository
 from app.repositories.member_repository import MemberRepository
 from app.repositories.membership_repository import MemberMembershipRepository
@@ -15,11 +17,12 @@ class AttendanceService:
         self.repo = AttendanceLogRepository(db)
         self.member_repo = MemberRepository(db)
         self.membership_repo = MemberMembershipRepository(db)
+        self.db = db
 
     async def check_in(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> AttendanceLog:
         member = await self.member_repo.get_by_id(member_id, gym_id)
         if not member:
-            raise NotFoundException("Member", str(member_id))
+            raise NotFoundException("Member not found")
 
         existing = await self.repo.get_today_checkin(member_id)
         if existing:
@@ -32,18 +35,23 @@ class AttendanceService:
         created = await self.repo.create(log)
 
         if active_membership and active_membership.remaining_visits is not None:
-            active_membership.remaining_visits -= 1
+            stmt = (
+                update(MemberMembership)
+                .where(MemberMembership.id == active_membership.id, MemberMembership.remaining_visits > 0)
+                .values(remaining_visits=MemberMembership.remaining_visits - 1)
+            )
+            await self.db.execute(stmt)
 
         return created
 
     async def check_out(self, log_id: uuid.UUID, gym_id: uuid.UUID) -> AttendanceLog:
         log = await self.repo.get_by_id(log_id)
         if not log:
-            raise NotFoundException("AttendanceLog", str(log_id))
+            raise NotFoundException("Attendance log not found")
 
         member = await self.member_repo.get_by_id(log.member_id, gym_id)
         if not member:
-            raise NotFoundException("AttendanceLog", str(log_id))
+            raise NotFoundException("Attendance log not found")
 
         if log.check_out:
             raise AppException("Already checked out", status_code=409)

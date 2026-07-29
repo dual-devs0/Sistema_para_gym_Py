@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException, NotFoundException
@@ -15,6 +16,7 @@ class PaymentService:
         self.repo = PaymentRepository(db)
         self.invoice_repo = InvoiceRepository(db)
         self.member_repo = MemberRepository(db)
+        self.db = db
 
     async def list_by_gym(self, gym_id: uuid.UUID) -> list[PaymentResponse]:
         payments = await self.repo.list_by_gym(gym_id)
@@ -31,7 +33,7 @@ class PaymentService:
     ) -> PaymentResponse:
         member = await self.member_repo.get_by_id(member_id, gym_id)
         if not member:
-            raise NotFoundException("Member", str(member_id))
+            raise NotFoundException("Member not found")
 
         payment = Payment(
             gym_id=gym_id,
@@ -51,7 +53,7 @@ class PaymentService:
     async def refund(self, payment_id: uuid.UUID, gym_id: uuid.UUID) -> PaymentResponse:
         payment = await self.repo.get_by_id(payment_id)
         if not payment or payment.gym_id != gym_id:
-            raise NotFoundException("Payment", str(payment_id))
+            raise NotFoundException("Payment not found")
         if payment.status != "paid":
             raise AppException("Only paid payments can be refunded", status_code=400)
         payment.status = "refunded"
@@ -61,17 +63,26 @@ class PaymentService:
     async def get_invoice(self, payment_id: uuid.UUID, gym_id: uuid.UUID) -> Invoice:
         payment = await self.repo.get_by_id(payment_id)
         if not payment or payment.gym_id != gym_id:
-            raise NotFoundException("Payment", str(payment_id))
+            raise NotFoundException("Payment not found")
         invoice = payment.invoice
         if not invoice:
-            raise NotFoundException("Invoice", str(payment_id))
+            raise NotFoundException("Invoice not found")
         return invoice
 
     async def _generate_invoice_number(self, payment: Payment) -> None:
-        total = await self.repo.count_all()
+        result = await self.db.execute(select(func.max(Invoice.invoice_number)).select_from(Invoice))
+        max_num = result.scalar()
+        next_num = 1
+        if max_num:
+            parts = max_num.rsplit("-", 1)
+            if len(parts) == 2:
+                try:
+                    next_num = int(parts[1]) + 1
+                except ValueError:
+                    next_num = 1
         invoice = Invoice(
             payment_id=payment.id,
-            invoice_number=f"INV-{datetime.now().year}-{total + 1:05d}",
+            invoice_number=f"INV-{datetime.now().year}-{next_num:05d}",
         )
         await self.invoice_repo.create(invoice)
 

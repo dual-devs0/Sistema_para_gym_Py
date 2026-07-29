@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime, time, timezone
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -38,7 +38,7 @@ class AttendanceLogRepository:
         query = (
             select(AttendanceLog)
             .join(Member)
-            .where(Member.gym_id == gym_id)
+            .where(Member.gym_id == gym_id, Member.deleted_at.is_(None))
             .options(selectinload(AttendanceLog.member))
             .order_by(AttendanceLog.check_in.desc())
         )
@@ -56,7 +56,7 @@ class AttendanceLogRepository:
         result = await self.db.execute(
             select(AttendanceLog)
             .join(Member)
-            .where(Member.gym_id == gym_id, AttendanceLog.check_in >= today_start)
+            .where(Member.gym_id == gym_id, Member.deleted_at.is_(None), AttendanceLog.check_in >= today_start)
         )
         logs = result.scalars().all()
         total = len(logs)
@@ -65,11 +65,10 @@ class AttendanceLogRepository:
 
     async def count_today_by_gym(self, gym_id: uuid.UUID) -> int:
         today_start = datetime.combine(date.today(), time.min, tzinfo=timezone.utc)
-        from sqlalchemy import func
         result = await self.db.execute(
             select(func.count()).select_from(AttendanceLog)
             .join(Member)
-            .where(Member.gym_id == gym_id, AttendanceLog.check_in >= today_start)
+            .where(Member.gym_id == gym_id, Member.deleted_at.is_(None), AttendanceLog.check_in >= today_start)
         )
         return result.scalar() or 0
 

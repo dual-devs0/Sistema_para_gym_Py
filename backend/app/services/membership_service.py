@@ -21,7 +21,7 @@ class MembershipPlanService:
     async def get_by_id(self, plan_id: uuid.UUID, gym_id: uuid.UUID) -> MembershipPlan:
         plan = await self.repo.get_by_id(plan_id)
         if not plan or plan.gym_id != gym_id or not plan.is_active:
-            raise NotFoundException("MembershipPlan", str(plan_id))
+            raise NotFoundException("Plan not found")
         return plan
 
     async def create(self, gym_id: uuid.UUID, data: dict) -> MembershipPlan:
@@ -54,16 +54,18 @@ class MemberMembershipService:
     async def assign(self, member_id: uuid.UUID, plan_id: uuid.UUID, gym_id: uuid.UUID, data: dict) -> MemberMembership:
         plan = await self.plan_repo.get_by_id(plan_id)
         if not plan or plan.gym_id != gym_id:
-            raise NotFoundException("MembershipPlan", str(plan_id))
+            raise NotFoundException("Plan not found")
         start_date = data.get("start_date") or date.today()
-        price_paid = data.get("price_paid") or plan.price
+        price_paid = data.get("price_paid")
+        if price_paid is None:
+            price_paid = plan.price
         end_date = start_date + timedelta(days=plan.duration_days)
         membership = MemberMembership(
             member_id=member_id,
             plan_id=plan_id,
             start_date=start_date,
             end_date=end_date,
-            price_paid=price_paid,
+            price_paid=float(price_paid),
             remaining_visits=plan.max_visits,
             auto_renew=data.get("auto_renew", False),
         )
@@ -72,14 +74,14 @@ class MemberMembershipService:
     async def cancel(self, membership_id: uuid.UUID, gym_id: uuid.UUID) -> MemberMembership:
         membership = await self.membership_repo.get_by_id(membership_id)
         if not membership or membership.plan.gym_id != gym_id:
-            raise NotFoundException("MemberMembership", str(membership_id))
+            raise NotFoundException("Membership not found")
         membership.status = "cancelled"
         return await self.membership_repo.update(membership)
 
     async def renew(self, membership_id: uuid.UUID, gym_id: uuid.UUID) -> MemberMembership:
         membership = await self.membership_repo.get_by_id(membership_id)
         if not membership or membership.plan.gym_id != gym_id:
-            raise NotFoundException("MemberMembership", str(membership_id))
+            raise NotFoundException("Membership not found")
         start_date = membership.end_date
         end_date = start_date + timedelta(days=membership.plan.duration_days)
         renewed = MemberMembership(
@@ -87,7 +89,7 @@ class MemberMembershipService:
             plan_id=membership.plan_id,
             start_date=start_date,
             end_date=end_date,
-            price_paid=membership.price_paid,
+            price_paid=float(membership.price_paid),
             remaining_visits=membership.plan.max_visits,
             auto_renew=membership.auto_renew,
             renewed_from_id=membership.id,

@@ -58,9 +58,7 @@ def require_role(*roles: str):
         if current_user.role not in roles:
             raise ForbiddenException(f"Role '{current_user.role}' not allowed. Requires: {', '.join(roles)}")
         return current_user
-
     return role_checker
-
 
 
 def require_permission(*permissions: str):
@@ -76,6 +74,8 @@ def require_platform_staff():
             raise ForbiddenException("This endpoint requires a platform staff account")
         return current_user
     return platform_checker
+
+
 async def get_current_gym_id(current_user: User = Depends(get_current_user)) -> uuid.UUID:
     if current_user.gym_id is None:
         raise ForbiddenException("Platform staff cannot access gym-scoped endpoints")

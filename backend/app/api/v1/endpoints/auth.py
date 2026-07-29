@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.deps import get_current_user, require_platform_staff
@@ -51,7 +51,13 @@ async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/logout", status_code=204)
-async def logout(current_user: User = Depends(get_current_user)):
+async def logout(
+    authorization: str = Header(...),
+    current_user: User = Depends(get_current_user),
+):
+    service = AuthService(None)
+    token = authorization.replace("Bearer ", "")
+    await service.logout(token)
     return None
 
 
