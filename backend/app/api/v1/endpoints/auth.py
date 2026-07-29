@@ -18,7 +18,7 @@ from app.services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register")
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     # Public self-service signup is disabled: GymPro accounts are provisioned manually
     # by the GymPro team, not created by gym owners themselves. Endpoint kept (not deleted)
