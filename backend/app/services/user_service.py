@@ -7,6 +7,8 @@ from app.core.security import hash_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
+ALLOWED_USER_FIELDS = {"full_name", "phone"}
+
 
 class UserService:
     def __init__(self, db: AsyncSession):
@@ -18,7 +20,7 @@ class UserService:
     async def get_by_id(self, user_id: uuid.UUID, gym_id: uuid.UUID) -> User:
         user = await self.repo.get_by_id(user_id)
         if not user or user.gym_id != gym_id:
-            raise NotFoundException("User", str(user_id))
+            raise NotFoundException("User not found")
         return user
 
     async def create(self, email: str, password: str, full_name: str, role: str, gym_id: uuid.UUID) -> User:
@@ -34,7 +36,7 @@ class UserService:
         )
         return await self.repo.create(user)
 
-    async def invite(self, email: str, full_name: str, role: str, gym_id: uuid.UUID) -> User:
+    async def invite(self, email: str, full_name: str, role: str, gym_id: uuid.UUID) -> tuple[User, str]:
         existing = await self.repo.get_by_email(email)
         if existing:
             raise ConflictException("Email already registered")
@@ -53,9 +55,9 @@ class UserService:
 
     async def update(self, user_id: uuid.UUID, gym_id: uuid.UUID, data: dict) -> User:
         user = await self.get_by_id(user_id, gym_id)
-        for key, value in data.items():
-            if value is not None:
-                setattr(user, key, value)
+        for key in data:
+            if key in ALLOWED_USER_FIELDS and data[key] is not None:
+                setattr(user, key, data[key])
         return await self.repo.update(user)
 
     async def delete(self, user_id: uuid.UUID, gym_id: uuid.UUID) -> None:

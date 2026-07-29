@@ -3,7 +3,6 @@ import uuid
 import pytest
 
 from app.core.exceptions import ConflictException, UnauthorizedException
-from app.models.user import User
 from app.services.auth_service import AuthService
 
 
@@ -41,10 +40,9 @@ async def test_refresh_invalid_token(db_session):
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_returns_none_for_unknown_email(db_session):
+async def test_forgot_password_unknown_email_does_not_raise(db_session):
     service = AuthService(db_session)
-    token = await service.forgot_password("unknown@test.com")
-    assert token is None
+    await service.forgot_password("unknown@test.com")
 
 
 @pytest.mark.asyncio

@@ -3,8 +3,9 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_gym_id, get_current_user, require_role
+from app.api.v1.deps import get_current_gym_id, get_current_user, require_permission, require_role
 from app.core.database import get_db
+from app.core.permissions import Perm
 from app.schemas.user import InviteResponse, UserCreate, UserInvite, UserResponse, UserUpdate
 from app.services.user_service import UserService
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def list_users(
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.USER_READ)),
 ):
     service = UserService(db)
     return await service.list_by_gym(gym_id)
@@ -26,7 +27,7 @@ async def get_user(
     user_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.USER_READ)),
 ):
     service = UserService(db)
     return await service.get_by_id(user_id, gym_id)
@@ -37,7 +38,7 @@ async def create_user(
     body: UserCreate,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.USER_CREATE)),
 ):
     service = UserService(db)
     return await service.create(body.email, body.password, body.full_name, body.role, gym_id)
@@ -48,7 +49,7 @@ async def invite_user(
     body: UserInvite,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.USER_CREATE)),
 ):
     service = UserService(db)
     created, temp_password = await service.invite(body.email, body.full_name, body.role, gym_id)
@@ -61,7 +62,7 @@ async def update_user(
     body: UserUpdate,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.USER_UPDATE)),
 ):
     service = UserService(db)
     return await service.update(user_id, gym_id, body.model_dump(exclude_unset=True))
@@ -72,8 +73,7 @@ async def delete_user(
     user_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin")),
+    user=Depends(require_permission(Perm.USER_DELETE)),
 ):
     service = UserService(db)
     await service.delete(user_id, gym_id)
-    return None

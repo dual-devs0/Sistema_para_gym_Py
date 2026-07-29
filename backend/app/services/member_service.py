@@ -6,6 +6,8 @@ from app.core.exceptions import NotFoundException
 from app.models.member import Member
 from app.repositories.member_repository import MemberRepository
 
+ALLOWED_MEMBER_FIELDS = {"first_name", "last_name", "email", "phone", "document_number", "birth_date", "gender", "photo_url", "notes", "status"}
+
 
 class MemberService:
     def __init__(self, db: AsyncSession):
@@ -17,18 +19,18 @@ class MemberService:
     async def get_by_id(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> Member:
         member = await self.repo.get_by_id(member_id, gym_id)
         if not member:
-            raise NotFoundException("Member", str(member_id))
+            raise NotFoundException("Member not found")
         return member
 
     async def create(self, gym_id: uuid.UUID, data: dict) -> Member:
-        member = Member(gym_id=gym_id, **data)
+        member = Member(gym_id=gym_id, **{k: v for k, v in data.items() if k in ALLOWED_MEMBER_FIELDS and v is not None})
         return await self.repo.create(member)
 
     async def update(self, member_id: uuid.UUID, gym_id: uuid.UUID, data: dict) -> Member:
         member = await self.get_by_id(member_id, gym_id)
-        for key, value in data.items():
-            if value is not None:
-                setattr(member, key, value)
+        for key in data:
+            if key in ALLOWED_MEMBER_FIELDS and data[key] is not None:
+                setattr(member, key, data[key])
         return await self.repo.update(member)
 
     async def delete(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> None:

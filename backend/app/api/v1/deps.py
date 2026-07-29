@@ -6,8 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.exceptions import ForbiddenException, UnauthorizedException
-from app.core.security import decode_token
+from app.core.permissions import require_permission as _require_permission
+from app.core.redis import get_redis
+from app.core.security import decode_token, TOKEN_TYPE_ACCESS
 from app.models.user import User
+
+
+async def _check_token_blacklist(jti: str) -> None:
+    redis = await get_redis()
+    blacklisted = await redis.get(f"token:blacklist:{jti}")
+    if blacklisted:
+        raise UnauthorizedException("Token has been revoked")
 
 
 async def get_current_user(
@@ -19,8 +28,19 @@ async def get_current_user(
 
     token = authorization.replace("Bearer ", "")
     payload = decode_token(token)
-    user_id = payload.get("sub")
+    error = payload.get("error")
+    if error == "expired":
+        raise UnauthorizedException("Token expired")
+    if not payload:
+        raise UnauthorizedException("Invalid token")
+    if payload.get("type") != TOKEN_TYPE_ACCESS:
+        raise UnauthorizedException("Invalid token type")
 
+    jti = payload.get("jti")
+    if jti:
+        await _check_token_blacklist(jti)
+
+    user_id = payload.get("sub")
     if not user_id:
         raise UnauthorizedException("Invalid token")
 
@@ -38,8 +58,14 @@ def require_role(*roles: str):
         if current_user.role not in roles:
             raise ForbiddenException(f"Role '{current_user.role}' not allowed. Requires: {', '.join(roles)}")
         return current_user
-
     return role_checker
+
+
+def require_permission(*permissions: str):
+    async def permission_checker(current_user: User = Depends(get_current_user)) -> User:
+        _require_permission(*permissions)(current_user)
+        return current_user
+    return permission_checker
 
 
 async def get_current_gym_id(current_user: User = Depends(get_current_user)) -> uuid.UUID:

@@ -4,8 +4,9 @@ from datetime import date
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_gym_id, require_role
+from app.api.v1.deps import get_current_gym_id, require_permission
 from app.core.database import get_db
+from app.core.permissions import Perm
 from app.schemas.attendance import AttendanceResponse, AttendanceTodayResponse
 from app.services.attendance_service import AttendanceService
 
@@ -17,7 +18,7 @@ async def check_in(
     member_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.ATTENDANCE_CHECKIN)),
 ):
     service = AttendanceService(db)
     return await service.check_in(member_id, gym_id)
@@ -28,7 +29,7 @@ async def check_out(
     log_id: uuid.UUID,
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.ATTENDANCE_CHECKOUT)),
 ):
     service = AttendanceService(db)
     return await service.check_out(log_id, gym_id)
@@ -40,7 +41,7 @@ async def list_attendance(
     member_id: uuid.UUID | None = Query(None),
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.ATTENDANCE_READ)),
 ):
     service = AttendanceService(db)
     return await service.list_attendance(gym_id, log_date, member_id)
@@ -50,7 +51,7 @@ async def list_attendance(
 async def today_summary(
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("owner", "admin", "trainer", "receptionist")),
+    user=Depends(require_permission(Perm.ATTENDANCE_READ)),
 ):
     service = AttendanceService(db)
     return await service.get_today(gym_id)

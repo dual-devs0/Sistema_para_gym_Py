@@ -3,7 +3,6 @@ import uuid
 import pytest
 
 from app.core.exceptions import AppException, NotFoundException
-from app.models.attendance import AttendanceLog
 from app.models.member import Member
 from app.services.attendance_service import AttendanceService
 

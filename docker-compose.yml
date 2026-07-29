@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: gympro
       POSTGRES_USER: gympro
-      POSTGRES_PASSWORD: gympro_dev
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-gympro_dev}
     ports:
       - "5432:5432"
     volumes:
@@ -33,11 +33,13 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
+    env_file:
+      - ./backend/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://gympro:gympro_dev@postgres:5432/gympro
+      DATABASE_URL: postgresql+asyncpg://gympro:${DB_PASSWORD:-gympro_dev}@postgres:5432/gympro
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: dev-secret-key-change-in-production
-      ENVIRONMENT: development
+      SECRET_KEY: ${SECRET_KEY}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
     depends_on:
       postgres:
         condition: service_healthy
