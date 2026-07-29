@@ -1,3 +1,380 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* ── Colors ── */
+  --color-background: #0c1017;
+  --color-surface: #13131b;
+  --color-surface-dim: #13131b;
+  --color-surface-container-lowest: #0c1017;
+  --color-surface-container-low: #13131b;
+  --color-surface-container: #1a1f26;
+  --color-surface-container-high: #252b34;
+  --color-surface-container-highest: #2d333b;
+  --color-surface-bright: #393841;
+  --color-surface-variant: #34343d;
+  --color-surface-tint: #c0c1ff;
+  --color-outline-variant: #2d333b;
+  --color-outline: #908fa0;
+
+  --color-primary: #c0c1ff;
+  --color-primary-container: #8083ff;
+  --color-primary-fixed: #e1e0ff;
+  --color-primary-fixed-dim: #c0c1ff;
+  --color-on-primary: #1000a9;
+  --color-on-primary-container: #0d0096;
+  --color-on-primary-fixed: #07006c;
+  --color-on-primary-fixed-variant: #2f2ebe;
+
+  --color-secondary: #4edea3;
+  --color-secondary-container: #00a572;
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-on-secondary: #003824;
+  --color-on-secondary-container: #00311f;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005236;
+
+  --color-tertiary: #ffb95f;
+  --color-tertiary-container: #ca8100;
+  --color-tertiary-fixed: #ffddb8;
+  --color-tertiary-fixed-dim: #ffb95f;
+  --color-on-tertiary: #472a00;
+  --color-on-tertiary-container: #3e2400;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-tertiary-fixed-variant: #653e00;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
+
+  --color-on-background: #e4e1ed;
+  --color-on-surface: #e4e1ed;
+  --color-on-surface-variant: #c7c4d7;
+  --color-inverse-surface: #e4e1ed;
+  --color-inverse-on-surface: #303038;
+  --color-inverse-primary: #494bd6;
+
+  /* ── Spacing ── */
+  --spacing-unit: 4px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-gutter: 20px;
+  --spacing-sidebar-collapsed: 64px;
+  --spacing-sidebar-width: 240px;
+
+  /* ── Widths & Max-Widths Override (to prevent collision with --spacing) ── */
+  --max-w-xs: 20rem;           /* 320px */
+  --max-w-sm: 24rem;           /* 384px */
+  --max-w-md: 28rem;           /* 448px */
+  --max-w-lg: 32rem;           /* 512px */
+  --max-w-xl: 36rem;           /* 576px */
+  --max-w-2xl: 42rem;          /* 672px */
+  --max-w-3xl: 48rem;          /* 768px */
+
+  /* ── Font Families ── */
+  --font-family-sans: "Inter", sans-serif;
+  --font-family-mono: "JetBrains Mono", monospace;
+
+  /* ── Font Sizes (body-sm, body-md, headline-sm, headline-lg, display-lg, label-caps) ── */
+  --font-size-body-sm: 13px;
+  --line-height-body-sm: 18px;
+  --font-size-body-md: 14px;
+  --line-height-body-md: 20px;
+  --font-size-headline-sm: 20px;
+  --line-height-headline-sm: 28px;
+  --font-size-headline-lg: 32px;
+  --line-height-headline-lg: 40px;
+  --font-size-display-lg: 48px;
+  --line-height-display-lg: 56px;
+  --font-size-label-caps: 11px;
+  --line-height-label-caps: 16px;
+
+  /* ── Animations ── */
+  --animate-pulse-check: pulse-check 0.5s ease-out;
+  --animate-slide-in-up: slide-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in: fade-in 0.15s ease-out;
+
+  @keyframes pulse-check {
+    0%   { box-shadow: 0 0 0 0 rgba(192, 193, 255, 0.7); }
+    100% { box-shadow: 0 0 0 20px rgba(192, 193, 255, 0); }
+  }
+  @keyframes slide-in-up {
+    0%   { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+}
+
+
+:root {
+  color-scheme: dark;
+}
+
+html.dark,
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0c1017;
+  color: #e4e1ed;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: #2d333b4d;
+}
+
+*:focus-visible {
+  outline: 2px solid #c0c1ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #c0c1ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #34343d #0c1017;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #0c1017;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #2d333b;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #464554;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #2d333b;
+  border-radius: 10px;
+}
+
+.stat-card {
+  background-color: #1a1f26;
+  border: 1px solid #2d333b;
+  padding: 24px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+  border-color: #c0c1ff80;
+}
+
+.stat-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background-color: #c0c1ff;
+  color: #1000a9;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.1s;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-ghost:hover {
+  background-color: #252b34;
+}
+
+.table-header {
+  padding: 12px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #e4e1ed;
+  background-color: #252b34;
+}
+
+.table-cell {
+  padding: 12px 24px;
+}
+
+.table-row:hover {
+  background-color: #252b34;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background-color: #c0c1ff1a;
+  color: #c0c1ff;
+  border: 1px solid #c0c1ff33;
+}
+
+.badge-secondary {
+  background-color: #252b34;
+  color: #c7c4d7;
+  border: 1px solid #2d333b;
+}
+
+.badge-tertiary {
+  background-color: #ca81004d;
+  color: #ffb95f;
+  border: 1px solid #ca810033;
+}
+
+.badge-error {
+  background-color: #93000a66;
+  color: #ffb4ab;
+  border: 1px solid #ffb4ab33;
+}
+
+.input-search {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  width: 100%;
+  color: #e4e1ed;
+}
+
+.input-search::placeholder {
+  color: #c7c4d7;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #8083ff;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0d0096;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #c0c1ff33;
+  overflow: hidden;
+}
+
+.chart-bar {
+  background-color: #c0c1ff1a;
+  height: 20%;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.chart-bar:hover {
+  background-color: #c0c1ff4d;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  background-color: #252b34;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.group:hover .chart-tooltip {
+  opacity: 1;
+}
+
+@keyframes spin-loader {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin-loader 0.6s linear infinite;
+}

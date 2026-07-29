@@ -4,9 +4,10 @@ import { useAuth } from "../../hooks/useAuth";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function RegisterPage() {
+  const { register } = useAuth();
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,10 +18,11 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      await register(email, password, fullName);
       navigate("/");
-    } catch {
-      setError("Credenciales inválidas. Verifica tu email y contraseña.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error al registrarse";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -28,31 +30,38 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      {/* Background gradient */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary opacity-5 blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-md mx-auto px-4">
-        {/* Logo */}
+      <div className="relative w-full max-w-sm mx-4">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-primary" style={{ fontSize: "32px" }}>fitness_center</span>
+          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: "28px" }}>fitness_center</span>
           </div>
-          <h1 className="text-3xl font-bold text-on-surface tracking-tight">GymPro</h1>
-          <p className="mt-2 text-sm text-on-surface-variant">Inicia sesión en tu panel administrativo</p>
+          <h1 className="text-2xl font-bold text-on-surface tracking-tight">Crear cuenta</h1>
+          <p className="mt-1 text-sm text-on-surface-variant">Registrá tu gimnasio para empezar</p>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl bg-surface-container border border-outline-variant px-lg py-xl shadow-2xl">
+        <div className="rounded-2xl bg-surface-container border border-outline-variant p-8 shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-5">
+            <Input
+              label="Nombre completo"
+              type="text"
+              name="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Tu nombre o el del gimnasio"
+              required
+              autoComplete="name"
+            />
             <Input
               label="Email"
               type="email"
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@gymPro.com"
+              placeholder="admin@gympro.com"
               required
               autoComplete="email"
             />
@@ -64,7 +73,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
 
             {error && (
@@ -75,14 +84,14 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" loading={loading} fullWidth className="mt-2">
-              Iniciar sesión
+              Crear cuenta
             </Button>
           </form>
 
           <p className="text-center mt-6 text-xs text-on-surface-variant">
-            ¿No tenés cuenta?{" "}
-            <Link to="/register" className="text-primary hover:underline font-medium">
-              Registrarse
+            ¿Ya tenés cuenta?{" "}
+            <Link to="/login" className="text-primary hover:underline font-medium">
+              Iniciar sesión
             </Link>
           </p>
         </div>
