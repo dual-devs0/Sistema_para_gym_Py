@@ -1,40 +1,52 @@
-import { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
+type Size = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
+  size?: Size;
   loading?: boolean;
+  fullWidth?: boolean;
+  icon?: React.ReactNode;
 }
 
-const styles: Record<Variant, string> = {
-  primary: "bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500",
-  secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400",
-  ghost: "bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-400",
-  danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+const variantStyles: Record<Variant, string> = {
+  primary: "bg-primary text-on-primary hover:scale-105 active:scale-95 focus:ring-primary",
+  secondary: "bg-surface-container-highest text-on-surface hover:bg-surface-bright focus:ring-outline-variant",
+  ghost: "bg-transparent text-on-surface-variant hover:bg-surface-container-highest focus:ring-outline-variant",
+  danger: "bg-error text-on-error hover:scale-105 active:scale-95 focus:ring-error",
+  outline: "bg-transparent border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest focus:ring-outline-variant",
 };
 
-export default function Button({
-  variant = "primary",
-  loading = false,
-  disabled,
-  children,
-  className = "",
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${styles[variant]} ${className}`}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading && (
-        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-        </svg>
-      )}
-      {children}
-    </button>
-  );
-}
+const sizeStyles: Record<Size, string> = {
+  sm: "px-sm min-h-[36px] text-body-sm gap-1",
+  md: "px-md min-h-[44px] text-body-sm gap-2",
+  lg: "px-lg min-h-[52px] text-body-md gap-2",
+};
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = "primary", size = "md", loading = false, fullWidth = false, disabled, children, icon, className = "", ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={`inline-flex items-center justify-center rounded-lg font-body-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && (
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+        )}
+        {!loading && icon && <span className="flex-shrink-0">{icon}</span>}
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export default Button;

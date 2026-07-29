@@ -44,18 +44,18 @@ const mockRevenue: DashboardRevenueResponse = {
 
 const mockExpiring: DashboardExpiringResponse = {
   items: [
-    { member_id: "1", member_name: "Juan Perez", plan_name: "Premium Annual", plan_type: "premium", expiration_date: "Oct 24, 2023", days_remaining: 2 },
-    { member_id: "2", member_name: "Maria Garcia", plan_name: "Monthly Basic", plan_type: "basic", expiration_date: "Oct 25, 2023", days_remaining: 3 },
-    { member_id: "3", member_name: "Ricardo Silva", plan_name: "Student Special", plan_type: "student", expiration_date: "Oct 25, 2023", days_remaining: 3 },
-    { member_id: "4", member_name: "Ana Martinez", plan_name: "Premium Annual", plan_type: "premium", expiration_date: "Oct 26, 2023", days_remaining: 4 },
-    { member_id: "5", member_name: "Carlos Lopez", plan_name: "Monthly Basic", plan_type: "basic", expiration_date: "Oct 26, 2023", days_remaining: 4 },
+    { member_id: "1", member_name: "Juan Pérez", plan_name: "Premium Anual", plan_type: "premium", expiration_date: "24 Oct 2023", days_remaining: 2 },
+    { member_id: "2", member_name: "María García", plan_name: "Básico Mensual", plan_type: "basic", expiration_date: "25 Oct 2023", days_remaining: 3 },
+    { member_id: "3", member_name: "Ricardo Silva", plan_name: "Estudiantil", plan_type: "student", expiration_date: "25 Oct 2023", days_remaining: 3 },
+    { member_id: "4", member_name: "Ana Martínez", plan_name: "Premium Anual", plan_type: "premium", expiration_date: "26 Oct 2023", days_remaining: 4 },
+    { member_id: "5", member_name: "Carlos López", plan_name: "Básico Mensual", plan_type: "basic", expiration_date: "26 Oct 2023", days_remaining: 4 },
   ],
 };
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const firstName = user?.full_name?.split(" ")[0] || "Admin";
-  const gymName = user?.gym?.name || "your gym";
+  const gymName = user?.gym?.name || "tu gimnasio";
 
   const { data: summary } = useQuery({
     queryKey: ["dashboard-summary"],
@@ -86,32 +86,32 @@ export default function DashboardPage() {
   const stats = [
     {
       key: "revenue_today",
-      label: "Today's Revenue",
+      label: "Ingresos de Hoy",
       value: summary?.revenue_today ?? 0,
       prefix: "$",
-      trend: { value: 12, direction: "up" as const, label: "vs. yesterday" },
+      trend: { value: 12, direction: "up" as const, label: "vs. ayer" },
       icon: <DollarSign size={20} />,
       iconColor: "primary" as const,
     },
     {
       key: "active_members",
-      label: "Active Members",
+      label: "Miembros Activos",
       value: summary?.active_members ?? 0,
-      trend: { value: 3, direction: "up" as const, label: "this month growth" },
+      trend: { value: 3, direction: "up" as const, label: "crecimiento este mes" },
       icon: <Users size={20} />,
       iconColor: "secondary" as const,
     },
     {
       key: "checkins_today",
-      label: "Today's Check-ins",
+      label: "Ingresos Hoy",
       value: summary?.checkins_today ?? 0,
-      trend: { value: 2, direction: "down" as const, label: "vs. last week" },
+      trend: { value: 2, direction: "down" as const, label: "vs. semana pasada" },
       icon: <CalendarCheck size={20} />,
       iconColor: "tertiary" as const,
     },
     {
       key: "expiring",
-      label: "Expiring Soon (3 days)",
+      label: "Por Vencer (3 días)",
       value: summary?.members_expiring_soon ?? 0,
       icon: <AlertTriangle size={20} />,
       iconColor: "error" as const,
@@ -127,10 +127,10 @@ export default function DashboardPage() {
     <>
       <div className="mb-xl">
         <h1 className="font-headline-lg text-headline-lg text-on-surface">
-          Welcome back, {firstName}.
+          Bienvenido de nuevo, {firstName}.
         </h1>
         <p className="text-on-surface-variant font-body-md text-body-md mt-unit">
-          Here is what is happening at {gymName} today.
+          Esto es lo que está pasando en {gymName} hoy.
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-xl">
 <RevenueChart
           data={revenueChartData}
-          title="Revenue (Last 30 Days)"
+          title="Ingresos (Últimos 30 Días)"
           period="30d"
           onPeriodChange={(period) => console.log("Period changed:", period)}
         />

@@ -24,12 +24,14 @@ class AuthService:
     def __init__(self, db: AsyncSession):
         self.repo = UserRepository(db)
 
-    async def login(self, email: str, password: str) -> tuple[str, str, User]:
+    async def login(self, email: str, password: str) -> tuple[str, str, User, str | None]:
         user = await self.repo.get_by_email(email)
         if not user or not verify_password(password, user.password_hash):
             raise UnauthorizedException("Invalid email or password")
         if not user.is_active:
             raise ForbiddenException("Account is inactive")
+
+        previous_login = user.last_login.isoformat() if user.last_login else None
 
         access_token = create_access_token(str(user.id), str(user.gym_id))
         refresh_token, jti, expires_at = create_refresh_token(str(user.id))
@@ -40,7 +42,7 @@ class AuthService:
         user.last_login = datetime.now(timezone.utc)
         await self.repo.update(user)
 
-        return access_token, refresh_token, user
+        return access_token, refresh_token, user, previous_login
 
     async def refresh(self, refresh_token: str) -> tuple[str, str]:
         payload = decode_token(refresh_token)

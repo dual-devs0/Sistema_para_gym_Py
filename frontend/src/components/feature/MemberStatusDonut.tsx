@@ -8,7 +8,7 @@ interface MemberStatusDonutProps {
   title?: ReactNode;
 }
 
-export default function MemberStatusDonut({ total, active, frozen, cancelled, title = "Member Status Breakdown" }: MemberStatusDonutProps) {
+export default function MemberStatusDonut({ total, active, frozen, cancelled, title = "Estado de Miembros" }: MemberStatusDonutProps) {
   const activePct = total > 0 ? (active / total) * 100 : 0;
   const frozenPct = total > 0 ? (frozen / total) * 100 : 0;
   const cancelledPct = total > 0 ? (cancelled / total) * 100 : 0;
@@ -71,28 +71,28 @@ export default function MemberStatusDonut({ total, active, frozen, cancelled, ti
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span className="text-headline-sm font-bold text-on-surface">{total}</span>
-          <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">Total Members</span>
+          <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">Total Miembros</span>
         </div>
       </div>
       <div className="w-full mt-xl grid grid-cols-3 gap-xs">
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-primary rounded-full" />
-            <span className="text-[10px] text-on-surface-variant font-bold">ACTIVE</span>
+            <span className="text-[10px] text-on-surface-variant font-bold">ACTIVOS</span>
           </div>
           <span className="font-data-mono text-body-sm text-on-surface">{activePct.toFixed(0)}%</span>
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-surface-container-highest rounded-full" />
-            <span className="text-[10px] text-on-surface-variant font-bold">FROZEN</span>
+            <span className="text-[10px] text-on-surface-variant font-bold">CONGELADOS</span>
           </div>
           <span className="font-data-mono text-body-sm text-on-surface">{frozenPct.toFixed(0)}%</span>
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-error rounded-full" />
-            <span className="text-[10px] text-on-surface-variant font-bold">CANCELLED</span>
+            <span className="text-[10px] text-on-surface-variant font-bold">CANCELADOS</span>
           </div>
           <span className="font-data-mono text-body-sm text-on-surface">{cancelledPct.toFixed(0)}%</span>
         </div>

@@ -1,0 +1,531 @@
+﻿<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GymPro | Membership Plans</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-low": "#1b1b23",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-surface-variant": "#c7c4d7",
+                        "error-container": "#93000a",
+                        "on-secondary": "#003824",
+                        "tertiary": "#ffb95f",
+                        "surface-bright": "#393841",
+                        "outline": "#908fa0",
+                        "inverse-primary": "#494bd6",
+                        "primary-container": "#8083ff",
+                        "error": "#ffb4ab",
+                        "on-tertiary": "#472a00",
+                        "secondary": "#4edea3",
+                        "background": "#13131b",
+                        "surface-container-highest": "#34343d",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-on-surface": "#303038",
+                        "surface-container": "#1f1f27",
+                        "outline-variant": "#464554",
+                        "on-primary-container": "#0d0096",
+                        "on-error": "#690005",
+                        "surface-container-high": "#292932",
+                        "surface": "#13131b",
+                        "on-surface": "#e4e1ed",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-variant": "#34343d",
+                        "on-error-container": "#ffdad6",
+                        "primary": "#c0c1ff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "inverse-surface": "#e4e1ed",
+                        "on-primary": "#1000a9",
+                        "on-background": "#e4e1ed",
+                        "tertiary-container": "#ca8100",
+                        "surface-container-lowest": "#0d0d15",
+                        "surface-dim": "#13131b",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed-variant": "#653e00"
+                    },
+                    borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+                    spacing: { xs: "4px", sm: "8px", md: "16px", gutter: "20px", lg: "24px", xl: "32px", xxl: "48px" },
+                    fontFamily: {
+                        "body-sm": ["Inter"], "display-lg": ["Inter"], "headline-sm": ["Inter"],
+                        "label-caps": ["Inter"], "headline-lg": ["Inter"], "data-mono": ["JetBrains Mono"], "body-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+                        "label-caps": ["11px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "data-mono": ["13px", { lineHeight: "20px", fontWeight: "500" }],
+                        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }]
+                    },
+                    keyframes: {
+                        "slide-in-right": { "0%": { transform: "translateX(100%)" }, "100%": { transform: "translateX(0)" } },
+                        "fade-in": { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+                        "slide-up": { "0%": { opacity: "0", transform: "translateY(12px)" }, "100%": { opacity: "1", transform: "translateY(0)" } }
+                    },
+                    animation: {
+                        "slide-in-right": "slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                        "fade-in": "fade-in 0.2s ease-out",
+                        "slide-up": "slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0c1017; color: #e4e1ed; font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #2d333b; border-radius: 10px; }
+        .plan-card { background-color: #1a1f26; border: 1px solid #2d333b; transition: all 0.2s ease-in-out; border-radius: 0.5rem; }
+        .plan-card:hover { border-color: #494bd6; background-color: #252b34; }
+        .plan-card:focus-visible { outline: 2px solid #c0c1ff; outline-offset: 2px; }
+        .recommended-card { border: 2px solid #c0c1ff !important; position: relative; }
+        .touch-target { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { outline: 2px solid #c0c1ff; outline-offset: 2px; border-radius: 4px; }
+        .side-panel-overlay { opacity: 0; pointer-events: none; transition: opacity 0.2s ease-out; }
+        .side-panel-overlay.active { opacity: 1; pointer-events: all; }
+        .side-panel { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .side-panel.active { transform: translateX(0); }
+        .empty-state-enter { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+    </style>
+</head>
+<body class="bg-background overflow-hidden">
+<aside class="bg-surface-container-low w-[240px] h-screen fixed left-0 top-0 border-r border-outline-variant flex flex-col py-lg z-20">
+<div class="px-md mb-xl">
+<h1 class="font-headline-sm font-bold text-primary">GymPro</h1>
+<p class="font-body-sm text-on-surface-variant opacity-70">Command Center</p>
+</div>
+<nav class="flex-1 space-y-xs overflow-y-auto px-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors duration-200 rounded" href="#"><span class="material-symbols-outlined">dashboard</span><span class="font-body-md">Dashboard</span></a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors duration-200 rounded" href="#"><span class="material-symbols-outlined">group</span><span class="font-body-md">Members</span></a>
+<a class="flex items-center gap-md px-md py-sm text-primary border-l-2 border-primary bg-surface-container duration-200 rounded" href="#"><span class="material-symbols-outlined">card_membership</span><span class="font-body-md font-bold">Memberships</span></a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors duration-200 rounded" href="#"><span class="material-symbols-outlined">how_to_reg</span><span class="font-body-md">Attendance</span></a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors duration-200 rounded" href="#"><span class="material-symbols-outlined">payments</span><span class="font-body-md">Payments</span></a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors duration-200 rounded" href="#"><span class="material-symbols-outlined">settings</span><span class="font-body-md">Settings</span></a>
+</nav>
+<div class="px-md mt-auto pt-lg border-t border-outline-variant/30 flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-primary">admin_panel_settings</span></div>
+<div class="flex-1 min-w-0"><p class="font-body-sm text-on-surface truncate font-semibold">Admin Panel</p><p class="font-body-sm text-on-surface-variant text-[11px] truncate">v2.4.0 High-Perf</p></div>
+</div>
+</aside>
+<main class="ml-[240px] h-screen overflow-y-auto custom-scrollbar bg-background">
+<header class="h-16 sticky top-0 bg-background/80 backdrop-blur-md z-10 flex justify-between items-center px-lg border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-surface-container border border-outline-variant text-body-md text-on-surface px-xl py-xs pl-[40px] focus:outline-none focus:border-primary transition-all rounded-lg w-64" placeholder="Search plans..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm pr-md border-r border-outline-variant">
+<button class="touch-target text-on-surface-variant hover:text-primary transition-colors rounded" aria-label="Notifications"><span class="material-symbols-outlined">notifications</span></button>
+<button class="touch-target text-on-surface-variant hover:text-primary transition-colors rounded" aria-label="Help"><span class="material-symbols-outlined">help</span></button>
+</div>
+<div class="flex items-center gap-sm cursor-pointer group">
+<div class="text-right"><p class="font-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Admin User</p><p class="text-[11px] text-on-surface-variant">Super Administrator</p></div>
+<div class="w-10 h-10 rounded-full border border-primary/40 overflow-hidden flex-shrink-0"><div class="w-full h-full bg-primary/30 flex items-center justify-center text-primary font-bold">AU</div></div>
+</div>
+</div>
+</header>
+<div class="p-lg space-y-xl">
+
+<div id="page-content">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Membership Plans</h2>
+<p class="font-body-md text-on-surface-variant mt-xs">Manage the plans your members can subscribe to and track enrollment trends.</p>
+</div>
+<div class="flex gap-sm">
+<button id="toggle-empty-btn" class="text-[11px] text-on-surface-variant border border-outline-variant rounded px-md py-1 min-h-[44px] hover:bg-surface-container-highest transition-colors" title="Toggle empty state preview">Toggle Empty State</button>
+<button id="open-new-plan-btn" class="flex items-center gap-sm px-lg min-h-[44px] bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-container transition-all active:scale-[0.98]"><span class="material-symbols-outlined">add</span><span>New Plan</span></button>
+</div>
+</div>
+
+<div id="empty-state" class="hidden">
+<div class="flex flex-col items-center justify-center py-xxl bg-surface-container-low border border-outline-variant border-dashed rounded-xl text-center empty-state-enter">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center mb-lg"><span class="material-symbols-outlined text-[32px] text-outline">card_membership</span></div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-sm">No plans created yet</h3>
+<p class="font-body-md text-on-surface-variant max-w-md mb-lg leading-relaxed">Membership plans define what your members can buy — set pricing, duration, visit limits, and renewal rules. Create your first plan to start enrolling members.</p>
+<button id="empty-create-btn" class="flex items-center gap-sm px-lg min-h-[44px] bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-container transition-all active:scale-[0.98]"><span class="material-symbols-outlined">add</span><span>Create Your First Plan</span></button>
+</div>
+</div>
+
+<div id="plans-grid">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-md">
+<div class="plan-card p-lg flex flex-col justify-between group rounded-xl" role="button" tabindex="0" aria-label="Edit Monthly Basic plan">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-[2px] bg-secondary/10 text-secondary text-[11px] font-bold rounded-full uppercase tracking-wider">Mensual</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm" aria-hidden="true">visibility</span><span class="text-[10px] text-on-surface-variant font-medium">Visible</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Monthly Basic</h3>
+<div class="flex items-baseline gap-xs mb-md">
+<span class="font-data-mono text-headline-lg text-primary">$29</span>
+<span class="font-body-sm text-on-surface-variant">/mes</span>
+</div>
+<ul class="space-y-sm mb-lg">
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">event</span><span>30 Days duration</span></li>
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">fitness_center</span><span>12 Visits limit</span></li>
+</ul>
+</div>
+<div class="pt-md border-t border-outline-variant/30 flex justify-between items-center">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm text-primary">group</span><span class="font-data-mono text-body-sm font-bold">142</span></div>
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm" aria-label="Auto-renew off">sync</span><span class="text-[10px] text-on-surface-variant">Off</span></div>
+</div>
+</div>
+
+<div class="plan-card recommended-card p-lg flex flex-col justify-between group rounded-xl" role="button" tabindex="0" aria-label="Edit Premium Annual plan">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary px-md py-xs rounded-full shadow-lg z-10"><span class="text-[10px] font-bold text-on-primary uppercase tracking-widest">Recommended</span></div>
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-[2px] bg-tertiary/10 text-tertiary text-[11px] font-bold rounded-full uppercase tracking-wider">Anual</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-primary text-sm" aria-hidden="true">visibility</span><span class="text-[10px] text-on-surface-variant font-medium">Visible</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Premium Annual</h3>
+<div class="flex items-baseline gap-xs mb-md">
+<span class="font-data-mono text-headline-lg text-primary">$299</span>
+<span class="font-body-sm text-on-surface-variant">/año</span>
+</div>
+<ul class="space-y-sm mb-lg">
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-primary">event</span><span>365 Days duration</span></li>
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-primary">all_inclusive</span><span>Ilimitado</span></li>
+</ul>
+</div>
+<div class="pt-md border-t border-outline-variant/30 flex justify-between items-center">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm text-primary">group</span><span class="font-data-mono text-body-sm font-bold">487</span></div>
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1" aria-label="Auto-renew on">sync</span><span class="text-[10px] text-primary font-medium">Auto</span></div>
+</div>
+</div>
+
+<div class="plan-card p-lg flex flex-col justify-between group rounded-xl" role="button" tabindex="0" aria-label="Edit Flex Quarterly plan">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-[2px] bg-secondary/10 text-secondary text-[11px] font-bold rounded-full uppercase tracking-wider">Quarterly</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm" aria-hidden="true">visibility</span><span class="text-[10px] text-on-surface-variant font-medium">Visible</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Flex Quarterly</h3>
+<div class="flex items-baseline gap-xs mb-md">
+<span class="font-data-mono text-headline-lg text-primary">$85</span>
+<span class="font-body-sm text-on-surface-variant">/trim</span>
+</div>
+<ul class="space-y-sm mb-lg">
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">event</span><span>90 Days duration</span></li>
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">fitness_center</span><span>45 Visits limit</span></li>
+</ul>
+</div>
+<div class="pt-md border-t border-outline-variant/30 flex justify-between items-center">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm text-primary">group</span><span class="font-data-mono text-body-sm font-bold">92</span></div>
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm" aria-label="Auto-renew off">sync</span><span class="text-[10px] text-on-surface-variant">Off</span></div>
+</div>
+</div>
+
+<div class="plan-card p-lg flex flex-col justify-between group rounded-xl opacity-80" role="button" tabindex="0" aria-label="Edit Internal Exec plan">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-[2px] bg-outline-variant/10 text-on-surface-variant text-[11px] font-bold rounded-full uppercase tracking-wider">Internal</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-error text-sm" style="font-variation-settings: 'FILL' 1" aria-hidden="true">visibility_off</span><span class="text-[10px] text-error font-medium">Internal</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Internal Exec</h3>
+<div class="flex items-baseline gap-xs mb-md">
+<span class="font-data-mono text-headline-lg text-primary">$0</span>
+<span class="font-body-sm text-on-surface-variant">/mes</span>
+</div>
+<ul class="space-y-sm mb-lg">
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">event</span><span>Permanent</span></li>
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">all_inclusive</span><span>Ilimitado</span></li>
+</ul>
+</div>
+<div class="pt-md border-t border-outline-variant/30 flex justify-between items-center">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm text-primary">group</span><span class="font-data-mono text-body-sm font-bold">12</span></div>
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm">history</span><span class="text-[10px] text-on-surface-variant">Manual</span></div>
+</div>
+</div>
+
+<div class="plan-card p-lg flex flex-col justify-between group rounded-xl" role="button" tabindex="0" aria-label="Edit Student Pass plan">
+<div>
+<div class="flex justify-between items-start mb-md">
+<span class="px-sm py-[2px] bg-secondary/10 text-secondary text-[11px] font-bold rounded-full uppercase tracking-wider">Mensual</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm" aria-hidden="true">visibility</span><span class="text-[10px] text-on-surface-variant font-medium">Visible</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Student Pass</h3>
+<div class="flex items-baseline gap-xs mb-md">
+<span class="font-data-mono text-headline-lg text-primary">$19</span>
+<span class="font-body-sm text-on-surface-variant">/mes</span>
+</div>
+<ul class="space-y-sm mb-lg">
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">event</span><span>30 Days duration</span></li>
+<li class="flex items-center gap-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-sm text-on-surface-variant">fitness_center</span><span>20 Visits limit</span></li>
+</ul>
+</div>
+<div class="pt-md border-t border-outline-variant/30 flex justify-between items-center">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm text-primary">group</span><span class="font-data-mono text-body-sm font-bold">205</span></div>
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-on-surface-variant text-sm" aria-label="Auto-renew off">sync</span><span class="text-[10px] text-on-surface-variant">Off</span></div>
+</div>
+</div>
+</div>
+</div>
+<section class="bg-surface-container border border-outline-variant rounded-lg overflow-hidden mt-xl">
+<div class="px-lg py-md border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-sm text-on-surface">Full Plan Catalog</h3>
+<div class="flex gap-md">
+<button class="touch-target px-md text-body-sm text-on-surface-variant border border-outline-variant rounded hover:bg-surface-container-highest transition-colors">Export CSV</button>
+<button class="touch-target px-md text-body-sm text-on-surface-variant border border-outline-variant rounded hover:bg-surface-container-highest transition-colors">Filter</button>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low/50">
+<tr>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant">Plan Name</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant">Type</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant">Price</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant">Duration</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant text-center">Public</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant">Status</th>
+<th class="px-lg py-md font-label-caps text-label-caps text-on-surface border-b border-outline-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-highest/50 transition-colors cursor-pointer group">
+<td class="px-lg py-md"><div class="font-body-md font-semibold text-on-surface">Premium Annual</div><div class="text-[11px] text-on-surface-variant">SKU: PL-ANN-PRM</div></td>
+<td class="px-lg py-md"><span class="px-sm py-1 bg-tertiary/10 text-tertiary font-label-caps rounded">Annual</span></td>
+<td class="px-lg py-md font-data-mono text-on-surface">$299.00</td>
+<td class="px-lg py-md font-body-sm text-on-surface-variant">365 Days</td>
+<td class="px-lg py-md text-center">
+<label class="toggle-switch">
+<input type="checkbox" checked aria-label="Toggle visibility for Premium Annual"/><span class="toggle-track"></span><span class="toggle-label sr-only">Visible</span>
+</label>
+<span class="text-[10px] text-secondary font-medium ml-1">Yes</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-secondary"></div><span class="text-body-sm text-secondary font-medium">Active</span></div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary" aria-label="Edit plan"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary" aria-label="Duplicate plan"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-error" aria-label="Deactivate plan"><span class="material-symbols-outlined text-sm">block</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/50 transition-colors cursor-pointer group">
+<td class="px-lg py-md"><div class="font-body-md font-semibold text-on-surface">Monthly Basic</div><div class="text-[11px] text-on-surface-variant">SKU: PL-MON-BSC</div></td>
+<td class="px-lg py-md"><span class="px-sm py-1 bg-secondary/10 text-secondary font-label-caps rounded">Monthly</span></td>
+<td class="px-lg py-md font-data-mono text-on-surface">$29.00</td>
+<td class="px-lg py-md font-body-sm text-on-surface-variant">30 Days</td>
+<td class="px-lg py-md text-center">
+<label class="toggle-switch">
+<input type="checkbox" checked aria-label="Toggle visibility for Monthly Basic"/><span class="toggle-track"></span><span class="toggle-label sr-only">Visible</span>
+</label>
+<span class="text-[10px] text-secondary font-medium ml-1">Yes</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-secondary"></div><span class="text-body-sm text-secondary font-medium">Active</span></div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary" aria-label="Edit plan"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary" aria-label="Duplicate plan"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-error" aria-label="Deactivate plan"><span class="material-symbols-outlined text-sm">block</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/50 transition-colors cursor-pointer group">
+<td class="px-lg py-md"><div class="font-body-md font-semibold text-on-surface">Flex Quarterly</div><div class="text-[11px] text-on-surface-variant">SKU: PL-QTR-FLX</div></td>
+<td class="px-lg py-md"><span class="px-sm py-1 bg-secondary/10 text-secondary font-label-caps rounded">Quarterly</span></td>
+<td class="px-lg py-md font-data-mono text-on-surface">$85.00</td>
+<td class="px-lg py-md font-body-sm text-on-surface-variant">90 Days</td>
+<td class="px-lg py-md text-center">
+<label class="toggle-switch">
+<input type="checkbox" checked aria-label="Toggle visibility for Flex Quarterly"/><span class="toggle-track"></span><span class="toggle-label sr-only">Visible</span>
+</label>
+<span class="text-[10px] text-secondary font-medium ml-1">Yes</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-secondary"></div><span class="text-body-sm text-secondary font-medium">Active</span></div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary" aria-label="Edit plan"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary" aria-label="Duplicate plan"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-error" aria-label="Deactivate plan"><span class="material-symbols-outlined text-sm">block</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/50 transition-colors cursor-pointer group opacity-60">
+<td class="px-lg py-md"><div class="font-body-md font-semibold text-on-surface">Legacy 2023 Pass</div><div class="text-[11px] text-on-surface-variant">SKU: PL-LEG-OLD</div></td>
+<td class="px-lg py-md"><span class="px-sm py-1 bg-outline-variant text-on-surface-variant font-label-caps rounded">Archived</span></td>
+<td class="px-lg py-md font-data-mono text-on-surface">$15.00</td>
+<td class="px-lg py-md font-body-sm text-on-surface-variant">30 Days</td>
+<td class="px-lg py-md text-center">
+<label class="toggle-switch">
+<input type="checkbox" aria-label="Toggle visibility for Legacy 2023 Pass"/><span class="toggle-track"></span><span class="toggle-label sr-only">Hidden</span>
+</label>
+<span class="text-[10px] text-outline font-medium ml-1">No</span>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-outline"></div><span class="text-body-sm text-outline-variant font-medium">Inactive</span></div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-secondary" aria-label="Restore plan"><span class="material-symbols-outlined text-sm">restore</span></button>
+<button class="touch-target hover:bg-surface-container-high rounded text-on-surface-variant hover:text-error" aria-label="Delete plan permanently"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-lg py-md border-t border-outline-variant flex justify-between items-center text-body-sm text-on-surface-variant">
+<p>Showing 4 of 12 membership plans</p>
+<div class="flex gap-xs">
+<button class="touch-target hover:bg-surface-container-highest rounded transition-colors" aria-label="Previous page"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="touch-target px-md bg-primary/20 text-primary rounded font-bold" aria-label="Page 1">1</button>
+<button class="touch-target px-md hover:bg-surface-container-highest rounded transition-colors" aria-label="Page 2">2</button>
+<button class="touch-target px-md hover:bg-surface-container-highest rounded transition-colors" aria-label="Page 3">3</button>
+<button class="touch-target hover:bg-surface-container-highest rounded transition-colors" aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</section>
+</div>
+
+</div>
+</div>
+
+<button class="fixed bottom-lg right-lg w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30 touch-target" aria-label="Quick add plan"><span class="material-symbols-outlined text-3xl">post_add</span></button>
+</main>
+
+<div id="side-panel-overlay" class="side-panel-overlay fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-sm" onclick="closeSidePanel()">
+<div id="side-panel" class="side-panel max-w-2xl w-full h-full bg-surface-container border-l border-outline-variant flex flex-col" onclick="event.stopPropagation()">
+<div class="flex items-center justify-between border-b border-outline-variant px-lg py-md shrink-0">
+<h2 id="side-panel-title" class="font-headline-sm font-semibold text-on-surface">Edit Plan</h2>
+<button onclick="closeSidePanel()" class="touch-target rounded text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors" aria-label="Close panel"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-lg">
+<div class="space-y-lg">
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Plan Name</label>
+<input class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm focus:border-primary focus:outline-none transition-colors" placeholder="e.g. Premium Annual" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Price</label>
+<input class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm font-data-mono focus:border-primary focus:outline-none transition-colors" placeholder="299" type="number"/>
+</div>
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Period</label>
+<select class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm focus:border-primary focus:outline-none transition-colors appearance-none"><option>/mes</option><option>/trim</option><option>/año</option></select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Plan Type</label>
+<select class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm focus:border-primary focus:outline-none transition-colors appearance-none"><option>Mensual</option><option>Trimestral</option><option>Anual</option><option>Clases Sueltas</option><option>Pase Diario</option><option>Internal</option></select>
+</div>
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Duration (days)</label>
+<input class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm focus:border-primary focus:outline-none transition-colors" placeholder="365" type="number"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Max Visits (0 = unlimited)</label>
+<input class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm focus:border-primary focus:outline-none transition-colors" placeholder="0" type="number"/>
+</div>
+<div class="flex items-end">
+<label class="flex items-center gap-sm min-h-[44px] cursor-pointer"><input type="checkbox" class="w-4 h-4 rounded border-outline-variant bg-surface text-primary focus:ring-primary" checked/><span class="font-body-sm text-body-sm text-on-surface">Active</span></label>
+</div>
+</div>
+<div>
+<label class="block mb-1 font-label-caps text-label-caps text-on-surface-variant">Description</label>
+<textarea class="w-full bg-surface border border-outline-variant rounded py-2 px-3 text-on-surface text-body-sm focus:border-primary focus:outline-none transition-colors" rows="3" placeholder="Plan description, benefits, restrictions..."></textarea>
+</div>
+<div class="flex items-center gap-md pt-lg border-t border-outline-variant">
+<label class="flex items-center gap-sm min-h-[44px] cursor-pointer"><input type="checkbox" class="w-4 h-4 rounded border-outline-variant bg-surface text-primary focus:ring-primary" checked/><span class="font-body-sm text-body-sm text-on-surface">Visible to members (public)</span></label>
+<label class="flex items-center gap-sm min-h-[44px] cursor-pointer ml-auto"><input type="checkbox" class="w-4 h-4 rounded border-outline-variant bg-surface text-primary focus:ring-primary"/><span class="font-body-sm text-body-sm text-on-surface">Auto-renew enabled</span></label>
+</div>
+</div>
+</div>
+<div class="border-t border-outline-variant p-lg bg-surface-container-low shrink-0">
+<div class="flex justify-end gap-sm">
+<button onclick="closeSidePanel()" class="px-md min-h-[44px] rounded-lg text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors font-body-sm">Cancel</button>
+<button onclick="closeSidePanel()" class="px-md min-h-[44px] rounded-lg bg-primary text-on-primary hover:scale-105 active:scale-95 transition-all font-body-sm">Save Plan</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const emptyState = document.getElementById('empty-state');
+const plansGrid = document.getElementById('plans-grid');
+const toggleBtn = document.getElementById('toggle-empty-btn');
+let showingEmpty = false;
+
+toggleBtn.addEventListener('click', () => {
+showingEmpty = !showingEmpty;
+if (showingEmpty) {
+emptyState.classList.remove('hidden');
+plansGrid.classList.add('hidden');
+toggleBtn.textContent = 'Show Plans';
+} else {
+emptyState.classList.add('hidden');
+plansGrid.classList.remove('hidden');
+toggleBtn.textContent = 'Toggle Empty State';
+}
+});
+
+const panelOverlay = document.getElementById('side-panel-overlay');
+const panel = document.getElementById('side-panel');
+
+function openSidePanel(title) {
+document.getElementById('side-panel-title').textContent = title;
+panelOverlay.classList.add('active');
+panel.classList.add('active');
+document.body.style.overflow = 'hidden';
+}
+
+function closeSidePanel() {
+panelOverlay.classList.remove('active');
+panel.classList.remove('active');
+document.body.style.overflow = '';
+}
+
+document.getElementById('open-new-plan-btn').addEventListener('click', () => openSidePanel('Create New Plan'));
+document.getElementById('empty-create-btn').addEventListener('click', () => openSidePanel('Create New Plan'));
+document.querySelectorAll('.plan-card').forEach(card => {
+card.addEventListener('click', () => {
+const name = card.querySelector('.font-headline-sm').textContent;
+openSidePanel('Edit ' + name);
+});
+card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
+});
+
+document.querySelectorAll('.touch-target').forEach(btn => {
+btn.addEventListener('click', function(e) {
+if (this.closest('tr') && this.closest('tr').querySelector('.font-headline-sm')) { return; }
+if (this.closest('.toggle-switch')) { return; }
+const actionLabel = this.getAttribute('aria-label');
+if (actionLabel === 'Edit plan') {
+const row = this.closest('tr');
+const name = row ? row.querySelector('.font-body-md.font-semibold').textContent : 'Plan';
+openSidePanel('Edit ' + name);
+}
+});
+});
+
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape' && panelOverlay.classList.contains('active')) closeSidePanel();
+});
+</script>
+</body>
+</html>

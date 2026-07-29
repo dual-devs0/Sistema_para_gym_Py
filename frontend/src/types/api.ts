@@ -15,6 +15,17 @@ export interface Member {
   updated_at: string;
 }
 
+export interface MemberListItem {
+  id: string;
+  avatar?: string;
+  name: string;
+  memberId: string;
+  plan: string;
+  status: "active" | "frozen" | "cancelled";
+  expiration: string;
+  lastCheckin: string;
+}
+
 export interface MembershipPlan {
   id: string;
   gym_id: string;
@@ -70,6 +81,30 @@ export interface DashboardSummary {
   members_expiring_soon: number;
 }
 
+export interface DashboardRevenueResponse {
+  labels: string[];
+  data: number[];
+}
+
+export interface DashboardMemberStatusBreakdown {
+  active: number;
+  frozen: number;
+  cancelled: number;
+}
+
+export interface ExpiringMembership {
+  member_id: string;
+  member_name: string;
+  plan_name: string;
+  plan_type: string;
+  expiration_date: string;
+  days_remaining: number;
+}
+
+export interface DashboardExpiringResponse {
+  items: ExpiringMembership[];
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
@@ -87,4 +122,17 @@ export interface GymSettings {
   currency: string;
   timezone: string;
   business_hours: Record<string, string> | null;
+}
+
+export interface User {
+  id: string;
+  gym_id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  phone: string | null;
+  avatar_url: string | null;
+  is_active: boolean;
+  last_login: string | null;
+  gym?: GymSettings;
 }

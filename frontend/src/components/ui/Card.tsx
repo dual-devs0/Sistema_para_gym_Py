@@ -1,15 +1,23 @@
 import { ReactNode } from "react";
 
 interface CardProps {
-  title?: string;
+  title?: ReactNode;
   children: ReactNode;
   className?: string;
+  padding?: "none" | "sm" | "md" | "lg";
 }
 
-export default function Card({ title, children, className = "" }: CardProps) {
+const paddingStyles = {
+  none: "",
+  sm: "p-sm",
+  md: "p-md",
+  lg: "p-lg",
+};
+
+export default function Card({ title, children, className = "", padding = "lg" }: CardProps) {
   return (
-    <div className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm ${className}`}>
-      {title && <h3 className="mb-4 text-lg font-semibold text-gray-900">{title}</h3>}
+    <div className={`bg-surface-container border border-outline-variant rounded-xl ${paddingStyles[padding]} ${className}`}>
+      {title && <h3 className="mb-md font-headline-sm text-headline-sm font-semibold text-on-surface">{title}</h3>}
       {children}
     </div>
   );

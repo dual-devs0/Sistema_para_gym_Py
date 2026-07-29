@@ -3,23 +3,47 @@ import { InputHTMLAttributes, forwardRef } from "react";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  helperText?: string;
+  rightElement?: React.ReactNode;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, className = "", ...props }, ref) => {
-  return (
-    <div className="flex flex-col gap-1">
-      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
-      <input
-        ref={ref}
-        className={`rounded-lg border px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary-500 ${
-          error ? "border-red-500 focus:ring-red-500" : "border-gray-300"
-        } ${className}`}
-        {...props}
-      />
-      {error && <span className="text-xs text-red-600">{error}</span>}
-    </div>
-  );
-});
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, error, helperText, rightElement, className = "", id, ...props }, ref) => {
+    const inputId = id || props.name;
+
+    return (
+      <div className="w-full">
+        {label && (
+          <label htmlFor={inputId} className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
+            {label}
+          </label>
+        )}
+        <div className="relative">
+          <input
+            ref={ref}
+            id={inputId}
+            className={`w-full rounded-lg bg-surface border border-outline-variant transition-colors 
+              ${error ? "border-error focus:border-error focus:ring-error/20" : "border-outline-variant focus:border-primary focus:ring-primary/20"}
+              px-sm py-2 text-body-sm text-on-surface placeholder:text-on-surface-variant min-h-[44px]
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background
+              disabled:opacity-50 disabled:cursor-not-allowed
+              ${rightElement ? "pr-11" : ""}
+              ${className}`}
+            {...props}
+          />
+          {rightElement && (
+            <div className="absolute right-0 top-0 h-full flex items-center pr-3">
+              {rightElement}
+            </div>
+          )}
+        </div>
+        {error && <p className="mt-1 text-[11px] text-error" role="alert">{error}</p>}
+        {helperText && !error && <p className="mt-1 text-[11px] text-on-surface-variant">{helperText}</p>}
+      </div>
+    );
+  }
+);
 
 Input.displayName = "Input";
+
 export default Input;

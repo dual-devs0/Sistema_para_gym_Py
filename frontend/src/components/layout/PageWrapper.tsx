@@ -1,22 +1,19 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
+import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import TopBar from "./TopBar";
 
-interface Props {
-  title: string;
-  children: ReactNode;
-  action?: ReactNode;
-}
+export default function PageWrapper({ children }: { children?: ReactNode }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-export default function PageWrapper({ title, children, action }: Props) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          {action && <div className="flex gap-2">{action}</div>}
-        </div>
-        <div className="p-8">{children}</div>
+    <div className="flex min-h-screen bg-background">
+      <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <TopBar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <section className="flex-1 overflow-y-auto p-lg bg-surface-container-lowest">
+          {children ?? <Outlet />}
+        </section>
       </main>
     </div>
   );
