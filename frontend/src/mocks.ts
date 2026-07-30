@@ -2,7 +2,7 @@ import type {
   Member,
   DashboardSummary,
   DashboardRevenueResponse,
-  DashboardExpiringResponse,
+  DashboardExpiringItem,
   TokenResponse,
   User,
 } from "./types/api";
@@ -63,15 +63,15 @@ export const mockRevenue: DashboardRevenueResponse = {
   data: [840, 920, 1100, 1340, 1560, 1280, 1890, 2100, 2450, 2780, 3100, 3450, 3890, 4200, 4560, 4890, 5120, 5340, 5670, 5890, 6100, 6340, 6560, 6780, 7000, 7200, 7450, 7680, 7890, 8100],
 };
 
-export const mockExpiring: DashboardExpiringResponse = {
-  items: [
-    { member_id: "1", member_name: "Juan Pérez", plan_name: "Premium Anual", plan_type: "premium", expiration_date: "24 Oct 2023", days_remaining: 2 },
-    { member_id: "2", member_name: "María García", plan_name: "Básico Mensual", plan_type: "basic", expiration_date: "25 Oct 2023", days_remaining: 3 },
-    { member_id: "3", member_name: "Ricardo Silva", plan_name: "Estudiantil", plan_type: "student", expiration_date: "25 Oct 2023", days_remaining: 3 },
-    { member_id: "4", member_name: "Ana Martínez", plan_name: "Premium Anual", plan_type: "premium", expiration_date: "26 Oct 2023", days_remaining: 4 },
-    { member_id: "5", member_name: "Carlos López", plan_name: "Básico Mensual", plan_type: "basic", expiration_date: "26 Oct 2023", days_remaining: 4 },
-  ],
-};
+// Matches the real /dashboard/expiring shape: backend only sends IDs, no
+// member/plan names yet (see report to backend re: get_expiring() gap).
+export const mockExpiring: DashboardExpiringItem[] = [
+  { membership_id: "m1", member_id: "1", plan_id: "p1", end_date: "2026-08-01", status: "active" },
+  { membership_id: "m2", member_id: "2", plan_id: "p2", end_date: "2026-08-02", status: "active" },
+  { membership_id: "m3", member_id: "3", plan_id: "p1", end_date: "2026-08-02", status: "active" },
+  { membership_id: "m4", member_id: "4", plan_id: "p3", end_date: "2026-08-03", status: "active" },
+  { membership_id: "m5", member_id: "5", plan_id: "p2", end_date: "2026-08-03", status: "active" },
+];
 
 export const mockMembers: Member[] = [
   { id: "1", gym_id: "mock-gym-1", first_name: "Sara", last_name: "Jiménez", email: "sara@example.com", phone: null, document_number: null, birth_date: null, gender: null, photo_url: null, notes: null, status: "active", registered_at: "2026-01-10", updated_at: "2026-08-15" },
