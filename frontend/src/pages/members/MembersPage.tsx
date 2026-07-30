@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -13,6 +13,11 @@ import type { Member, MemberListItem } from "../../types/api";
 
 async function fetchMembers(): Promise<Member[]> {
   const { data } = await api.get("/members");
+  return data;
+}
+
+async function createMember(body: { first_name: string; last_name: string; email?: string; phone?: string; document_number?: string }) {
+  const { data } = await api.post("/members", body);
   return data;
 }
 
@@ -32,16 +37,38 @@ function transformMembers(members: Member[]): MemberListItem[] {
 const ITEMS_PER_PAGE = 10;
 
 export default function MembersPage() {
+  const queryClient = useQueryClient();
   const { data: members, isLoading } = useQuery({
     queryKey: ["members"],
     queryFn: fetchMembers,
   });
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", document_number: "" });
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const createMutation = useMutation({
+    mutationFn: createMember,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      setModalOpen(false);
+      setForm({ first_name: "", last_name: "", email: "", phone: "", document_number: "" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate({
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email || undefined,
+      phone: form.phone || undefined,
+      document_number: form.document_number || undefined,
+    });
+  };
 
   const transformedMembers = useMemo(() => {
     if (!members) return [];
@@ -103,7 +130,6 @@ export default function MembersPage() {
 
   return (
     <div>
-      {/* Page Header */}
       <div className="mb-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface">Miembros</h1>
@@ -116,7 +142,6 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Filters */}
       <FilterBar
         searchValue={searchValue}
         onSearchChange={setSearchValue}
@@ -128,7 +153,6 @@ export default function MembersPage() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      {/* Members Table */}
       <Card className="flex flex-col">
         <MembersTable
           members={paginatedMembers}
@@ -138,7 +162,6 @@ export default function MembersPage() {
           loading={isLoading}
         />
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
@@ -151,7 +174,6 @@ export default function MembersPage() {
           />
         )}
 
-        {/* Empty State */}
         {!isLoading && transformedMembers.length === 0 && (
           <div className="p-xl text-center">
             <p className="font-body-md text-body-md text-on-surface-variant mb-sm">
@@ -168,34 +190,20 @@ export default function MembersPage() {
         )}
       </Card>
 
-      {/* Add Member Modal */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Agregar Nuevo Miembro" size="lg">
-        <div className="space-y-md">
-          <div className="grid grid-cols-2 gap-md">
-            <Input label="Nombre" placeholder="Juan" />
-            <Input label="Apellido" placeholder="Pérez" />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Nombre" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} required />
+            <Input label="Apellido" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} required />
           </div>
-          <div className="grid grid-cols-2 gap-md">
-            <Input label="Email" type="email" placeholder="correo@ejemplo.com" />
-            <Input label="Teléfono" type="tel" placeholder="+52 55 1234 5678" />
+          <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Input label="Teléfono" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Input label="Documento" value={form.document_number} onChange={(e) => setForm({ ...form, document_number: e.target.value })} />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" loading={createMutation.isPending}>Guardar</Button>
           </div>
-          <Input label="Documento" placeholder="Nro. de identidad/pasaporte" />
-          <div className="grid grid-cols-2 gap-md">
-            <Input label="Fecha de Nac." type="date" />
-            <select className="w-full bg-surface border border-outline-variant rounded py-2 pl-3 pr-10 text-on-surface text-body-sm appearance-none focus:border-primary focus:ring-0 focus:outline-none transition-colors">
-              <option>Género: Masculino</option>
-              <option>Género: Femenino</option>
-              <option>Género: Otro</option>
-            </select>
-          </div>
-          <Input label="Notas" placeholder="Alergias, restricciones, etc." />
-          <div className="flex justify-end gap-sm pt-md border-t border-outline-variant">
-            <Button variant="ghost" onClick={() => setModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => setModalOpen(false)}>Guardar Miembro</Button>
-          </div>
-        </div>
+        </form>
       </Modal>
     </div>
   );

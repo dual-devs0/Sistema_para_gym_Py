@@ -105,6 +105,37 @@ export interface DashboardExpiringResponse {
   items: ExpiringMembership[];
 }
 
+export interface UserInfo {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  gym_id: string | null;
+  gym: { name: string } | null;
+}
+
+export interface DashboardRevenueResponse {
+  labels: string[];
+  data: number[];
+}
+
+export interface DashboardExpiringItem {
+  membership_id: string;
+  member_id: string;
+  plan_id: string;
+  end_date: string;
+  status: string;
+}
+
+export interface DashboardExpiringResponse {
+  items: DashboardExpiringItem[];
+}
+
+export interface AttendanceTodayResponse {
+  total_checkins: number;
+  active_now: number;
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;

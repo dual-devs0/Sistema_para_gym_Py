@@ -1,126 +1,130 @@
-import { useState, useCallback } from "react";
-import RegisterPaymentPanel from "../../components/feature/RegisterPaymentPanel";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import PageWrapper from "../../components/layout/PageWrapper";
+import Card from "../../components/ui/Card";
+import Button from "../../components/ui/Button";
+import Modal from "../../components/ui/Modal";
+import Input from "../../components/ui/Input";
+import api from "../../services/api";
+import type { Payment } from "../../types/api";
 
-interface PaymentRecord {
-  id: string;
-  name: string;
-  initials: string;
-  plan: string;
-  amount: number;
-  method: string;
-  methodIcon: string;
-  methodColor: string;
-  date: string;
-  status: "paid" | "refunded";
+async function fetchPayments(): Promise<Payment[]> {
+  const { data } = await api.get("/payments");
+  return data;
 }
 
-const mockPayments: PaymentRecord[] = [
-  { id: "1", name: "Marcos Aurelio", initials: "MA", plan: "Básico Mensual", amount: 29.00, method: "Efectivo", methodIcon: "payments", methodColor: "text-secondary", date: "24 Oct 2023", status: "paid" },
-  { id: "2", name: "David Chen", initials: "DC", plan: "Premium Anual", amount: 299.00, method: "Tarjeta", methodIcon: "credit_card", methodColor: "text-tertiary", date: "22 Oct 2023", status: "paid" },
-  { id: "3", name: "Elena Rodríguez", initials: "ER", plan: "Flex Trimestral", amount: 85.00, method: "Reembolsado", methodIcon: "reply", methodColor: "text-error", date: "20 Oct 2023", status: "refunded" },
-  { id: "4", name: "Sara Jiménez", initials: "SJ", plan: "Pase Estudiantil", amount: 19.00, method: "Efectivo", methodIcon: "payments", methodColor: "text-secondary", date: "19 Oct 2023", status: "paid" },
-  { id: "5", name: "Tomás Herrera", initials: "TH", plan: "Pase Diario", amount: 15.00, method: "QR/MP", methodIcon: "qr_code_2", methodColor: "text-primary", date: "18 Oct 2023", status: "paid" },
-];
-
-const mockMembers = [
-  { id: "1", name: "Marcos Aurelio", initials: "MA", planName: "Plan Básico Mensual", planPrice: 29.00, dueDate: "Vence 24 Oct" },
-  { id: "2", name: "David Chen", initials: "DC", planName: "Premium Anual", planPrice: 299.00, dueDate: "Vence 15 Nov" },
-  { id: "3", name: "Sara Jiménez", initials: "SJ", planName: "Pase Estudiantil", planPrice: 19.00, dueDate: "Vence 28 Oct" },
-];
+async function registerPayment(body: { member_id: string; amount: number; payment_method: string; reference?: string; notes?: string }) {
+  const { data } = await api.post("/payments", body);
+  return data;
+}
 
 export default function PaymentsPage() {
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [payments, setPayments] = useState<PaymentRecord[]>(mockPayments);
+  const queryClient = useQueryClient();
+  const { data: payments, isLoading } = useQuery({ queryKey: ["payments"], queryFn: fetchPayments });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ member_id: "", amount: "", payment_method: "efectivo", reference: "", notes: "" });
 
-  const handleRegister = useCallback(async (data: { memberId: string }) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    const member = mockMembers.find((m) => m.id === data.memberId);
-    if (!member) throw new Error("Member not found");
-    const newPayment: PaymentRecord = {
-      id: `p${Date.now()}`,
-      name: member.name,
-      initials: member.initials,
-      plan: member.planName,
-      amount: member.planPrice,
-      method: "Cash",
-      methodIcon: "payments",
-      methodColor: "text-secondary",
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      status: "paid",
-    };
-    setPayments((prev) => [newPayment, ...prev]);
-  }, []);
+  const createMutation = useMutation({
+    mutationFn: registerPayment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      setModalOpen(false);
+      setForm({ member_id: "", amount: "", payment_method: "efectivo", reference: "", notes: "" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate({
+      member_id: form.member_id,
+      amount: parseFloat(form.amount),
+      payment_method: form.payment_method,
+      reference: form.reference || undefined,
+      notes: form.notes || undefined,
+    });
+  };
 
   return (
-    <div>
-      <div className="flex justify-between items-end mb-lg">
-        <div>
-          <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Pagos</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Historial de transacciones y registro de pagos</p>
-        </div>
-        <button
-          onClick={() => setPanelOpen(true)}
-          className="inline-flex items-center gap-sm px-lg min-h-[44px] bg-primary text-on-primary font-semibold rounded-lg hover:opacity-90 active:scale-[0.98] transition-all"
-        >
-          <span className="material-symbols-outlined">add</span>
-          Registrar Pago
-        </button>
-      </div>
+    <PageWrapper
+      title="Pagos"
+      action={
+        <Button onClick={() => setModalOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Registrar pago
+        </Button>
+      }
+    >
+      <Card>
+        {isLoading ? (
+          <p className="text-center text-gray-400 py-8">Cargando pagos...</p>
+        ) : payments && payments.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-gray-500">
+                  <th className="pb-3 pr-4 font-medium">Miembro</th>
+                  <th className="pb-3 pr-4 font-medium">Monto</th>
+                  <th className="pb-3 pr-4 font-medium">Método</th>
+                  <th className="pb-3 pr-4 font-medium">Referencia</th>
+                  <th className="pb-3 pr-4 font-medium">Estado</th>
+                  <th className="pb-3 font-medium">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((p) => (
+                  <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 pr-4 font-medium text-gray-900">{p.member_name ?? "—"}</td>
+                    <td className="py-3 pr-4 text-gray-600">${p.amount.toFixed(2)}</td>
+                    <td className="py-3 pr-4 text-gray-600 capitalize">{p.payment_method}</td>
+                    <td className="py-3 pr-4 text-gray-600">{p.reference ?? "—"}</td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                        p.status === "completed" ? "bg-green-100 text-green-700" :
+                        p.status === "refunded" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {p.status === "completed" ? "Completado" : p.status === "refunded" ? "Reembolsado" : p.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-gray-600">
+                      {p.paid_at ? new Date(p.paid_at).toLocaleDateString("es-MX") : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="py-12 text-center">
+            <p className="text-gray-400">No hay pagos registrados todavía.</p>
+            <Button variant="secondary" className="mt-4" onClick={() => setModalOpen(true)}>
+              Registrar primer pago
+            </Button>
+          </div>
+        )}
+      </Card>
 
-      <div className="bg-surface-container border border-outline-variant rounded-lg overflow-hidden">
-        <div className="grid grid-cols-5 bg-surface-container-lowest border-b border-outline-variant px-lg py-3 font-label-caps text-label-caps text-on-surface">
-          <div className="col-span-2">Miembro</div>
-          <div>Monto</div>
-          <div>Método</div>
-          <div className="text-right">Fecha</div>
-        </div>
-        <div className="divide-y divide-outline-variant">
-          {payments.map((payment) => (
-            <div
-              key={payment.id}
-              className={`grid grid-cols-5 px-lg py-4 hover:bg-surface-container-high transition-colors items-center ${
-                payment.status === "refunded" ? "opacity-60" : ""
-              }`}
-            >
-              <div className="col-span-2 flex items-center gap-md">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold shrink-0 ${
-                  payment.status === "refunded" ? "bg-error/20 text-error" : "bg-primary/20 text-primary"
-                }`}>
-                  {payment.initials}
-                </div>
-                <div>
-                  <div className="font-body-md text-body-md font-bold text-on-surface">{payment.name}</div>
-                  <div className="text-on-surface-variant text-[12px]">{payment.plan}</div>
-                </div>
-              </div>
-              <div className={`font-data-mono text-data-mono ${payment.status === "refunded" ? "text-error line-through" : "text-on-surface"}`}>
-                ${payment.amount.toFixed(2)}
-              </div>
-              <div>
-                <span className={`flex items-center gap-1 text-xs font-label-caps ${payment.methodColor}`}>
-                  {payment.status === "refunded" ? (
-                    <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>{payment.methodIcon}</span>
-                  ) : (
-                    <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>{payment.methodIcon}</span>
-                  )}
-                  {payment.method}
-                </span>
-              </div>
-              <div className="text-right font-data-mono text-data-mono text-outline">{payment.date}</div>
-            </div>
-          ))}
-          {payments.length === 0 && (
-            <div className="px-lg py-xl text-center text-on-surface-variant font-body-sm">No hay pagos registrados.</div>
-          )}
-        </div>
-      </div>
-
-      <RegisterPaymentPanel
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
-        members={mockMembers}
-        onRegister={handleRegister}
-      />
-    </div>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Registrar pago">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="ID del miembro" value={form.member_id} onChange={(e) => setForm({ ...form, member_id: e.target.value })} required />
+          <Input label="Monto" type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Método de pago</label>
+            <select value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })} className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500">
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <Input label="Referencia (opcional)" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
+          <Input label="Notas (opcional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" loading={createMutation.isPending}>Registrar</Button>
+          </div>
+        </form>
+      </Modal>
+    </PageWrapper>
   );
 }
