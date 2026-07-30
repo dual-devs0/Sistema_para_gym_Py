@@ -24,6 +24,7 @@ async def init_redis() -> Redis | None:
         logger.warning("Redis unavailable (%s), using fakeredis fallback", exc)
         try:
             from fakeredis.aioredis import FakeRedis
+
             _fake_redis = FakeRedis(decode_responses=True)
             return _fake_redis
         except ImportError:

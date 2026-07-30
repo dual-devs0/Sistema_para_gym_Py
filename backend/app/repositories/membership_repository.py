@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.membership import MembershipPlan, MemberMembership
+from app.models.membership import MemberMembership, MembershipPlan
 
 
 class MembershipPlanRepository:
@@ -84,11 +84,15 @@ class MemberMembershipRepository:
 
     async def count_expiring_soon(self, gym_id: uuid.UUID, days: int = 3) -> int:
         from datetime import timedelta
+
         from sqlalchemy import func
+
         from app.models.member import Member
+
         end = date.today() + timedelta(days=days)
         result = await self.db.execute(
-            select(func.count()).select_from(MemberMembership)
+            select(func.count())
+            .select_from(MemberMembership)
             .join(Member)
             .where(
                 Member.gym_id == gym_id,
@@ -101,7 +105,9 @@ class MemberMembershipRepository:
 
     async def list_expiring_soon(self, gym_id: uuid.UUID, days: int = 3) -> list[MemberMembership]:
         from datetime import timedelta
+
         from app.models.member import Member
+
         end = date.today() + timedelta(days=days)
         result = await self.db.execute(
             select(MemberMembership)

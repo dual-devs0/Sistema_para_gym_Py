@@ -9,8 +9,12 @@ from app.models.base import Base, TimestampMixin, UUIDMixin
 
 
 class AttendanceLog(Base, TimestampMixin, UUIDMixin):
-    member_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("member.id"), nullable=False, index=True)
-    member_membership_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("membermembership.id"), nullable=True)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("member.id"), nullable=False, index=True
+    )  # noqa: E501
+    member_membership_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("membermembership.id"), nullable=True
+    )  # noqa: E501
     check_in: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     check_out: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

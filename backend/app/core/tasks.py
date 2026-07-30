@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.core.redis import get_redis
@@ -19,14 +19,17 @@ class TaskQueue:
             "id": task_id,
             "name": task_name,
             "payload": payload,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "attempts": 0,
         }
         if redis is None:
             return task_id
         key = f"{TaskQueue.QUEUE_PREFIX}{queue_name}"
         if delay_seconds > 0:
-            await redis.zadd(f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}", {json.dumps(task): datetime.now(timezone.utc).timestamp() + delay_seconds})
+            await redis.zadd(
+                f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}",
+                {json.dumps(task): datetime.now(UTC).timestamp() + delay_seconds},
+            )  # noqa: E501
         else:
             await redis.rpush(key, json.dumps(task))
         return task_id
@@ -60,7 +63,7 @@ class TaskQueue:
         redis = await get_redis()
         if redis is None:
             return []
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
         items = await redis.zrangebyscore(f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}", 0, now)
         if items:
             await redis.zremrangebyscore(f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}", 0, now)

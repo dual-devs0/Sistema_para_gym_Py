@@ -1,12 +1,11 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictException, ForbiddenException, UnauthorizedException
 from app.core.redis import get_redis
 from app.core.security import (
-    TOKEN_TYPE_ACCESS,
     TOKEN_TYPE_PASSWORD_RESET,
     TOKEN_TYPE_REFRESH,
     create_access_token,
@@ -38,9 +37,9 @@ class AuthService:
 
         redis = await get_redis()
         if redis is not None:
-            await redis.setex(f"refresh:{jti}", int((expires_at - datetime.now(timezone.utc)).total_seconds()), str(user.id))
+            await redis.setex(f"refresh:{jti}", int((expires_at - datetime.now(UTC)).total_seconds()), str(user.id))
 
-        user.last_login = datetime.now(timezone.utc)
+        user.last_login = datetime.now(UTC)
         await self.repo.update(user)
 
         return access_token, refresh_token, user, previous_login
@@ -72,7 +71,7 @@ class AuthService:
         access_token = create_access_token(str(user.id), str(user.gym_id))
         new_refresh_token, new_jti, expires_at = create_refresh_token(str(user.id))
         if redis is not None:
-            await redis.setex(f"refresh:{new_jti}", int((expires_at - datetime.now(timezone.utc)).total_seconds()), str(user.id))
+            await redis.setex(f"refresh:{new_jti}", int((expires_at - datetime.now(UTC)).total_seconds()), str(user.id))
 
         return access_token, new_refresh_token
 
@@ -94,7 +93,7 @@ class AuthService:
             password_hash=hash_password(password),
             full_name=full_name,
             role="owner",
-            password_changed_at=datetime.now(timezone.utc),
+            password_changed_at=datetime.now(UTC),
         )
         return await self.repo.create(user)
 
@@ -105,7 +104,9 @@ class AuthService:
         token, jti, expires_at = create_password_reset_token(str(user.id))
         redis = await get_redis()
         if redis is not None:
-            await redis.setex(f"password_reset:{jti}", int((expires_at - datetime.now(timezone.utc)).total_seconds()), str(user.id))
+            await redis.setex(
+                f"password_reset:{jti}", int((expires_at - datetime.now(UTC)).total_seconds()), str(user.id)
+            )  # noqa: E501
 
     async def reset_password(self, token: str, new_password: str) -> None:
         payload = decode_token(token)
@@ -131,5 +132,5 @@ class AuthService:
             raise UnauthorizedException("User not found")
 
         user.password_hash = hash_password(new_password)
-        user.password_changed_at = datetime.now(timezone.utc)
+        user.password_changed_at = datetime.now(UTC)
         await self.repo.update(user)

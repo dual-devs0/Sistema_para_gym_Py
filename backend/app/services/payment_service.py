@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,8 +27,13 @@ class PaymentService:
         return [await self._to_response(p) for p in payments]
 
     async def register(
-        self, gym_id: uuid.UUID, member_id: uuid.UUID, amount: float, payment_method: str,
-        reference: str | None = None, notes: str | None = None,
+        self,
+        gym_id: uuid.UUID,
+        member_id: uuid.UUID,
+        amount: float,
+        payment_method: str,
+        reference: str | None = None,
+        notes: str | None = None,
         member_membership_id: uuid.UUID | None = None,
     ) -> PaymentResponse:
         member = await self.member_repo.get_by_id(member_id, gym_id)
@@ -44,7 +49,7 @@ class PaymentService:
             reference=reference,
             notes=notes,
             status="paid",
-            paid_at=datetime.now(timezone.utc),
+            paid_at=datetime.now(UTC),
         )
         created = await self.repo.create(payment)
         await self._generate_invoice_number(created)

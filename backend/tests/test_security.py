@@ -33,7 +33,9 @@ async def test_missing_authorization_header(client: AsyncClient):
 async def test_expired_token(client: AsyncClient):
     response = await client.get(
         "/api/v1/members",
-        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjB9"},
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjB9"  # noqa: E501
+        },
     )
     assert response.status_code == 401
 

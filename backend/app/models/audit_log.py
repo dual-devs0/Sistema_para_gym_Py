@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -10,7 +10,9 @@ from app.models.base import Base, UUIDMixin
 
 class AuditLog(Base, UUIDMixin):
     gym_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gym.id"), nullable=False, index=True)
-    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True, index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("user.id"), nullable=True, index=True
+    )  # noqa: E501
     action: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     table_name: Mapped[str] = mapped_column(String(50), nullable=False)
     record_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)

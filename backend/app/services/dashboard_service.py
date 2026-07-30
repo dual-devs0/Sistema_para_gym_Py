@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,7 +38,7 @@ class DashboardService:
         }
 
     async def get_revenue_chart(self, gym_id: uuid.UUID, days: int = 30) -> dict:
-        since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=timezone.utc)
+        since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=UTC)
         payments = await self.payment_repo.list_paid_since(gym_id, since)
 
         daily = {}
@@ -54,7 +54,7 @@ class DashboardService:
         return {"labels": list(daily.keys()), "data": list(daily.values())}
 
     async def get_attendance_chart(self, gym_id: uuid.UUID, days: int = 7) -> dict:
-        since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=timezone.utc)
+        since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=UTC)
         logs = await self.attendance_repo.list_since(since)
 
         daily = {}

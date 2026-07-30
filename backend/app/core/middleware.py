@@ -4,7 +4,6 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.logging import correlation_id_var, request_id_var
-from app.core.config import settings
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):

@@ -6,7 +6,18 @@ from app.core.exceptions import NotFoundException
 from app.models.member import Member
 from app.repositories.member_repository import MemberRepository
 
-ALLOWED_MEMBER_FIELDS = {"first_name", "last_name", "email", "phone", "document_number", "birth_date", "gender", "photo_url", "notes", "status"}
+ALLOWED_MEMBER_FIELDS = {
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "document_number",
+    "birth_date",
+    "gender",
+    "photo_url",
+    "notes",
+    "status",
+}  # noqa: E501
 
 
 class MemberService:
@@ -23,7 +34,9 @@ class MemberService:
         return member
 
     async def create(self, gym_id: uuid.UUID, data: dict) -> Member:
-        member = Member(gym_id=gym_id, **{k: v for k, v in data.items() if k in ALLOWED_MEMBER_FIELDS and v is not None})
+        member = Member(
+            gym_id=gym_id, **{k: v for k, v in data.items() if k in ALLOWED_MEMBER_FIELDS and v is not None}
+        )  # noqa: E501
         return await self.repo.create(member)
 
     async def update(self, member_id: uuid.UUID, gym_id: uuid.UUID, data: dict) -> Member:

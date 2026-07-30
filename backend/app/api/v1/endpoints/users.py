@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_gym_id, get_current_user, require_permission, require_role
+from app.api.v1.deps import get_current_gym_id, require_permission
 from app.core.database import get_db
 from app.core.permissions import Perm
 from app.schemas.user import InviteResponse, UserCreate, UserInvite, UserResponse, UserUpdate

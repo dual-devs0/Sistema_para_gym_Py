@@ -12,7 +12,7 @@ Usage:
 import asyncio
 import sys
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -69,19 +69,31 @@ async def seed() -> None:
         else:
             print(f"User already exists: {user.email}")
 
-        existing_plans = (await db.execute(select(MembershipPlan).where(MembershipPlan.gym_id == gym.id))).scalars().all()
+        existing_plans = (
+            (await db.execute(select(MembershipPlan).where(MembershipPlan.gym_id == gym.id))).scalars().all()
+        )  # noqa: E501
         if existing_plans:
             plans = list(existing_plans)
             print(f"{len(plans)} plan(s) already exist, skipping plan seed")
         else:
             plans = [
                 MembershipPlan(
-                    id=uuid.uuid4(), gym_id=gym.id, name="Premium Anual",
-                    price=850000, duration_days=365, type="anual", is_active=True,
+                    id=uuid.uuid4(),
+                    gym_id=gym.id,
+                    name="Premium Anual",
+                    price=850000,
+                    duration_days=365,
+                    type="anual",
+                    is_active=True,
                 ),
                 MembershipPlan(
-                    id=uuid.uuid4(), gym_id=gym.id, name="Monthly Basic",
-                    price=120000, duration_days=30, type="mensual", is_active=True,
+                    id=uuid.uuid4(),
+                    gym_id=gym.id,
+                    name="Monthly Basic",
+                    price=120000,
+                    duration_days=30,
+                    type="mensual",
+                    is_active=True,
                 ),
             ]
             db.add_all(plans)
@@ -90,7 +102,9 @@ async def seed() -> None:
 
         existing_members = (await db.execute(select(Member).where(Member.gym_id == gym.id))).scalars().all()
         if existing_members:
-            print(f"{len(existing_members)} member(s) already exist, skipping member/membership/payment/attendance seed")
+            print(
+                f"{len(existing_members)} member(s) already exist, skipping member/membership/payment/attendance seed"
+            )  # noqa: E501
             return
 
         today = date.today()
@@ -126,8 +140,12 @@ async def seed() -> None:
                 start = today - timedelta(days=5)
                 end = today + timedelta(days=plan.duration_days - 5)
             mm = MemberMembership(
-                id=uuid.uuid4(), member_id=m.id, plan_id=plan.id,
-                start_date=start, end_date=end, price_paid=float(plan.price),
+                id=uuid.uuid4(),
+                member_id=m.id,
+                plan_id=plan.id,
+                start_date=start,
+                end_date=end,
+                price_paid=float(plan.price),
                 status=m.status if m.status != "active" else "active",
             )
             memberships.append(mm)
@@ -137,12 +155,16 @@ async def seed() -> None:
 
         payments = []
         for i, (m, plan) in enumerate(members):
-            paid_at = datetime.now(timezone.utc) - timedelta(days=i)
+            paid_at = datetime.now(UTC) - timedelta(days=i)
             p = Payment(
-                id=uuid.uuid4(), gym_id=gym.id, member_id=m.id,
+                id=uuid.uuid4(),
+                gym_id=gym.id,
+                member_id=m.id,
                 member_membership_id=memberships[i].id,
-                amount=float(plan.price), payment_method="cash",
-                status="paid", paid_at=paid_at,
+                amount=float(plan.price),
+                payment_method="cash",
+                status="paid",
+                paid_at=paid_at,
             )
             payments.append(p)
             db.add(p)
@@ -153,8 +175,9 @@ async def seed() -> None:
         for m, _ in members:
             if m.status != "cancelled":
                 log = AttendanceLog(
-                    id=uuid.uuid4(), member_id=m.id,
-                    check_in=datetime.now(timezone.utc) - timedelta(hours=checkins + 1),
+                    id=uuid.uuid4(),
+                    member_id=m.id,
+                    check_in=datetime.now(UTC) - timedelta(hours=checkins + 1),
                 )
                 db.add(log)
                 checkins += 1

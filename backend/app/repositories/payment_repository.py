@@ -1,11 +1,10 @@
 import uuid
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.member import Member
 from app.models.payment import Invoice, Payment
 
 
@@ -29,7 +28,7 @@ class PaymentRepository:
         return list(result.scalars().all())
 
     async def get_revenue_today(self, gym_id: uuid.UUID) -> float:
-        today_start = datetime.combine(date.today(), time.min, tzinfo=timezone.utc)
+        today_start = datetime.combine(date.today(), time.min, tzinfo=UTC)
         result = await self.db.execute(
             select(Payment).where(
                 Payment.gym_id == gym_id,
@@ -42,7 +41,7 @@ class PaymentRepository:
 
     async def get_revenue_month(self, gym_id: uuid.UUID) -> float:
         today = date.today()
-        month_start = datetime.combine(today.replace(day=1), time.min, tzinfo=timezone.utc)
+        month_start = datetime.combine(today.replace(day=1), time.min, tzinfo=UTC)
         result = await self.db.execute(
             select(Payment).where(
                 Payment.gym_id == gym_id,
@@ -64,16 +63,19 @@ class PaymentRepository:
 
     async def count_all(self) -> int:
         from sqlalchemy import func
+
         result = await self.db.execute(select(func.count()).select_from(Payment))
         return result.scalar() or 0
 
     async def list_paid_since(self, gym_id: uuid.UUID, since: datetime) -> list[Payment]:
         result = await self.db.execute(
-            select(Payment).where(
+            select(Payment)
+            .where(
                 Payment.gym_id == gym_id,
                 Payment.status == "paid",
                 Payment.paid_at >= since,
-            ).order_by(Payment.paid_at.asc())
+            )
+            .order_by(Payment.paid_at.asc())
         )
         return list(result.scalars().all())
 
