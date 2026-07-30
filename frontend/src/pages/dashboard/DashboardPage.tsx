@@ -36,18 +36,21 @@ export default function DashboardPage() {
     queryKey: ["dashboard-summary"],
     queryFn: fetchSummary,
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: revenue } = useQuery({
     queryKey: ["dashboard-revenue", revenuePeriod],
     queryFn: () => fetchRevenue(DAYS_MAP[revenuePeriod]),
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: expiring } = useQuery({
     queryKey: ["dashboard-expiring"],
     queryFn: fetchExpiring,
     staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const revenueChartData = revenue?.labels.map((label, i) => ({
