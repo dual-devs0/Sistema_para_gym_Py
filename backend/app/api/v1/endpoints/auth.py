@@ -59,6 +59,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "role": current_user.role,
         "gym_id": str(current_user.gym_id) if current_user.gym_id else None,
         "gym": {"name": current_user.gym.name} if current_user.gym else None,
+        "last_login": current_user.last_login.isoformat() if current_user.last_login else None,
     }
 
 

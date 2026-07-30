@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class MembershipPlanResponse(BaseModel):
@@ -17,6 +18,11 @@ class MembershipPlanResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("id", "gym_id", mode="before")
+    @classmethod
+    def coerce_uuid(cls, v):
+        return str(v) if isinstance(v, UUID) else v
 
 
 class MembershipPlanCreate(BaseModel):
@@ -52,6 +58,11 @@ class MemberMembershipResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("id", "member_id", "plan_id", mode="before")
+    @classmethod
+    def coerce_uuid(cls, v):
+        return str(v) if isinstance(v, UUID) else v
 
 
 class AssignPlanRequest(BaseModel):

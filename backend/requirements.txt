@@ -1,3 +1,11 @@
+# =============================================================================
+# GymPro API — Python dependencies
+# =============================================================================
+# Python 3.11+ required (tested on 3.12). Install with:
+#   python -m venv .venv
+#   .venv\Scripts\pip install -r requirements.txt
+# =============================================================================
+
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 sqlalchemy[asyncio]==2.0.35
@@ -7,8 +15,10 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 pyjwt==2.9.0
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1  # pin below latest: passlib 1.7.4's backend check breaks on bcrypt>=4.1
 python-multipart==0.0.12
 redis[hiredis]==5.1.1
+fakeredis==2.37.0  # dev fallback when real Redis is unavailable
 httpx==0.27.2
 structlog==24.4.0
 sentry-sdk==2.14.0

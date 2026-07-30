@@ -30,6 +30,13 @@ class MemberRepository:
         )
         return result.scalar() or 0
 
+    async def count_by_status(self, gym_id: uuid.UUID, status: str) -> int:
+        from sqlalchemy import func
+        result = await self.db.execute(
+            select(func.count()).select_from(Member).where(Member.gym_id == gym_id, Member.status == status, Member.deleted_at.is_(None))
+        )
+        return result.scalar() or 0
+
     async def count_new_this_month(self, gym_id: uuid.UUID) -> int:
         from sqlalchemy import func
         month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)

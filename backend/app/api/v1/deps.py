@@ -14,6 +14,8 @@ from app.models.user import User
 
 async def _check_token_blacklist(jti: str) -> None:
     redis = await get_redis()
+    if redis is None:
+        return
     blacklisted = await redis.get(f"token:blacklist:{jti}")
     if blacklisted:
         raise UnauthorizedException("Token has been revoked")

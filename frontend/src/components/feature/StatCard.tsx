@@ -7,25 +7,22 @@ interface Props {
   trend?: { value: number; direction: "up" | "down"; label: string };
   icon: ReactNode;
   iconColor: "primary" | "secondary" | "tertiary" | "error";
-  variant?: "default" | "warning";
 }
 
 const iconBg: Record<string, string> = {
-  primary: "bg-primary-100 text-primary-600",
-  secondary: "bg-green-100 text-green-600",
-  tertiary: "bg-blue-100 text-blue-600",
-  error: "bg-red-100 text-red-600",
+  primary: "bg-[#c0c1ff1a] text-primary",
+  secondary: "bg-[#4edea31a] text-secondary",
+  tertiary: "bg-[#ffb95f1a] text-tertiary",
+  error: "bg-[#ffb4ab1a] text-error",
 };
 
-export default function StatCard({ label, value, prefix, trend, icon, iconColor, variant = "default" }: Props) {
+export default function StatCard({ label, value, prefix, trend, icon, iconColor }: Props) {
   return (
-    <div className={`rounded-xl border p-5 shadow-sm ${
-      variant === "warning" ? "border-yellow-200 bg-yellow-50" : "border-gray-200 bg-white"
-    }`}>
+    <div className="rounded-xl border border-outline-variant bg-surface-container p-5 transition-all duration-200 hover:scale-[1.03] hover:border-primary/30 active:scale-[0.97] cursor-pointer select-none">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-500">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">
+          <p className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-on-surface tabular-nums">
             {prefix}{typeof value === "number" ? value.toLocaleString() : value}
           </p>
         </div>
@@ -33,10 +30,10 @@ export default function StatCard({ label, value, prefix, trend, icon, iconColor,
       </div>
       {trend && (
         <div className="mt-3 flex items-center gap-1 text-xs">
-          <span className={trend.direction === "up" ? "text-green-600" : "text-red-600"}>
+          <span className={trend.direction === "up" ? "text-secondary font-semibold" : "text-error font-semibold"}>
             {trend.direction === "up" ? "↑" : "↓"} {trend.value}%
           </span>
-          <span className="text-gray-400">{trend.label}</span>
+          <span className="text-on-surface-variant">{trend.label}</span>
         </div>
       )}
     </div>

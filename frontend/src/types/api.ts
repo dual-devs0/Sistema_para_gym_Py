@@ -76,6 +76,8 @@ export interface DashboardSummary {
   revenue_today: number;
   revenue_month: number;
   active_members: number;
+  frozen_members: number;
+  cancelled_members: number;
   new_members_month: number;
   checkins_today: number;
   members_expiring_soon: number;
@@ -99,6 +101,7 @@ export interface UserInfo {
   role: string;
   gym_id: string | null;
   gym: { name: string } | null;
+  last_login: string | null;
 }
 
 export interface DashboardRevenueResponse {
@@ -109,7 +112,9 @@ export interface DashboardRevenueResponse {
 export interface DashboardExpiringItem {
   membership_id: string;
   member_id: string;
+  member_name: string;
   plan_id: string;
+  plan_name: string;
   end_date: string;
   status: string;
 }

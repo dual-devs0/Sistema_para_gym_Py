@@ -20,7 +20,7 @@ def generate_request_id() -> str:
 
 
 class RequestIdFilter(logging.Filter):
-    def filter(self, record: logging.Record) -> bool:
+    def filter(self, record: logging.LogRecord) -> bool:
         record.request_id = get_request_id()
         record.correlation_id = get_correlation_id()
         return True

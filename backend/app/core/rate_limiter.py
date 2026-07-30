@@ -3,17 +3,17 @@ from collections.abc import Callable
 from functools import wraps
 
 from fastapi import Request
-from redis.asyncio import Redis
-
 from app.core.config import settings
 from app.core.exceptions import RateLimitException
 
 
 class RateLimiter:
-    def __init__(self, redis: Redis):
+    def __init__(self, redis):
         self.redis = redis
 
     async def check(self, key: str, max_requests: int, window_seconds: int = 60) -> None:
+        if self.redis is None:
+            return
         now = int(time.time())
         window_key = f"ratelimit:{key}:{now // window_seconds}"
         count = await self.redis.incr(window_key)

@@ -18,17 +18,17 @@ interface Props {
 }
 
 const planColors: Record<string, string> = {
-  premium: "bg-purple-100 text-purple-700",
-  basic: "bg-blue-100 text-blue-700",
-  student: "bg-green-100 text-green-700",
-  other: "bg-gray-100 text-gray-700",
+  premium: "bg-[#c0c1ff1a] text-primary",
+  basic: "bg-[#4ede3a1a] text-secondary",
+  student: "bg-[#ffb95f1a] text-tertiary",
+  other: "bg-surface-container-high text-on-surface-variant",
 };
 
 export default function ExpiringTable({ members, onRenew }: Props) {
   if (members.length === 0) {
     return (
       <Card title="Próximos a vencer">
-        <p className="text-sm text-gray-400">No hay membresías próximas a vencer.</p>
+        <p className="text-sm text-on-surface-variant">No hay membresías próximas a vencer.</p>
       </Card>
     );
   }
@@ -37,25 +37,25 @@ export default function ExpiringTable({ members, onRenew }: Props) {
     <Card title="Próximos a vencer">
       <div className="space-y-3">
         {members.map((m) => (
-          <div key={m.id} className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
+          <div key={m.id} className="flex items-center justify-between rounded-lg border border-outline-variant bg-surface-container p-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-highest text-sm font-semibold text-on-surface-variant">
                 {m.initials}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{m.name}</p>
+                <p className="text-sm font-medium text-on-surface">{m.name}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${planColors[m.planType] || planColors.other}`}>
                     {m.plan}
                   </span>
                   {m.daysUntilExpiry <= 3 && (
-                    <AlertTriangle size={14} className="text-yellow-500" />
+                    <AlertTriangle size={14} className="text-tertiary" />
                   )}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">{m.expirationDate}</span>
+              <span className="text-xs text-on-surface-variant">{m.expirationDate}</span>
               <Button variant="ghost" size="small" onClick={() => onRenew(m.id)}>
                 Renovar
               </Button>

@@ -112,6 +112,7 @@ class MemberMembershipRepository:
                 MemberMembership.end_date <= end,
                 MemberMembership.end_date >= date.today(),
             )
+            .options(selectinload(MemberMembership.member), selectinload(MemberMembership.plan))
         )
         return list(result.scalars().all())
 

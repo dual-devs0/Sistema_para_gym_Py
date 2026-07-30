@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.add_column("user", sa.Column("is_platform_staff", sa.Boolean, nullable=False, server_default="false"))
     op.add_column("user", sa.Column("password_changed_at", sa.DateTime(timezone=True), nullable=True))
     op.alter_column("user", "last_login", type_=sa.DateTime(timezone=True), postgresql_using="last_login::timestamptz")
-    op.create_index("ix_user_gym_id", "user", ["gym_id"])
+    op.create_index("ix_user_gym_id", "user", ["gym_id"], if_not_exists=True)
 
 
 def downgrade() -> None:

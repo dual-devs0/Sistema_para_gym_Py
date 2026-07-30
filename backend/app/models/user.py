@@ -21,5 +21,5 @@ class User(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    gym = relationship("Gym", back_populates="users")
+    gym = relationship("Gym", back_populates="users", lazy="selectin")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")
