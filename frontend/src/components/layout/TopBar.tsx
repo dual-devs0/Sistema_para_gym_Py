@@ -115,11 +115,7 @@ export default function TopBar({ sidebarCollapsed, onToggleSidebar }: TopBarProp
               <span className="text-[10px] text-on-surface-variant group-hover:text-primary">{user?.role || "Miembro"}</span>
             </div>
             <div className="w-8 h-8 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container text-xs font-bold border border-primary/20 overflow-hidden">
-              {user?.avatar_url ? (
-                <img className="w-full h-full object-cover" src={user.avatar_url} alt="" />
-              ) : (
-                <span className="font-bold text-xs">{initials}</span>
-              )}
+              <span className="font-bold text-xs">{initials}</span>
             </div>
           </button>
 

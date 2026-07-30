@@ -3,13 +3,13 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuth, fetchUser } = useAuth();
+  const { isAuth, loadUser } = useAuth();
 
   useEffect(() => {
     if (isAuth) {
-      fetchUser();
+      loadUser();
     }
-  }, [isAuth, fetchUser]);
+  }, [isAuth, loadUser]);
 
   if (!isAuth) {
     return <Navigate to="/login" replace />;

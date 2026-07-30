@@ -92,19 +92,6 @@ export interface DashboardMemberStatusBreakdown {
   cancelled: number;
 }
 
-export interface ExpiringMembership {
-  member_id: string;
-  member_name: string;
-  plan_name: string;
-  plan_type: string;
-  expiration_date: string;
-  days_remaining: number;
-}
-
-export interface DashboardExpiringResponse {
-  items: ExpiringMembership[];
-}
-
 export interface UserInfo {
   id: string;
   email: string;
