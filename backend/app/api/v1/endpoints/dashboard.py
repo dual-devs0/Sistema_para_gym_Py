@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.deps import get_current_gym_id, require_permission
 from app.core.database import get_db
 from app.core.permissions import Perm
-from app.schemas.dashboard import AttendanceChart, DashboardSummary, RevenueChart
+from app.schemas.dashboard import AttendanceChart, DashboardSummary, ExpiringMembership, RevenueChart
 from app.services.dashboard_service import DashboardService
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -47,7 +47,7 @@ async def attendance(
     return AttendanceChart(**data)
 
 
-@router.get("/expiring")
+@router.get("/expiring", response_model=list[ExpiringMembership])
 async def expiring(
     gym_id: uuid.UUID = Depends(get_current_gym_id),
     db: AsyncSession = Depends(get_db),

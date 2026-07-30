@@ -5,16 +5,18 @@ Revises:
 Create Date: 2026-07-28 19:38:00.000000
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 revision: str = "001"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -102,7 +104,9 @@ def upgrade() -> None:
         "attendancelog",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("member_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("member.id"), nullable=False, index=True),
-        sa.Column("member_membership_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("membermembership.id"), nullable=True),
+        sa.Column(
+            "member_membership_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("membermembership.id"), nullable=True
+        ),  # noqa: E501
         sa.Column("check_in", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("check_out", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -113,7 +117,9 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("gym_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("gym.id"), nullable=False, index=True),
         sa.Column("member_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("member.id"), nullable=False, index=True),
-        sa.Column("member_membership_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("membermembership.id"), nullable=True),
+        sa.Column(
+            "member_membership_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("membermembership.id"), nullable=True
+        ),  # noqa: E501
         sa.Column("amount", sa.Numeric(10, 2), nullable=False),
         sa.Column("payment_method", sa.String(30), nullable=False),
         sa.Column("reference", sa.String(200), nullable=True),
@@ -126,7 +132,9 @@ def upgrade() -> None:
     op.create_table(
         "invoice",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("payment_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("payment.id"), nullable=False, unique=True),
+        sa.Column(
+            "payment_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("payment.id"), nullable=False, unique=True
+        ),  # noqa: E501
         sa.Column("invoice_number", sa.String(50), unique=True, nullable=False),
         sa.Column("pdf_url", sa.String(500), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),

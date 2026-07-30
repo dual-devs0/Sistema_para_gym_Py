@@ -1,4 +1,6 @@
-import { ReactNode } from "react";
+import { AlertTriangle } from "lucide-react";
+import Card from "../ui/Card";
+import Button from "../ui/Button";
 
 interface ExpiringMember {
   id: string;
@@ -10,73 +12,57 @@ interface ExpiringMember {
   daysUntilExpiry: number;
 }
 
-interface ExpiringTableProps {
+interface Props {
   members: ExpiringMember[];
   onRenew: (memberId: string) => void;
-  title?: ReactNode;
-  showAllLink?: boolean;
 }
 
-const planStyles = {
-  premium: "badge-primary",
-  basic: "badge-secondary",
-  student: "badge-tertiary",
-  other: "badge-secondary",
-} as const;
+const planColors: Record<string, string> = {
+  premium: "bg-[#c0c1ff1a] text-primary",
+  basic: "bg-[#4ede3a1a] text-secondary",
+  student: "bg-[#ffb95f1a] text-tertiary",
+  other: "bg-surface-container-high text-on-surface-variant",
+};
 
-export default function ExpiringTable({ members, onRenew, title = "Próximos Vencimientos", showAllLink = true }: ExpiringTableProps) {
+export default function ExpiringTable({ members, onRenew }: Props) {
+  if (members.length === 0) {
+    return (
+      <Card title="Próximos a vencer">
+        <p className="text-sm text-on-surface-variant">No hay membresías próximas a vencer.</p>
+      </Card>
+    );
+  }
+
   return (
-    <div className="bg-surface-container border border-outline-variant rounded-xl overflow-hidden mb-lg">
-      <div className="px-lg py-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
-        <h3 className="font-headline-sm text-headline-sm text-on-surface">{title}</h3>
-        {showAllLink && <button className="text-primary hover:underline text-body-sm font-medium">Ver todo</button>}
+    <Card title="Próximos a vencer">
+      <div className="space-y-3">
+        {members.map((m) => (
+          <div key={m.id} className="flex items-center justify-between rounded-lg border border-outline-variant bg-surface-container p-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-highest text-sm font-semibold text-on-surface-variant">
+                {m.initials}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-on-surface">{m.name}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${planColors[m.planType] || planColors.other}`}>
+                    {m.plan}
+                  </span>
+                  {m.daysUntilExpiry <= 3 && (
+                    <AlertTriangle size={14} className="text-tertiary" />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-on-surface-variant">{m.expirationDate}</span>
+              <Button variant="ghost" size="small" onClick={() => onRenew(m.id)}>
+                Renovar
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-surface-container-highest">
-              <th className="table-header">Miembro</th>
-              <th className="table-header">Plan</th>
-              <th className="table-header">Vencimiento</th>
-              <th className="table-header text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-outline-variant/30">
-            {members.map((member) => (
-              <tr key={member.id} className="table-row group">
-                <td className="table-cell">
-                  <div className="flex items-center gap-sm">
-                    <div className="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center font-bold text-xs border border-outline-variant">
-                      {member.initials}
-                    </div>
-                    <span className="font-body-md text-body-md text-on-surface">{member.name}</span>
-                  </div>
-                </td>
-                <td className="table-cell">
-                  <span className={`badge ${planStyles[member.planType]}`}>{member.plan}</span>
-                </td>
-                <td className="table-cell text-on-surface-variant font-data-mono text-body-sm">{member.expirationDate}</td>
-                <td className="table-cell text-right">
-                  <button
-                    onClick={() => onRenew(member.id)}
-                    className="btn-primary"
-                    disabled={member.daysUntilExpiry < 0}
-                  >
-                    Renovar
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {members.length === 0 && (
-              <tr>
-                <td colSpan={4} className="table-cell text-center text-on-surface-variant py-xl">
-                  No hay vencimientos próximos
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </Card>
   );
 }

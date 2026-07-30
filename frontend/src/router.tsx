@@ -8,6 +8,7 @@ import MembershipsPage from "./pages/memberships/MembershipsPage";
 import PaymentsPage from "./pages/payments/PaymentsPage";
 import AttendancePage from "./pages/attendance/AttendancePage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import ProfilePage from "./pages/profile/ProfilePage";
 import PageLayout from "./components/layout/PageLayout";
 
 export default function Router() {
@@ -61,6 +62,14 @@ export default function Router() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

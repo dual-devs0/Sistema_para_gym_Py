@@ -41,6 +41,7 @@ class UserService:
         if existing:
             raise ConflictException("Email already registered")
         import secrets
+
         temp_password = secrets.token_urlsafe(12)
         user = User(
             gym_id=gym_id,

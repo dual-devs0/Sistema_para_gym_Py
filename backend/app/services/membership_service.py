@@ -1,10 +1,10 @@
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException
-from app.models.membership import MembershipPlan, MemberMembership
+from app.models.membership import MemberMembership, MembershipPlan
 from app.repositories.membership_repository import (
     MemberMembershipRepository,
     MembershipPlanRepository,

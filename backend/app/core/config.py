@@ -1,4 +1,3 @@
-import os
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
@@ -28,7 +27,9 @@ class Settings(BaseSettings):
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
     cors_allow_methods: str = Field(default="GET,POST,PUT,DELETE,OPTIONS,PATCH", alias="CORS_ALLOW_METHODS")
-    cors_allow_headers: str = Field(default="Authorization,Content-Type,X-Requested-With,Accept,Origin", alias="CORS_ALLOW_HEADERS")
+    cors_allow_headers: str = Field(
+        default="Authorization,Content-Type,X-Requested-With,Accept,Origin", alias="CORS_ALLOW_HEADERS"
+    )  # noqa: E501
 
     @property
     def cors_origin_list(self) -> list[str]:

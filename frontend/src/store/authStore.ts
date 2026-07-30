@@ -1,51 +1,35 @@
 import { create } from "zustand";
-import { isAuthenticated, login, logout, register as registerService, getCurrentUser } from "../services/auth";
-import type { User } from "../types/api";
+import { isAuthenticated, login as apiLogin, logout as apiLogout, fetchMe } from "../services/auth";
+import type { UserInfo } from "../types/api";
 
 interface AuthState {
   isAuth: boolean;
-  user: User | null;
+  user: UserInfo | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, full_name: string) => Promise<void>;
   logout: () => void;
-  setUser: (user: User) => void;
-  fetchUser: () => Promise<void>;
+  loadUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuth: isAuthenticated(),
   user: null,
   login: async (email, password) => {
-    await login({ email, password });
-    set({ isAuth: true });
-    try {
-      const user = await getCurrentUser();
-      set({ user });
-    } catch {
-      set({ user: null });
-    }
-  },
-  register: async (email, password, full_name) => {
-    await registerService({ email, password, full_name });
-    set({ isAuth: true });
-    try {
-      const user = await getCurrentUser();
-      set({ user });
-    } catch {
-      set({ user: null });
-    }
+    await apiLogin({ email, password });
+    const user = await fetchMe();
+    set({ isAuth: true, user });
   },
   logout: () => {
-    logout();
+    apiLogout();
     set({ isAuth: false, user: null });
   },
-  setUser: (user) => set({ user }),
-  fetchUser: async () => {
-    try {
-      const user = await getCurrentUser();
-      set({ user });
-    } catch {
-      set({ user: null });
+  loadUser: async () => {
+    if (isAuthenticated()) {
+      try {
+        const user = await fetchMe();
+        set({ user, isAuth: true });
+      } catch {
+        set({ isAuth: false, user: null });
+      }
     }
   },
 }));

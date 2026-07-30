@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -22,9 +22,11 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def _build_token(subject: str, token_type: str, expire_minutes: int | None = None, expire_days: int | None = None) -> tuple[str, str, datetime]:
+def _build_token(
+    subject: str, token_type: str, expire_minutes: int | None = None, expire_days: int | None = None
+) -> tuple[str, str, datetime]:  # noqa: E501
     jti = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if expire_days:
         expire = now + timedelta(days=expire_days)
     else:

@@ -76,6 +76,8 @@ export interface DashboardSummary {
   revenue_today: number;
   revenue_month: number;
   active_members: number;
+  frozen_members: number;
+  cancelled_members: number;
   new_members_month: number;
   checkins_today: number;
   members_expiring_soon: number;
@@ -92,17 +94,38 @@ export interface DashboardMemberStatusBreakdown {
   cancelled: number;
 }
 
-export interface ExpiringMembership {
+export interface UserInfo {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  gym_id: string | null;
+  gym: { name: string } | null;
+  last_login: string | null;
+}
+
+export interface DashboardRevenueResponse {
+  labels: string[];
+  data: number[];
+}
+
+export interface DashboardExpiringItem {
+  membership_id: string;
   member_id: string;
   member_name: string;
+  plan_id: string;
   plan_name: string;
-  plan_type: string;
-  expiration_date: string;
-  days_remaining: number;
+  end_date: string;
+  status: string;
 }
 
 export interface DashboardExpiringResponse {
-  items: ExpiringMembership[];
+  items: DashboardExpiringItem[];
+}
+
+export interface AttendanceTodayResponse {
+  total_checkins: number;
+  active_now: number;
 }
 
 export interface TokenResponse {

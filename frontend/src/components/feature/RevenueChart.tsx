@@ -4,16 +4,16 @@ import { useMemo } from "react";
 interface RevenueChartProps {
   data: { day: string; revenue: number }[];
   title?: React.ReactNode;
-  period: "7d" | "30d" | "90d";
-  onPeriodChange: (period: "7d" | "30d" | "90d") => void;
+  period: "7d" | "30d" | "1a";
+  onPeriodChange: (period: "7d" | "30d" | "1a") => void;
 }
 
 const customTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length && payload[0].value !== undefined) {
     return (
-      <div className="bg-surface-container-highest border border-outline-variant/30 p-2 rounded text-[11px] font-data-mono">
+      <div className="bg-surface-container-highest border border-outline-variant/30 p-2 rounded text-[11px] font-mono">
         <p className="text-on-surface-variant">{label}</p>
-        <p className="text-primary font-bold">${payload[0].value.toLocaleString()}</p>
+        <p className="text-primary font-bold">₲{Number(payload[0].value).toLocaleString()}</p>
       </div>
     );
   }
@@ -22,7 +22,7 @@ const customTooltip = ({ active, payload, label }: any) => {
 
 export default function RevenueChart({ data, title = "Ingresos (Últimos 30 Días)", period, onPeriodChange }: RevenueChartProps) {
   const chartData = useMemo(
-    () => data.length > 0 ? data : Array.from({ length: period === "7d" ? 7 : 12 }, (_, i) => ({ day: `Day ${i + 1}`, revenue: 0 })),
+    () => data.length > 0 ? data : Array.from({ length: period === "7d" ? 7 : period === "30d" ? 30 : 12 }, (_, i) => ({ day: `Day ${i + 1}`, revenue: 0 })),
     [data, period]
   );
 
@@ -31,17 +31,17 @@ export default function RevenueChart({ data, title = "Ingresos (Últimos 30 Día
       <div className="flex justify-between items-center mb-xl">
         <h3 className="font-headline-sm text-headline-sm text-on-surface">{title}</h3>
         <div className="flex gap-xs">
-          {(["7d", "30d", "90d"] as const).map((p) => (
+          {(["7d", "30d", "1a"] as const).map((p) => (
             <button
               key={p}
               onClick={() => onPeriodChange(p)}
-              className={`px-sm py-1 rounded font-label-caps text-label-caps cursor-pointer transition-colors ${
+               className={`px-sm py-1 rounded text-[11px] font-semibold uppercase tracking-wider cursor-pointer transition-colors ${
                 period === p
                   ? "bg-primary text-on-primary"
                   : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright"
               }`}
             >
-              {p.toUpperCase()}
+              {p === "1a" ? "1A" : p.toUpperCase()}
             </button>
           ))}
         </div>
@@ -55,13 +55,13 @@ export default function RevenueChart({ data, title = "Ingresos (Últimos 30 Día
               tick={{ fill: "var(--color-on-surface-variant)", fontSize: 10, fontFamily: "Inter" }}
               axisLine={false}
               tickLine={false}
-              interval={period === "7d" ? 0 : 2}
+              interval={period === "7d" ? 0 : period === "1a" ? Math.floor(chartData.length / 12) : 2}
             />
             <YAxis
               tick={{ fill: "var(--color-on-surface-variant)", fontSize: 10, fontFamily: "Inter" }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tickFormatter={(value) => `₲${(value / 1000).toFixed(0)}k`}
               interval="preserveStartEnd"
             />
             <Tooltip content={customTooltip} />
@@ -69,11 +69,7 @@ export default function RevenueChart({ data, title = "Ingresos (Últimos 30 Día
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex justify-between mt-sm text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
-        <span>Inicio</span>
-        <span>Medio</span>
-        <span>Final</span>
-      </div>
+
     </div>
   );
 }

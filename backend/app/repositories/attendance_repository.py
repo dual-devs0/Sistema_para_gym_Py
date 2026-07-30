@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,14 +15,12 @@ class AttendanceLogRepository:
 
     async def get_by_id(self, log_id: uuid.UUID) -> AttendanceLog | None:
         result = await self.db.execute(
-            select(AttendanceLog)
-            .where(AttendanceLog.id == log_id)
-            .options(selectinload(AttendanceLog.member))
+            select(AttendanceLog).where(AttendanceLog.id == log_id).options(selectinload(AttendanceLog.member))
         )
         return result.scalar_one_or_none()
 
     async def get_today_checkin(self, member_id: uuid.UUID) -> AttendanceLog | None:
-        today_start = datetime.combine(date.today(), time.min, tzinfo=timezone.utc)
+        today_start = datetime.combine(date.today(), time.min, tzinfo=UTC)
         result = await self.db.execute(
             select(AttendanceLog).where(
                 AttendanceLog.member_id == member_id,
@@ -43,8 +41,8 @@ class AttendanceLogRepository:
             .order_by(AttendanceLog.check_in.desc())
         )
         if log_date:
-            day_start = datetime.combine(log_date, time.min, tzinfo=timezone.utc)
-            day_end = datetime.combine(log_date, time.max, tzinfo=timezone.utc)
+            day_start = datetime.combine(log_date, time.min, tzinfo=UTC)
+            day_end = datetime.combine(log_date, time.max, tzinfo=UTC)
             query = query.where(and_(AttendanceLog.check_in >= day_start, AttendanceLog.check_in <= day_end))
         if member_id:
             query = query.where(AttendanceLog.member_id == member_id)
@@ -52,7 +50,7 @@ class AttendanceLogRepository:
         return list(result.scalars().all())
 
     async def get_today_summary(self, gym_id: uuid.UUID) -> tuple[int, int]:
-        today_start = datetime.combine(date.today(), time.min, tzinfo=timezone.utc)
+        today_start = datetime.combine(date.today(), time.min, tzinfo=UTC)
         result = await self.db.execute(
             select(AttendanceLog)
             .join(Member)
@@ -64,18 +62,17 @@ class AttendanceLogRepository:
         return total, active
 
     async def count_today_by_gym(self, gym_id: uuid.UUID) -> int:
-        today_start = datetime.combine(date.today(), time.min, tzinfo=timezone.utc)
+        today_start = datetime.combine(date.today(), time.min, tzinfo=UTC)
         result = await self.db.execute(
-            select(func.count()).select_from(AttendanceLog)
+            select(func.count())
+            .select_from(AttendanceLog)
             .join(Member)
             .where(Member.gym_id == gym_id, Member.deleted_at.is_(None), AttendanceLog.check_in >= today_start)
         )
         return result.scalar() or 0
 
     async def list_since(self, since: datetime) -> list[AttendanceLog]:
-        result = await self.db.execute(
-            select(AttendanceLog).where(AttendanceLog.check_in >= since)
-        )
+        result = await self.db.execute(select(AttendanceLog).where(AttendanceLog.check_in >= since))
         return list(result.scalars().all())
 
     async def create(self, log: AttendanceLog) -> AttendanceLog:

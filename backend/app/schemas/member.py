@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class MemberResponse(BaseModel):
@@ -20,6 +21,11 @@ class MemberResponse(BaseModel):
     updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+    @field_validator("id", "gym_id", mode="before")
+    @classmethod
+    def coerce_uuid(cls, v):
+        return str(v) if isinstance(v, UUID) else v
 
 
 class MemberCreate(BaseModel):

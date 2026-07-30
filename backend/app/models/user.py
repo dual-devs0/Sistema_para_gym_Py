@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -9,7 +9,9 @@ from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
 class User(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
-    gym_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("gym.id"), nullable=True, index=True)
+    gym_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gym.id"), nullable=True, index=True
+    )  # noqa: E501
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(200), nullable=False)
     full_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -21,5 +23,5 @@ class User(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    gym = relationship("Gym", back_populates="users")
+    gym = relationship("Gym", back_populates="users", lazy="selectin")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")

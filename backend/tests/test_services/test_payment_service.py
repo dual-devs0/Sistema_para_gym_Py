@@ -4,7 +4,6 @@ import pytest
 
 from app.core.exceptions import AppException, NotFoundException
 from app.models.member import Member
-from app.models.payment import Payment
 from app.services.payment_service import PaymentService
 
 

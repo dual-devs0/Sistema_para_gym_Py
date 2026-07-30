@@ -14,7 +14,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
+          <label htmlFor={inputId} className="block mb-1 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
             {label}
           </label>
         )}
@@ -32,8 +32,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightElement && (
-            <div className="absolute right-0 top-0 h-full flex items-center pr-3">
-              {rightElement}
+            <div className="absolute right-0 top-0 h-full flex items-center pr-3 z-10 pointer-events-none">
+              <div className="pointer-events-auto flex items-center justify-center min-w-[40px] text-on-surface-variant hover:text-on-surface transition-colors">
+                {rightElement}
+              </div>
             </div>
           )}
         </div>

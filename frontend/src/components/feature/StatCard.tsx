@@ -1,58 +1,41 @@
 import { ReactNode } from "react";
 
-interface StatCardProps {
+interface Props {
   label: string;
-  value: number | string;
+  value: number;
   prefix?: string;
-  trend?: {
-    value: number;
-    direction: "up" | "down" | "neutral";
-    label?: string;
-  };
+  trend?: { value: number; direction: "up" | "down"; label: string };
   icon: ReactNode;
   iconColor: "primary" | "secondary" | "tertiary" | "error";
-  variant?: "default" | "warning";
 }
 
-const iconColors = {
-  primary: "text-primary bg-surface-container-highest",
-  secondary: "text-secondary bg-surface-container-highest",
-  tertiary: "text-tertiary bg-surface-container-highest",
-  error: "text-error bg-error-container/40",
-} as const;
+const iconBg: Record<string, string> = {
+  primary: "bg-[#c0c1ff1a] text-primary",
+  secondary: "bg-[#4edea31a] text-secondary",
+  tertiary: "bg-[#ffb95f1a] text-tertiary",
+  error: "bg-[#ffb4ab1a] text-error",
+};
 
-export default function StatCard({ label, value, prefix, trend, icon, iconColor, variant = "default" }: StatCardProps) {
-  const isAlert = variant === "warning";
-
+export default function StatCard({ label, value, prefix, trend, icon, iconColor }: Props) {
   return (
-    <div className={`stat-card ${isAlert ? "border-error/30 hover:border-error" : ""}`}>
-      <div className="flex justify-between items-start mb-md">
-        <span className="text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
-          {label}
-        </span>
-        <div className={`stat-icon-wrapper ${iconColors[iconColor]}`}>
-          {icon}
+    <div className="rounded-xl border border-outline-variant bg-surface-container p-5 transition-all duration-200 hover:scale-[1.03] hover:border-primary/30 active:scale-[0.97] cursor-pointer select-none">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-wider font-semibold text-on-surface-variant">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-on-surface tabular-nums">
+            {prefix}{typeof value === "number" ? value.toLocaleString() : value}
+          </p>
         </div>
+        <div className={`rounded-lg p-2 ${iconBg[iconColor]}`}>{icon}</div>
       </div>
-      <div className="flex items-baseline gap-sm">
-        <span className="font-display-lg text-[28px] leading-tight font-bold text-on-surface font-data-mono tabular-nums">
-          {prefix ?? ""}{value}
-        </span>
-        {trend && (
-          <span
-            className={`font-body-sm text-body-sm flex items-center ${
-              trend.direction === "up" ? "text-secondary" : trend.direction === "down" ? "text-error" : "text-on-surface-variant"
-            }`}
-          >
-            {trend.value}%
-            <span className="material-symbols-outlined text-sm ml-1">
-              {trend.direction === "up" ? "trending_up" : trend.direction === "down" ? "trending_down" : "remove"}
-            </span>
+      {trend && (
+        <div className="mt-3 flex items-center gap-1 text-xs">
+          <span className={trend.direction === "up" ? "text-secondary font-semibold" : "text-error font-semibold"}>
+            {trend.direction === "up" ? "↑" : "↓"} {trend.value}%
           </span>
-        )}
-      </div>
-      {trend && trend.label && <p className="text-[11px] text-on-surface-variant mt-sm">{trend.label}</p>}
-      {isAlert && <p className="text-[11px] text-error mt-sm font-bold tracking-tight">ACCIÓN REQUERIDA</p>}
+          <span className="text-on-surface-variant">{trend.label}</span>
+        </div>
+      )}
     </div>
   );
 }

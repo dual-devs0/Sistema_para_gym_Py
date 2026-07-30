@@ -8,12 +8,14 @@ from app.core.database import get_db
 from app.core.exceptions import ForbiddenException, UnauthorizedException
 from app.core.permissions import require_permission as _require_permission
 from app.core.redis import get_redis
-from app.core.security import decode_token, TOKEN_TYPE_ACCESS
+from app.core.security import TOKEN_TYPE_ACCESS, decode_token
 from app.models.user import User
 
 
 async def _check_token_blacklist(jti: str) -> None:
     redis = await get_redis()
+    if redis is None:
+        return
     blacklisted = await redis.get(f"token:blacklist:{jti}")
     if blacklisted:
         raise UnauthorizedException("Token has been revoked")
@@ -58,6 +60,7 @@ def require_role(*roles: str):
         if current_user.role not in roles:
             raise ForbiddenException(f"Role '{current_user.role}' not allowed. Requires: {', '.join(roles)}")
         return current_user
+
     return role_checker
 
 
@@ -65,6 +68,7 @@ def require_permission(*permissions: str):
     async def permission_checker(current_user: User = Depends(get_current_user)) -> User:
         _require_permission(*permissions)(current_user)
         return current_user
+
     return permission_checker
 
 
@@ -73,6 +77,7 @@ def require_platform_staff():
         if not current_user.is_platform_staff:
             raise ForbiddenException("This endpoint requires a platform staff account")
         return current_user
+
     return platform_checker
 
 

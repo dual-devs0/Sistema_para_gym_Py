@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,7 +56,7 @@ class AttendanceService:
         if log.check_out:
             raise AppException("Already checked out", status_code=409)
 
-        log.check_out = datetime.now(timezone.utc)
+        log.check_out = datetime.now(UTC)
         return await self.repo.update(log)
 
     async def list_attendance(

@@ -1,233 +1,263 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import Card from "../../components/ui/Card";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Package, SearchX } from "lucide-react";
 import Button from "../../components/ui/Button";
+import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
-import PlanCard from "../../components/feature/PlanCard";
 import PlansTable from "../../components/feature/PlansTable";
-import SidePanel from "../../components/layout/SidePanel";
+import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
 import type { MembershipPlan } from "../../types/api";
+
+const ITEMS_PER_PAGE = 10;
 
 async function fetchPlans(): Promise<MembershipPlan[]> {
   const { data } = await api.get("/plans");
   return data;
 }
 
-const mockPlans: MembershipPlan[] = [
-  { id: "1", gym_id: "1", name: "Básico Mensual", description: "Acceso básico para miembros casuales", price: 29, duration_days: 30, max_visits: 12, type: "mensual", is_active: true },
-  { id: "2", gym_id: "1", name: "Premium Anual", description: "Acceso completo con todas las instalaciones", price: 299, duration_days: 365, max_visits: null, type: "anual", is_active: true },
-  { id: "3", gym_id: "1", name: "Flex Trimestral", description: "Plan trimestral para regulares", price: 85, duration_days: 90, max_visits: 45, type: "trimestral", is_active: true },
-  { id: "4", gym_id: "1", name: "Pase Estudiantil", description: "Descuento mensual para estudiantes", price: 19, duration_days: 30, max_visits: 20, type: "mensual", is_active: true },
-  { id: "5", gym_id: "1", name: "Ejecutivo Interno", description: "Solo para staff y socios", price: 0, duration_days: -1, max_visits: null, type: "internal", is_active: true },
+const emptyForm = { name: "", description: "", price: "", duration_days: "", max_visits: "", type: "mensual" };
+
+const typeOptions = [
+  { value: "mensual", label: "Mensual" },
+  { value: "trimestral", label: "Trimestral" },
+  { value: "semestral", label: "Semestral" },
+  { value: "anual", label: "Anual" },
+  { value: "visitas", label: "Por visitas" },
 ];
 
-function mapPlanToCard(plan: MembershipPlan) {
-  return {
-    id: plan.id,
-    name: plan.name,
-    price: plan.price,
-    period: (plan.type === "anual" ? "/año" : plan.type === "trimestral" ? "/trim" : "/mes") as "/mes" | "/año" | "/trim",
-    type: plan.type.charAt(0).toUpperCase() + plan.type.slice(1) as "Mensual" | "Trimestral" | "Anual" | "Clases Sueltas" | "Pase Diario" | "Internal",
-    duration: `${plan.duration_days} Días`,
-    visits: plan.max_visits ?? "Ilimitado",
-    activeMembers: Math.floor(Math.random() * 500),
-    autoRenew: plan.type !== "internal",
-    internal: plan.type === "internal",
-    recommended: plan.id === "2",
-    onEdit: () => console.log("Edit", plan.id),
-  };
-}
-
 export default function MembershipsPage() {
-  const { data: plans } = useQuery({
-    queryKey: ["plans"],
-    queryFn: fetchPlans,
-    staleTime: 30_000,
-    placeholderData: mockPlans,
+  const qc = useQueryClient();
+  const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: fetchPlans });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<MembershipPlan | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [searchValue, setSearchValue] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const body = {
+        name: form.name,
+        description: form.description || undefined,
+        price: parseFloat(form.price),
+        duration_days: parseInt(form.duration_days),
+        max_visits: form.max_visits ? parseInt(form.max_visits) : undefined,
+        type: form.type,
+      };
+      if (editingPlan) {
+        return api.put(`/plans/${editingPlan.id}`, body);
+      }
+      return api.post("/plans", body);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      setModalOpen(false);
+      setEditingPlan(null);
+      setForm(emptyForm);
+    },
   });
 
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      api.put(`/plans/${id}`, { is_active }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+  });
 
-  const cards = useMemo(() => plans?.map(mapPlanToCard) ?? [], [plans]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/plans/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+  });
 
-  const handleOpenEditor = (plan?: MembershipPlan) => {
-    setSelectedPlan(plan || null);
-    setEditorOpen(true);
+  const duplicateMutation = useMutation({
+    mutationFn: (plan: MembershipPlan) =>
+      api.post("/plans", {
+        name: `${plan.name} (copia)`,
+        description: plan.description,
+        price: plan.price,
+        duration_days: plan.duration_days,
+        max_visits: plan.max_visits,
+        type: plan.type,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveMutation.mutate();
   };
 
-  const handleCloseEditor = () => {
-    setEditorOpen(false);
-    setSelectedPlan(null);
+  const openCreate = () => {
+    setEditingPlan(null);
+    setForm(emptyForm);
+    setModalOpen(true);
   };
 
-  const handleSave = () => {
-    console.log("Save plan:", selectedPlan);
-    handleCloseEditor();
+  const openEdit = (plan: MembershipPlan) => {
+    setEditingPlan(plan);
+    setForm({
+      name: plan.name,
+      description: plan.description || "",
+      price: String(plan.price),
+      duration_days: String(plan.duration_days),
+      max_visits: plan.max_visits ? String(plan.max_visits) : "",
+      type: plan.type,
+    });
+    setModalOpen(true);
   };
+
+  const filtered = (plans || []).filter((p) => {
+    const q = searchValue.toLowerCase();
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    if (statusFilter !== "all") {
+      if (statusFilter === "active" && !p.is_active) return false;
+      if (statusFilter === "inactive" && p.is_active) return false;
+    }
+    if (typeFilter !== "all" && p.type !== typeFilter) return false;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const hasActiveFilters = !!(searchValue || statusFilter !== "all" || typeFilter !== "all");
 
   return (
     <div>
-      <div className="mb-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 animate-slide-in-up">
         <div>
-          <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
-            Planes de Membresía
-          </h2>
-          <p className="font-body-md text-on-surface-variant mt-xs">
-            Gestioná los planes disponibles y controlá las tendencias de inscripción.
+          <h1 className="text-2xl font-bold text-on-surface">Membresías</h1>
+          <p className="text-sm text-on-surface-variant mt-0.5">
+            {plans?.length || 0} planes registrados
           </p>
         </div>
-        <Button variant="primary" onClick={() => handleOpenEditor()} icon={<Plus className="w-4 h-4" />}>
-          + Nuevo Plan
+        <Button variant="primary" onClick={openCreate} icon={<Plus className="w-4 h-4" />}>
+          Nuevo Plan
         </Button>
       </div>
 
-      <Card className="p-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-md p-lg">
-          {cards.map((card) => (
-            <PlanCard key={card.id} {...card} onEdit={() => handleOpenEditor(plans?.find((p) => p.id === card.id))} />
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg pointer-events-none">search</span>
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => { setSearchValue(e.target.value); setCurrentPage(1); }}
+            className="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/50 focus:outline-none transition-colors"
+            placeholder="Buscar planes..."
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+          className="min-w-[140px] bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary/50 focus:outline-none transition-colors"
+        >
+          <option value="all">Todos los estados</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+          className="min-w-[140px] bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary/50 focus:outline-none transition-colors"
+        >
+          <option value="all">Todos los tipos</option>
+          {typeOptions.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
           ))}
-          {cards.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-xxl bg-surface-container-low border border-outline-variant border-dashed rounded-xl text-center">
-              <span className="material-symbols-outlined text-[48px] text-outline mb-md">
-                card_membership
-              </span>
-              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-sm">
-                No hay planes creados
-              </h3>
-              <p className="font-body-md text-on-surface-variant max-w-sm mb-lg">
-                Creá tu primer plan para comenzar a inscribir miembros. Los planes definen precios,
-                duración y límites de visitas para tu gimnasio.
-              </p>
-              <Button variant="primary" onClick={() => handleOpenEditor()} icon={<Plus className="w-4 h-4" />}>
-                Crear mi Primer Plan
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
+        </select>
+        {hasActiveFilters && (
+          <button
+            onClick={() => { setSearchValue(""); setStatusFilter("all"); setTypeFilter("all"); setCurrentPage(1); }}
+            className="px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-higher border border-outline-variant transition-colors"
+          >
+            Restablecer filtros
+          </button>
+        )}
+      </div>
 
-      <Card className="mt-xl">
-        <PlansTable
-          plans={plans || []}
-          onDuplicate={(id) => console.log("Duplicate", id)}
-          onStatusToggle={(id, status) => console.log("Toggle", id, status)}
-          onRestore={(id) => console.log("Restore", id)}
-          onDelete={(id) => console.log("Delete", id)}
-        />
-      </Card>
-
-      <SidePanel
-        open={editorOpen}
-        onClose={handleCloseEditor}
-        title={selectedPlan ? "Editar Plan" : "Crear Nuevo Plan"}
-        size="lg"
-        onSubmit={handleSave}
-        submitLabel="Guardar Plan"
-      >
-        <div className="space-y-lg">
-          <div className="grid grid-cols-2 gap-lg">
-            <div className="sm:col-span-2">
-              <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-                Nombre del Plan
-              </label>
-              <Input placeholder="Ej: Premium Anual" defaultValue={selectedPlan?.name || ""} />
-            </div>
+      <div className="bg-surface-container border border-outline-variant rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-
-          <div className="grid grid-cols-2 gap-lg">
-            <div>
-              <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-                Precio
-              </label>
-              <Input type="number" placeholder="299" defaultValue={selectedPlan?.price || ""} />
-            </div>
-            <div>
-              <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-                Período
-              </label>
-              <select className="w-full bg-surface border border-outline-variant rounded py-2 pl-3 pr-10 text-on-surface text-body-sm appearance-none focus:border-primary focus:ring-0 focus:outline-none transition-colors">
-                <option>/mes</option>
-                <option>/trim</option>
-                <option>/año</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-lg">
-            <div>
-              <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-                Tipo de Plan
-                
-              </label>
-              <select className="w-full bg-surface border border-outline-variant rounded py-2 pl-3 pr-10 text-on-surface text-body-sm appearance-none focus:border-primary focus:ring-0 focus:outline-none transition-colors">
-                <option>Mensual</option>
-                <option>Trimestral</option>
-                <option>Anual</option>
-                <option>Clases Sueltas</option>
-                <option>Pase Diario</option>
-                <option>Internal</option>
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-                Duración (días)
-              </label>
-              <Input type="number" placeholder="365" defaultValue={selectedPlan?.duration_days || ""} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-lg">
-            <div>
-              <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-                Visitas Máx. (0 = ilimitado)
-              </label>
-              <Input type="number" placeholder="0" defaultValue={selectedPlan?.max_visits || ""} />
-            </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-outline-variant bg-surface text-primary focus:ring-primary"
-                  defaultChecked={selectedPlan?.is_active ?? true}
-                />
-                <span className="font-body-sm text-body-sm text-on-surface">Activo</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className="block mb-1 font-label-caps text-label-caps text-on-surface-variant">
-              Descripción
-            </label>
-            <textarea
-              className="w-full bg-surface border border-outline-variant rounded py-2 pl-3 pr-4 text-on-surface text-body-sm focus:border-primary focus:ring-0 focus:outline-none transition-colors"
-              rows={3}
-              placeholder="Descripción del plan, beneficios, restricciones..."
-              defaultValue={selectedPlan?.description || ""}
+        ) : filtered.length > 0 ? (
+          <>
+            <PlansTable
+              plans={paginated}
+              onEdit={openEdit}
+              onDuplicate={(id) => {
+                const p = plans?.find((x) => x.id === id);
+                if (p) duplicateMutation.mutate(p);
+              }}
+              onStatusToggle={(id, status) => toggleActiveMutation.mutate({ id, is_active: status })}
+              onRestore={(id) => toggleActiveMutation.mutate({ id, is_active: true })}
+              onDelete={(id) => deleteMutation.mutate(id)}
             />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-6">
+            <div className="w-12 h-12 rounded-xl bg-surface-container-higher flex items-center justify-center mb-4">
+              {hasActiveFilters ? <SearchX className="w-6 h-6 text-on-surface-variant" /> : <Package className="w-6 h-6 text-on-surface-variant" />}
+            </div>
+            <p className="text-sm font-medium text-on-surface mb-1">
+              {hasActiveFilters ? "Sin resultados" : "No hay planes de membresía todavía"}
+            </p>
+            <p className="text-xs text-on-surface-variant mb-4">
+              {hasActiveFilters ? "Probá con otros filtros o limpiá la búsqueda." : "Creá el primer plan para empezar."}
+            </p>
+            {!hasActiveFilters && (
+              <Button variant="primary" size="sm" onClick={openCreate}>
+                Crear primer plan
+              </Button>
+            )}
           </div>
+        )}
+      </div>
 
-          <div className="flex items-center gap-md pt-lg border-t border-outline-variant">
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-outline-variant bg-surface text-primary focus:ring-primary"
-              />
-              <span className="font-body-sm text-body-sm text-on-surface">Visible para miembros (público)</span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer ml-auto">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-outline-variant bg-surface text-primary focus:ring-primary"
-              />
-              <span className="font-body-sm text-body-sm text-on-surface">Renovación automática</span>
-            </label>
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setEditingPlan(null); setForm(emptyForm); }} title={editingPlan ? "Editar Plan" : "Nuevo Plan"} size="md">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <Input label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Precio ($)" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+            <Input label="Duración (días)" type="number" value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: e.target.value })} required />
           </div>
-        </div>
-      </SidePanel>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Máx. visitas (opcional)" type="number" value={form.max_visits} onChange={(e) => setForm({ ...form, max_visits: e.target.value })} />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-on-surface">Tipo</label>
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                className="rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                {typeOptions.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => { setModalOpen(false); setEditingPlan(null); setForm(emptyForm); }}>Cancelar</Button>
+            <Button type="submit" loading={saveMutation.isPending}>
+              {editingPlan ? "Guardar cambios" : "Guardar"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

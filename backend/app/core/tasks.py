@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.core.redis import get_redis
@@ -19,12 +19,17 @@ class TaskQueue:
             "id": task_id,
             "name": task_name,
             "payload": payload,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "attempts": 0,
         }
+        if redis is None:
+            return task_id
         key = f"{TaskQueue.QUEUE_PREFIX}{queue_name}"
         if delay_seconds > 0:
-            await redis.zadd(f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}", {json.dumps(task): datetime.now(timezone.utc).timestamp() + delay_seconds})
+            await redis.zadd(
+                f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}",
+                {json.dumps(task): datetime.now(UTC).timestamp() + delay_seconds},
+            )  # noqa: E501
         else:
             await redis.rpush(key, json.dumps(task))
         return task_id
@@ -32,6 +37,8 @@ class TaskQueue:
     @staticmethod
     async def dequeue(queue_name: str) -> dict[str, Any] | None:
         redis = await get_redis()
+        if redis is None:
+            return None
         key = f"{TaskQueue.QUEUE_PREFIX}{queue_name}"
         data = await redis.lpop(key)
         if data:
@@ -41,17 +48,22 @@ class TaskQueue:
     @staticmethod
     async def get_queue_length(queue_name: str) -> int:
         redis = await get_redis()
+        if redis is None:
+            return 0
         return await redis.llen(f"{TaskQueue.QUEUE_PREFIX}{queue_name}")
 
     @staticmethod
     async def store_result(task_id: str, result: dict[str, Any]) -> None:
         redis = await get_redis()
-        await redis.setex(f"{TaskQueue.RESULT_PREFIX}{task_id}", 86400, json.dumps(result))
+        if redis is not None:
+            await redis.setex(f"{TaskQueue.RESULT_PREFIX}{task_id}", 86400, json.dumps(result))
 
     @staticmethod
     async def get_pending_scheduled(queue_name: str) -> list[dict[str, Any]]:
         redis = await get_redis()
-        now = datetime.now(timezone.utc).timestamp()
+        if redis is None:
+            return []
+        now = datetime.now(UTC).timestamp()
         items = await redis.zrangebyscore(f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}", 0, now)
         if items:
             await redis.zremrangebyscore(f"{TaskQueue.SCHEDULE_PREFIX}{queue_name}", 0, now)

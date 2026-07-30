@@ -4,7 +4,6 @@ import pytest
 
 from app.core.exceptions import ConflictException, NotFoundException
 from app.services.user_service import UserService
-from app.models.user import User
 
 
 @pytest.mark.asyncio

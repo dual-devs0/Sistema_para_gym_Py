@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
-type Size = "sm" | "md" | "lg";
+type Size = "sm" | "md" | "lg" | "small";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -23,6 +23,7 @@ const sizeStyles: Record<Size, string> = {
   sm: "px-sm min-h-[36px] text-body-sm gap-1",
   md: "px-md min-h-[44px] text-body-sm gap-2",
   lg: "px-lg min-h-[52px] text-body-md gap-2",
+  small: "px-2.5 py-1.5 text-xs",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(

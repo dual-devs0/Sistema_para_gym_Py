@@ -1,7 +1,7 @@
 import uuid
-from datetime import date, datetime
+from datetime import date
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,7 +23,9 @@ class MembershipPlan(Base, TimestampMixin, UUIDMixin):
 
 
 class MemberMembership(Base, TimestampMixin, UUIDMixin):
-    member_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("member.id"), nullable=False, index=True)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("member.id"), nullable=False, index=True
+    )  # noqa: E501
     plan_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("membershipplan.id"), nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
