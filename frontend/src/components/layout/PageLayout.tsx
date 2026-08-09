@@ -1,17 +1,13 @@
 import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar";
-import TopBar from "./TopBar";
+import TopNav from "./TopNav";
 
 export default function PageLayout({ children }: { children?: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
-        <section className="flex-1 overflow-y-auto p-lg bg-surface-container-lowest">
-          {children ?? <Outlet />}
-        </section>
+    <div className="min-h-screen bg-background flex flex-col">
+      <TopNav />
+      <main className="flex-1 w-full max-w-[1400px] mx-auto px-lg py-xl">
+        <section className="animate-fade-in">{children ?? <Outlet />}</section>
       </main>
     </div>
   );
