@@ -1,5 +1,23 @@
-export function formatCurrency(amount: number, currency = "MXN"): string {
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency }).format(amount);
+const SYMBOLS: Record<string, string> = {
+  PYG: "₲",
+  ARS: "$",
+  USD: "$",
+  MXN: "$",
+  EUR: "€",
+};
+
+const NO_DECIMALS = new Set(["PYG", "JPY", "KRW", "CLP"]);
+
+export function currencySymbol(currency = "PYG"): string {
+  return SYMBOLS[currency] ?? `${currency} `;
+}
+
+export function formatCurrency(amount: number, currency = "PYG"): string {
+  const formatted = new Intl.NumberFormat("es", {
+    minimumFractionDigits: NO_DECIMALS.has(currency) ? 0 : 2,
+    maximumFractionDigits: NO_DECIMALS.has(currency) ? 0 : 2,
+  }).format(amount);
+  return `${currencySymbol(currency)}${formatted}`;
 }
 
 export function formatDate(date: string | Date, locale = "es-MX"): string {

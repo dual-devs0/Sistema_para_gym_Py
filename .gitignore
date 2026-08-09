@@ -12,6 +12,10 @@ venv/
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
+
+# Python
+backend.zip
 
 # Env
 .env

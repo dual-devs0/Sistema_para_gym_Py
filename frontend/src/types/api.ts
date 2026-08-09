@@ -11,7 +11,7 @@ export interface Member {
   photo_url: string | null;
   notes: string | null;
   status: string;
-  registered_at: string;
+  created_at: string;
   updated_at: string;
 }
 
@@ -95,7 +95,7 @@ export interface UserInfo {
   full_name: string;
   role: string;
   gym_id: string | null;
-  gym: { name: string } | null;
+  gym: { name: string; currency: string; timezone: string } | null;
 }
 
 export interface DashboardRevenueResponse {
@@ -107,6 +107,8 @@ export interface DashboardExpiringItem {
   membership_id: string;
   member_id: string;
   plan_id: string;
+  member_name: string | null;
+  plan_name: string | null;
   end_date: string;
   status: string;
 }

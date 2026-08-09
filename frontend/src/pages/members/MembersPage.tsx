@@ -86,7 +86,7 @@ export default function MembersPage() {
                       </span>
                     </td>
                     <td className="py-3 text-gray-600">
-                      {m.registered_at ? new Date(m.registered_at).toLocaleDateString("es-MX") : "—"}
+                      {m.created_at ? new Date(m.created_at).toLocaleDateString("es-MX") : "—"}
                     </td>
                   </tr>
                 ))}

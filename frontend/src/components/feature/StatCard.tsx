@@ -11,7 +11,7 @@ interface Props {
 }
 
 const iconBg: Record<string, string> = {
-  primary: "bg-primary-100 text-primary-600",
+  primary: "bg-gray-100 text-gray-700",
   secondary: "bg-green-100 text-green-600",
   tertiary: "bg-blue-100 text-blue-600",
   error: "bg-red-100 text-red-600",
@@ -26,7 +26,7 @@ export default function StatCard({ label, value, prefix, trend, icon, iconColor,
         <div>
           <p className="text-sm text-gray-500">{label}</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">
-            {prefix}{typeof value === "number" ? value.toLocaleString() : value}
+            {prefix ?? ""}{typeof value === "number" ? value.toLocaleString("es") : value}
           </p>
         </div>
         <div className={`rounded-lg p-2 ${iconBg[iconColor]}`}>{icon}</div>

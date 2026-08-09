@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.attendance_repository import AttendanceLogRepository
+from app.repositories.gym_repository import GymRepository
 from app.repositories.member_repository import MemberRepository
 from app.repositories.membership_repository import MemberMembershipRepository
 from app.repositories.payment_repository import PaymentRepository
@@ -15,13 +16,19 @@ class DashboardService:
         self.payment_repo = PaymentRepository(db)
         self.attendance_repo = AttendanceLogRepository(db)
         self.membership_repo = MemberMembershipRepository(db)
+        self.gym_repo = GymRepository(db)
+
+    async def _gym_timezone(self, gym_id: uuid.UUID) -> str:
+        gym = await self.gym_repo.get_by_id(gym_id)
+        return gym.timezone if gym and gym.timezone else "UTC"
 
     async def get_summary(self, gym_id: uuid.UUID) -> dict:
+        tz_str = await self._gym_timezone(gym_id)
         revenue_today = await self.payment_repo.get_revenue_today(gym_id)
         revenue_month = await self.payment_repo.get_revenue_month(gym_id)
         active_members = await self.member_repo.count_active(gym_id)
         new_members = await self.member_repo.count_new_this_month(gym_id)
-        checkins_today = await self.attendance_repo.count_today_by_gym(gym_id)
+        checkins_today = await self.attendance_repo.count_today_by_gym(gym_id, tz_str)
         expiring = await self.membership_repo.count_expiring_soon(gym_id)
 
         return {
@@ -71,6 +78,8 @@ class DashboardService:
                 "membership_id": str(m.id),
                 "member_id": str(m.member_id),
                 "plan_id": str(m.plan_id),
+                "member_name": f"{m.member.first_name} {m.member.last_name}" if m.member else None,
+                "plan_name": m.plan.name if m.plan else None,
                 "end_date": m.end_date.isoformat(),
                 "status": m.status,
             }
