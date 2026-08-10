@@ -30,10 +30,11 @@ api.interceptors.response.use(
       if (refreshToken && !error.config._retry) {
         error.config._retry = true;
         try {
-          const { data } = await axios.post("/api/v1/auth/refresh", {
+          const { data } = await api.post("/auth/refresh", {
             refresh_token: refreshToken,
           });
           localStorage.setItem("access_token", data.access_token);
+          localStorage.setItem("refresh_token", data.refresh_token);
           error.config.headers.Authorization = `Bearer ${data.access_token}`;
           return api(error.config);
         } catch {

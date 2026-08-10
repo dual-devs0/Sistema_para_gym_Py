@@ -11,7 +11,7 @@ export interface Member {
   photo_url: string | null;
   notes: string | null;
   status: string;
-  registered_at: string;
+  created_at: string;
   updated_at: string;
 }
 

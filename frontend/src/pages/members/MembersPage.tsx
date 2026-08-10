@@ -27,7 +27,7 @@ function transformMembers(members: Member[]): MemberListItem[] {
     plan: m.status === "active" ? "Premium Anual" : "Básico Mensual",
     status: m.status as "active" | "frozen" | "cancelled",
     expiration: dateFmt(m.updated_at),
-    lastCheckin: dateFmt(m.registered_at),
+    lastCheckin: dateFmt(m.created_at),
   }));
 }
 
@@ -240,7 +240,7 @@ export default function MembersPage() {
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Registrado</p>
-                <p className="text-on-surface mt-0.5">{dateFmt(viewMember.registered_at)}</p>
+                <p className="text-on-surface mt-0.5">{dateFmt(viewMember.created_at)}</p>
               </div>
             </div>
             <div className="flex justify-end pt-2">

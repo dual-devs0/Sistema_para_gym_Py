@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime, time
+from datetime import date, datetime, time
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.attendance import AttendanceLog
 from app.models.member import Member
+from app.utils.date_helpers import day_start_local
 
 
 class AttendanceLogRepository:
@@ -49,8 +50,8 @@ class AttendanceLogRepository:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_today_summary(self, gym_id: uuid.UUID) -> tuple[int, int]:
-        today_start = datetime.combine(date.today(), time.min, tzinfo=UTC)
+    async def get_today_summary(self, gym_id: uuid.UUID, tz_str: str = "UTC") -> tuple[int, int]:
+        today_start = day_start_local(tz_str)
         result = await self.db.execute(
             select(AttendanceLog)
             .join(Member)
@@ -61,8 +62,8 @@ class AttendanceLogRepository:
         active = sum(1 for log in logs if log.check_out is None)
         return total, active
 
-    async def count_today_by_gym(self, gym_id: uuid.UUID) -> int:
-        today_start = datetime.combine(date.today(), time.min, tzinfo=UTC)
+    async def count_today_by_gym(self, gym_id: uuid.UUID, tz_str: str = "UTC") -> int:
+        today_start = day_start_local(tz_str)
         result = await self.db.execute(
             select(func.count())
             .select_from(AttendanceLog)

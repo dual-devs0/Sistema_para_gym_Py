@@ -45,7 +45,7 @@ async def test_check_in_and_out(db_session):
     assert log.check_in is not None
     assert log.check_out is None
 
-    checked_out = await service.check_out(log.id, gym_id)
+    checked_out = await service.check_out(uuid.UUID(log.id), gym_id)
     assert checked_out.check_out is not None
 
 
