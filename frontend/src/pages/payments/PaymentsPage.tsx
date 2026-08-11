@@ -87,11 +87,25 @@ export default function PaymentsPage() {
       setForm(emptyForm);
       setMemberSearch("");
     },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setFormError(detail || "No se pudo registrar el pago. Intentá de nuevo.");
+    },
   });
+
+  const [refundError, setRefundError] = useState("");
 
   const refundMutation = useMutation({
     mutationFn: (paymentId: string) => api.put(`/payments/${paymentId}/refund`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["payments"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      setRefundError("");
+    },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setRefundError(detail || "No se pudo reembolsar el pago. Intentá de nuevo.");
+      setTimeout(() => setRefundError(""), 5000);
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -158,6 +172,13 @@ export default function PaymentsPage() {
           Registrar pago
         </Button>
       </div>
+
+      {refundError && (
+        <div className="flex items-center gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2 mb-4">
+          <span className="material-symbols-outlined text-error shrink-0" style={{ fontSize: "16px" }}>error</span>
+          <p className="text-xs text-error">{refundError}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-container border border-outline-variant rounded-xl p-5">
