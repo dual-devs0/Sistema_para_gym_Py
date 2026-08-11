@@ -2,8 +2,8 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictException, NotFoundException
-from app.core.security import hash_password
+from app.core.exceptions import AppException, ConflictException, NotFoundException
+from app.core.security import hash_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
@@ -64,3 +64,9 @@ class UserService:
     async def delete(self, user_id: uuid.UUID, gym_id: uuid.UUID) -> None:
         user = await self.get_by_id(user_id, gym_id)
         await self.repo.soft_delete(user)
+
+    async def change_password(self, user: User, current_password: str, new_password: str) -> None:
+        if not verify_password(current_password, user.password_hash):
+            raise AppException("Current password is incorrect", status_code=400)
+        user.password_hash = hash_password(new_password)
+        await self.repo.update(user)

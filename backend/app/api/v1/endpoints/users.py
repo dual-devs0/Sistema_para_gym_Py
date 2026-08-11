@@ -3,13 +3,24 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_gym_id, require_permission
+from app.api.v1.deps import get_current_gym_id, get_current_user, require_permission
 from app.core.database import get_db
 from app.core.permissions import Perm
-from app.schemas.user import InviteResponse, UserCreate, UserInvite, UserResponse, UserUpdate
+from app.models.user import User
+from app.schemas.user import ChangePasswordRequest, InviteResponse, UserCreate, UserInvite, UserResponse, UserUpdate
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+@router.put("/me/password", status_code=204)
+async def change_my_password(
+    body: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = UserService(db)
+    await service.change_password(current_user, body.current_password, body.new_password)
 
 
 @router.get("", response_model=list[UserResponse])
