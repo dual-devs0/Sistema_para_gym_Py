@@ -197,7 +197,7 @@ export default function ProfilePage() {
             </div>
 
             {activeTab === "profile" && (
-              <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-xl">
+              <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-[36rem]">
                 {successMessage && (
                   <div className="text-xs text-secondary bg-secondary/10 px-3 py-2 rounded-lg flex items-center gap-2">
                     <Save className="w-3.5 h-3.5 flex-shrink-0" />
@@ -227,7 +227,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === "security" && (
-              <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-xl">
+              <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-[36rem]">
                 {passwordSuccess && (
                   <div className="text-xs text-secondary bg-secondary/10 px-3 py-2 rounded-lg flex items-center gap-2">
                     <Save className="w-3.5 h-3.5 flex-shrink-0" />

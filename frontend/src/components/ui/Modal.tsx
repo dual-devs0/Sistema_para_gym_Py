@@ -9,11 +9,16 @@ interface ModalProps {
   closeOnOverlayClick?: boolean;
 }
 
+// Arbitrary values on purpose: max-w-{sm,md,lg,xl} would resolve through
+// Tailwind's `--spacing-*` theme keys (see index.css @theme), which this repo
+// repurposes for gap-*/p-*/space-y-* (xs=4px ... xl=32px). Tailwind v4 prefers
+// --spacing-* over --container-* for max-w-*, so those classes silently
+// shrink to a few px. Bypass theme lookup entirely here.
 const sizeStyles = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  sm: "max-w-[28rem]",
+  md: "max-w-[32rem]",
+  lg: "max-w-[42rem]",
+  xl: "max-w-[56rem]",
 };
 
 export default function Modal({ open, onClose, title, children, size = "md", closeOnOverlayClick = true }: ModalProps) {
