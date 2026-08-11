@@ -62,7 +62,7 @@ class DashboardService:
 
     async def get_attendance_chart(self, gym_id: uuid.UUID, days: int = 7) -> dict:
         since = datetime.combine(date.today() - timedelta(days=days - 1), datetime.min.time(), tzinfo=UTC)
-        logs = await self.attendance_repo.list_since(since)
+        logs = await self.attendance_repo.list_since(gym_id, since)
 
         daily = {}
         for i in range(days):

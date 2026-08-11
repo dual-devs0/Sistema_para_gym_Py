@@ -6,6 +6,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+import app.core.redis as redis_module
 from app.core.database import get_db
 from app.main import app
 from app.models.base import Base
@@ -19,6 +20,17 @@ TEST_DATABASE_URL = os.getenv(
         "postgresql+asyncpg://gympro:gympro_dev@localhost:5432/gympro_test",
     ),
 )
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _reset_redis_singleton():
+    # app.core.redis caches its client as a module-level singleton bound to the
+    # event loop that created it. Tests run each on their own loop (function
+    # scope), so a client created in one test breaks in the next with
+    # "Event loop is closed". Force a fresh client per test.
+    yield
+    redis_module._redis = None
+    redis_module._fake_redis = None
 
 
 @pytest_asyncio.fixture

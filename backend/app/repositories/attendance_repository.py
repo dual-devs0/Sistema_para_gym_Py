@@ -72,8 +72,12 @@ class AttendanceLogRepository:
         )
         return result.scalar() or 0
 
-    async def list_since(self, since: datetime) -> list[AttendanceLog]:
-        result = await self.db.execute(select(AttendanceLog).where(AttendanceLog.check_in >= since))
+    async def list_since(self, gym_id: uuid.UUID, since: datetime) -> list[AttendanceLog]:
+        result = await self.db.execute(
+            select(AttendanceLog)
+            .join(Member)
+            .where(Member.gym_id == gym_id, Member.deleted_at.is_(None), AttendanceLog.check_in >= since)
+        )
         return list(result.scalars().all())
 
     async def create(self, log: AttendanceLog) -> AttendanceLog:

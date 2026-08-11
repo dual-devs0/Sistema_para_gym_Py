@@ -1,10 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.deps import get_current_user, require_platform_staff
+from app.core.config import settings
 from app.core.database import get_db
+from app.core.rate_limiter import rate_limit
 from app.models.gym import Gym
 from app.models.user import User
 from app.schemas.auth import (
@@ -37,7 +39,8 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+@rate_limit(settings.rate_limit_login_per_minute)
+async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
     access_token, refresh_token, _, previous_login = await service.login(body.email, body.password)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token, previous_login=previous_login)
@@ -73,17 +76,18 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 @router.post("/logout", status_code=204)
 async def logout(
-    authorization: str = Header(...),
+    authorization: str | None = Header(default=None),
     current_user: User = Depends(get_current_user),
 ):
     service = AuthService(None)
-    token = authorization.replace("Bearer ", "")
+    token = (authorization or "").replace("Bearer ", "")
     await service.logout(token)
     return None
 
 
 @router.post("/forgot-password", status_code=204)
-async def forgot_password(body: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+@rate_limit(settings.rate_limit_login_per_minute)
+async def forgot_password(request: Request, body: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
     await service.forgot_password(body.email)
     return None
