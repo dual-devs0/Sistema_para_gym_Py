@@ -74,3 +74,7 @@ descartaron porque `main` ya tiene el dark theme actual.
 
 - ~~`backend.zip` (snapshot viejo) — eliminar; Git es la fuente de verdad.~~ Hecho (2026-08-10): eliminado del repo, agregado `*.zip` a `.gitignore`.
 - Confirmar pruebas manuales contra la demo en entorno con Docker. **Bloqueado**: Docker no disponible en esta máquina de trabajo — pendiente correr en entorno con Docker instalado.
+
+### Bugs encontrados al verificar el setup Docker (sin correrlo, por lectura del compose/Makefile)
+- `docker-compose.yml` sustituye `${SECRET_KEY}` / `${DB_PASSWORD}` desde un `.env` en la raíz que no existía — el backend crasheaba al levantar (`secret_key` exige `min_length=32`, quedaba vacío). **Fix**: agregado `.env.example` en la raíz + `docs/setup.md` actualizado para copiarlo.
+- `make dev` apuntaba a `docker-compose.dev.yml`, archivo inexistente. **Fix**: target simplificado a `docker compose up --build`.
