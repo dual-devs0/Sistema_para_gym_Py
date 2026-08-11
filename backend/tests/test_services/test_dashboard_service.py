@@ -2,7 +2,6 @@ import uuid
 
 import pytest
 
-from app.models.member import Member
 from app.services.dashboard_service import DashboardService
 
 
@@ -19,12 +18,7 @@ async def test_summary_empty_gym(db_session):
 
 
 @pytest.mark.asyncio
-async def test_summary_with_active_member(db_session):
-    gym_id = uuid.uuid4()
-    member = Member(gym_id=gym_id, first_name="Test", last_name="User", status="active")
-    db_session.add(member)
-    await db_session.flush()
-
+async def test_summary_with_active_member(db_session, gym_id, member_id):
     service = DashboardService(db_session)
     summary = await service.get_summary(gym_id)
     assert summary["active_members"] == 1

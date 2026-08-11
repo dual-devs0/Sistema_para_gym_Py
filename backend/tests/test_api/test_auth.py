@@ -33,18 +33,11 @@ async def test_reset_password_invalid_token(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_register_weak_password_rejected(client: AsyncClient):
-    response = await client.post(
-        "/api/v1/auth/register",
-        json={"email": "test@test.com", "password": "123", "full_name": "Test User"},
-    )
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_register_min_length_password(client: AsyncClient):
+async def test_register_requires_platform_staff(client: AsyncClient):
+    # /auth/register is platform-staff-only (self-service signup disabled); an
+    # unauthenticated request must be rejected before any body validation runs.
     response = await client.post(
         "/api/v1/auth/register",
         json={"email": "test@test.com", "password": "12345678", "full_name": "Test User"},
     )
-    assert response.status_code in (201, 409)
+    assert response.status_code == 401
