@@ -72,5 +72,5 @@ descartaron porque `main` ya tiene el dark theme actual.
 
 ## Pendiente
 
-- `backend.zip` (snapshot viejo) — eliminar; Git es la fuente de verdad.
-- Confirmar pruebas manuales contra la demo en entorno con Docker.
+- ~~`backend.zip` (snapshot viejo) — eliminar; Git es la fuente de verdad.~~ Hecho (2026-08-10): eliminado del repo, agregado `*.zip` a `.gitignore`.
+- Confirmar pruebas manuales contra la demo en entorno con Docker. **Bloqueado**: Docker no disponible en esta máquina de trabajo — pendiente correr en entorno con Docker instalado.
