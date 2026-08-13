@@ -38,6 +38,12 @@ export function canViewGymSettings(role: string | undefined): boolean {
   return role === "owner" || role === "admin";
 }
 
+// users.create/users.update are owner/admin only (trainer/receptionist only
+// have users.read on the backend).
+export function canManageStaff(role: string | undefined): boolean {
+  return role === "owner" || role === "admin";
+}
+
 export function roleLabel(role: string | undefined): string {
   return ROLE_LABELS[role || ""] || role || "Usuario";
 }

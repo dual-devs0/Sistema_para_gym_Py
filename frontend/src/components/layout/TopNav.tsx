@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { allowedNavPaths, canViewGymSettings, roleLabel } from "../../utils/roles";
+import { allowedNavPaths, canManageStaff, canViewGymSettings, roleLabel } from "../../utils/roles";
 
 const allNavItems = [
   { to: "/", label: "Panel", icon: "dashboard" },
@@ -22,6 +22,7 @@ export default function TopNav() {
   const allowedPaths = allowedNavPaths(user?.role);
   const navItems = allNavItems.filter((i) => allowedPaths.includes(i.to));
   const showSettings = canViewGymSettings(user?.role);
+  const showStaff = canManageStaff(user?.role);
 
   const initials =
     user?.full_name
@@ -119,6 +120,16 @@ export default function TopNav() {
                   <span className="material-symbols-outlined">person</span>
                   <span>Perfil</span>
                 </Link>
+                {showStaff && (
+                  <Link
+                    to="/staff"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-sm px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors text-sm"
+                  >
+                    <span className="material-symbols-outlined">badge</span>
+                    <span>Staff</span>
+                  </Link>
+                )}
                 {showSettings && (
                   <Link
                     to="/settings"

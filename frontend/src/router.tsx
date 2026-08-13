@@ -9,9 +9,10 @@ import PaymentsPage from "./pages/payments/PaymentsPage";
 import AttendancePage from "./pages/attendance/AttendancePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import StaffPage from "./pages/staff/StaffPage";
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/useAuth";
-import { allowedNavPaths, canViewGymSettings, defaultRouteForRole } from "./utils/roles";
+import { allowedNavPaths, canManageStaff, canViewGymSettings, defaultRouteForRole } from "./utils/roles";
 
 // Roles without dashboard.view (receptionist, trainer) would otherwise land
 // on "/" and get a 403 from every dashboard endpoint. Send them to whatever
@@ -32,6 +33,15 @@ function GuardedSettings() {
     return <Navigate to={defaultRouteForRole(user.role)} replace />;
   }
   return <SettingsPage />;
+}
+
+// users.create/users.update are owner/admin only on the backend.
+function GuardedStaff() {
+  const { user } = useAuth();
+  if (user && !canManageStaff(user.role)) {
+    return <Navigate to={defaultRouteForRole(user.role)} replace />;
+  }
+  return <StaffPage />;
 }
 
 export default function Router() {
@@ -85,6 +95,14 @@ export default function Router() {
           element={
             <ProtectedRoute>
               <GuardedSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute>
+              <GuardedStaff />
             </ProtectedRoute>
           }
         />
