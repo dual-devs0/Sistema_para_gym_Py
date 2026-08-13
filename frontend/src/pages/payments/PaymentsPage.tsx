@@ -7,6 +7,8 @@ import Input from "../../components/ui/Input";
 import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
 import type { Payment, Member } from "../../types/api";
+import { useAuth } from "../../hooks/useAuth";
+import { canRefundPayments } from "../../utils/roles";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -54,6 +56,8 @@ const methodOptions = [
 
 export default function PaymentsPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const canRefund = canRefundPayments(user?.role);
   const { data: payments, isLoading } = useQuery({ queryKey: ["payments"], queryFn: fetchPayments });
   const { data: members } = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
 
@@ -285,7 +289,7 @@ export default function PaymentsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {p.status === "paid" && (
+                          {p.status === "paid" && canRefund && (
                             <button
                               onClick={() => refundMutation.mutate(p.id)}
                               className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors"
@@ -294,7 +298,7 @@ export default function PaymentsPage() {
                               <RotateCcw className="w-4 h-4" />
                             </button>
                           )}
-                          {p.status !== "paid" && (
+                          {(p.status !== "paid" || !canRefund) && (
                             <span className="text-xs text-on-surface-variant">—</span>
                           )}
                         </div>

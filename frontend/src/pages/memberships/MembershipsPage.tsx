@@ -8,6 +8,8 @@ import PlansTable from "../../components/feature/PlansTable";
 import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
 import type { MembershipPlan } from "../../types/api";
+import { useAuth } from "../../hooks/useAuth";
+import { canManagePlans } from "../../utils/roles";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -28,6 +30,8 @@ const typeOptions = [
 
 export default function MembershipsPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const canManage = canManagePlans(user?.role);
   const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: fetchPlans });
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -134,9 +138,11 @@ export default function MembershipsPage() {
             {plans?.length || 0} planes registrados
           </p>
         </div>
-        <Button variant="primary" onClick={openCreate} icon={<Plus className="w-4 h-4" />}>
-          Nuevo Plan
-        </Button>
+        {canManage && (
+          <Button variant="primary" onClick={openCreate} icon={<Plus className="w-4 h-4" />}>
+            Nuevo Plan
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -196,6 +202,7 @@ export default function MembershipsPage() {
               onStatusToggle={(id, status) => toggleActiveMutation.mutate({ id, is_active: status })}
               onRestore={(id) => toggleActiveMutation.mutate({ id, is_active: true })}
               onDelete={(id) => deleteMutation.mutate(id)}
+              readOnly={!canManage}
             />
             {totalPages > 1 && (
               <Pagination

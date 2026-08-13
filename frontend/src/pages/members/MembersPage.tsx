@@ -8,7 +8,7 @@ import MembersTable from "../../components/feature/MembersTable";
 import FilterBar from "../../components/feature/FilterBar";
 import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
-import type { Member, MemberListItem } from "../../types/api";
+import type { Member, MemberListItem, MemberMembership, AttendanceLog, MembershipPlan } from "../../types/api";
 
 const dateOpts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
 const dateFmt = (d: string) => d ? new Date(d).toLocaleDateString("es", dateOpts) : "—";
@@ -18,17 +18,52 @@ async function fetchMembers(): Promise<Member[]> {
   return data;
 }
 
-function transformMembers(members: Member[]): MemberListItem[] {
-  return members.map((m) => ({
-    id: m.id,
-    avatar: m.photo_url || undefined,
-    name: `${m.first_name} ${m.last_name}`,
-    memberId: `#GP-${String(m.id).slice(-4)}`,
-    plan: m.status === "active" ? "Premium Anual" : "Básico Mensual",
-    status: m.status as "active" | "frozen" | "cancelled",
-    expiration: dateFmt(m.updated_at),
-    lastCheckin: dateFmt(m.created_at),
-  }));
+async function fetchMemberships(): Promise<MemberMembership[]> {
+  const { data } = await api.get("/memberships");
+  return data;
+}
+
+async function fetchAttendance(): Promise<AttendanceLog[]> {
+  const { data } = await api.get("/attendance");
+  return data;
+}
+
+async function fetchPlans(): Promise<MembershipPlan[]> {
+  const { data } = await api.get("/plans");
+  return data;
+}
+
+function transformMembers(
+  members: Member[],
+  memberships: MemberMembership[],
+  attendance: AttendanceLog[],
+): MemberListItem[] {
+  return members.map((m) => {
+    // Real plan/expiration: most recent membership assigned to this member
+    // (by end_date), not a hardcoded guess from member.status.
+    const memberMemberships = memberships
+      .filter((mm) => mm.member_id === m.id)
+      .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
+    const currentMembership = memberMemberships.find((mm) => mm.status === "active") || memberMemberships[0];
+
+    // Real last check-in: most recent attendance log for this member, not
+    // member.created_at (registration date).
+    const memberLogs = attendance
+      .filter((l) => l.member_id === m.id)
+      .sort((a, b) => new Date(b.check_in).getTime() - new Date(a.check_in).getTime());
+    const lastLog = memberLogs[0];
+
+    return {
+      id: m.id,
+      avatar: m.photo_url || undefined,
+      name: `${m.first_name} ${m.last_name}`,
+      memberId: `#GP-${String(m.id).slice(-4)}`,
+      plan: currentMembership?.plan_name || "Sin plan asignado",
+      status: m.status as "active" | "frozen" | "cancelled",
+      expiration: currentMembership ? dateFmt(currentMembership.end_date) : "—",
+      lastCheckin: lastLog ? dateFmt(lastLog.check_in) : "Nunca",
+    };
+  });
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -36,6 +71,9 @@ const ITEMS_PER_PAGE = 10;
 export default function MembersPage() {
   const qc = useQueryClient();
   const { data: members, isLoading } = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
+  const { data: memberships } = useQuery({ queryKey: ["memberships"], queryFn: fetchMemberships });
+  const { data: attendance } = useQuery({ queryKey: ["attendance"], queryFn: fetchAttendance });
+  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: fetchPlans });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [viewMember, setViewMember] = useState<Member | null>(null);
@@ -109,13 +147,13 @@ export default function MembersPage() {
 
   const transformed = useMemo(() => {
     if (!members) return [];
-    let r = transformMembers(members);
+    let r = transformMembers(members, memberships || [], attendance || []);
     const q = searchValue.toLowerCase();
     if (q) r = r.filter((m) => m.name.toLowerCase().includes(q) || m.memberId.toLowerCase().includes(q));
     if (statusFilter !== "all") r = r.filter((m) => m.status === statusFilter);
     if (planFilter !== "all") r = r.filter((m) => m.plan === planFilter);
     return r;
-  }, [members, searchValue, statusFilter, planFilter]);
+  }, [members, memberships, attendance, searchValue, statusFilter, planFilter]);
 
   const totalPages = Math.ceil(transformed.length / ITEMS_PER_PAGE);
   const paginated = transformed.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -142,6 +180,7 @@ export default function MembersPage() {
         onStatusChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}
         planFilter={planFilter}
         onPlanChange={(v) => { setPlanFilter(v); setCurrentPage(1); }}
+        planOptions={plans?.map((p) => p.name)}
         onClearFilters={() => { setSearchValue(""); setStatusFilter("all"); setPlanFilter("all"); setCurrentPage(1); }}
         hasActiveFilters={hasActiveFilters}
       />

@@ -44,6 +44,18 @@ export function canManageStaff(role: string | undefined): boolean {
   return role === "owner" || role === "admin";
 }
 
+// plans.create/update/delete are owner/admin only — receptionist can assign
+// existing plans (memberships.assign) but not create/edit/deactivate them.
+export function canManagePlans(role: string | undefined): boolean {
+  return role === "owner" || role === "admin";
+}
+
+// payments.refund is owner/admin only — receptionist can register payments
+// but not refund them.
+export function canRefundPayments(role: string | undefined): boolean {
+  return role === "owner" || role === "admin";
+}
+
 export function roleLabel(role: string | undefined): string {
   return ROLE_LABELS[role || ""] || role || "Usuario";
 }

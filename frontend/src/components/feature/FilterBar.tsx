@@ -7,6 +7,7 @@ interface FilterBarProps {
   onStatusChange: (value: string) => void;
   planFilter: string;
   onPlanChange: (value: string) => void;
+  planOptions?: string[];
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }
@@ -16,13 +17,6 @@ const statusOptions = [
   { value: "active", label: "Activo" },
   { value: "frozen", label: "Congelado" },
   { value: "cancelled", label: "Cancelado" },
-];
-
-const planOptions = [
-  { value: "all", label: "Todos los planes" },
-  { value: "premium_annual", label: "Premium Anual" },
-  { value: "monthly_basic", label: "Básico Mensual" },
-  { value: "student_access", label: "Acceso Estudiante" },
 ];
 
 function Select({ options, value, onChange }: { options: { value: string; label: string }[]; value: string; onChange: (v: string) => void }) {
@@ -74,6 +68,10 @@ function Select({ options, value, onChange }: { options: { value: string; label:
 }
 
 export default function FilterBar(props: FilterBarProps) {
+  const planOptions = [
+    { value: "all", label: "Todos los planes" },
+    ...(props.planOptions || []).map((name) => ({ value: name, label: name })),
+  ];
   return (
     <div className="flex items-center gap-3 mb-4 flex-wrap">
       <div className="relative flex-1 min-w-[200px]">

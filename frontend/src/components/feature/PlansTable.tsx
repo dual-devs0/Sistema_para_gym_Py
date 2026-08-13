@@ -7,6 +7,7 @@ interface PlansTableProps {
   onRestore: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (plan: MembershipPlan) => void;
+  readOnly?: boolean;
 }
 
 const typeConfig: Record<string, { label: string; color: string }> = {
@@ -24,6 +25,7 @@ export default function PlansTable({
   onRestore,
   onDelete,
   onEdit,
+  readOnly = false,
 }: PlansTableProps) {
   return (
     <table className="w-full">
@@ -74,7 +76,9 @@ export default function PlansTable({
             </td>
             <td className="px-6 py-4 text-right">
               <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {plan.is_active ? (
+                {readOnly ? (
+                  <span className="text-xs text-on-surface-variant">—</span>
+                ) : plan.is_active ? (
                   <>
                     <button
                       onClick={(e) => { e.stopPropagation(); onEdit(plan); }}
