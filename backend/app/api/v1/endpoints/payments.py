@@ -7,6 +7,7 @@ from app.api.v1.deps import get_current_gym_id, require_permission
 from app.core.database import get_db
 from app.core.permissions import Perm
 from app.schemas.payment import PaymentResponse, RegisterPaymentRequest
+from app.services.audit_service import AuditService
 from app.services.payment_service import PaymentService
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -50,7 +51,11 @@ async def refund_payment(
     user=Depends(require_permission(Perm.PAYMENT_REFUND)),
 ):
     service = PaymentService(db)
-    return await service.refund(payment_id, gym_id)
+    result = await service.refund(payment_id, gym_id)
+    await AuditService(db, user_id=user.id, gym_id=gym_id).log(
+        AuditService.ACTIONS["REFUND"], "payment", record_id=str(payment_id)
+    )
+    return result
 
 
 @router.get("/{payment_id}/invoice")

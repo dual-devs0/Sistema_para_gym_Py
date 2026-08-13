@@ -3,7 +3,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.endpoints import attendance, auth, dashboard, gym, health, members, memberships, payments, plans, users
+from app.api.v1.endpoints import (
+    attendance,
+    audit,
+    auth,
+    dashboard,
+    gym,
+    health,
+    members,
+    memberships,
+    payments,
+    plans,
+    users,
+)
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
@@ -42,6 +54,7 @@ app.include_router(memberships.router, prefix="/api/v1")
 app.include_router(attendance.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(audit.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 
 register_exception_handlers(app)

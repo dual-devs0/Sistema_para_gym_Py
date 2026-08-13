@@ -2,19 +2,19 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException, NotFoundException
 from app.models.payment import Invoice, Payment
 from app.repositories.member_repository import MemberRepository
-from app.repositories.payment_repository import InvoiceRepository, PaymentRepository
+from app.repositories.payment_repository import PaymentRepository
 from app.schemas.payment import PaymentResponse
 
 
 class PaymentService:
     def __init__(self, db: AsyncSession):
         self.repo = PaymentRepository(db)
-        self.invoice_repo = InvoiceRepository(db)
         self.member_repo = MemberRepository(db)
         self.db = db
 
@@ -74,22 +74,36 @@ class PaymentService:
             raise NotFoundException("Invoice not found")
         return invoice
 
-    async def _generate_invoice_number(self, payment: Payment) -> None:
-        result = await self.db.execute(select(func.max(Invoice.invoice_number)).select_from(Invoice))
-        max_num = result.scalar()
-        next_num = 1
-        if max_num:
-            parts = max_num.rsplit("-", 1)
-            if len(parts) == 2:
-                try:
-                    next_num = int(parts[1]) + 1
-                except ValueError:
-                    next_num = 1
-        invoice = Invoice(
-            payment_id=payment.id,
-            invoice_number=f"INV-{datetime.now().year}-{next_num:05d}",
-        )
-        await self.invoice_repo.create(invoice)
+    async def _generate_invoice_number(self, payment: Payment, attempts: int = 5) -> None:
+        # invoice_number is unique at the DB level; under concurrent requests
+        # two transactions can read the same MAX() and collide on insert.
+        # Retry inside a SAVEPOINT so a collision only rolls back the invoice
+        # insert, not the payment already created in this same transaction.
+        last_error: IntegrityError | None = None
+        for _ in range(attempts):
+            result = await self.db.execute(select(func.max(Invoice.invoice_number)).select_from(Invoice))
+            max_num = result.scalar()
+            next_num = 1
+            if max_num:
+                parts = max_num.rsplit("-", 1)
+                if len(parts) == 2:
+                    try:
+                        next_num = int(parts[1]) + 1
+                    except ValueError:
+                        next_num = 1
+            invoice = Invoice(
+                payment_id=payment.id,
+                invoice_number=f"INV-{datetime.now().year}-{next_num:05d}",
+            )
+            try:
+                async with self.db.begin_nested():
+                    self.db.add(invoice)
+                    await self.db.flush()
+                await self.db.refresh(invoice)
+                return
+            except IntegrityError as exc:
+                last_error = exc
+        raise AppException("Could not generate a unique invoice number, please retry", status_code=409) from last_error
 
     async def _to_response(self, payment: Payment) -> PaymentResponse:
         resp = PaymentResponse.model_validate(payment)

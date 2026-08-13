@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.core.permissions import Perm
 from app.models.user import User
 from app.schemas.user import ChangePasswordRequest, InviteResponse, UserCreate, UserInvite, UserResponse, UserUpdate
+from app.services.audit_service import AuditService
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -76,7 +77,18 @@ async def update_user(
     user=Depends(require_permission(Perm.USER_UPDATE)),
 ):
     service = UserService(db)
-    return await service.update(user_id, gym_id, body.model_dump(exclude_unset=True))
+    target_before = await service.get_by_id(user_id, gym_id)
+    old_role = target_before.role
+    data = body.model_dump(exclude_unset=True)
+    updated = await service.update(user_id, gym_id, data)
+    if "role" in data and data["role"] != old_role:
+        await AuditService(db, user_id=user.id, gym_id=gym_id).log(
+            AuditService.ACTIONS["ROLE_CHANGE"],
+            "user",
+            record_id=str(user_id),
+            changes={"from": old_role, "to": data["role"]},
+        )
+    return updated
 
 
 @router.delete("/{user_id}", status_code=204)

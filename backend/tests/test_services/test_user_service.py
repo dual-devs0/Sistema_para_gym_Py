@@ -31,12 +31,22 @@ async def test_get_user_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_update_user_restricted_fields(db_session, gym_id):
+async def test_update_user_allows_role_change(db_session, gym_id):
+    # role/is_active are intentionally editable via update() — used by the
+    # staff management endpoint (PUT /users/{id}) to promote/demote staff.
     service = UserService(db_session)
     user = await service.create("update@test.com", "Secure123!", "Original", "trainer", gym_id)
     updated = await service.update(user.id, gym_id, {"full_name": "Updated", "role": "owner"})
     assert updated.full_name == "Updated"
-    assert updated.role == "trainer"
+    assert updated.role == "owner"
+
+
+@pytest.mark.asyncio
+async def test_update_user_ignores_unknown_fields(db_session, gym_id):
+    service = UserService(db_session)
+    user = await service.create("restricted@test.com", "Secure123!", "Original", "trainer", gym_id)
+    updated = await service.update(user.id, gym_id, {"email": "hacked@test.com"})
+    assert updated.email == "restricted@test.com"
 
 
 @pytest.mark.asyncio

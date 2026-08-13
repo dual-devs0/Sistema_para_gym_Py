@@ -7,7 +7,7 @@ from app.core.security import hash_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
-ALLOWED_USER_FIELDS = {"full_name", "phone"}
+ALLOWED_USER_FIELDS = {"full_name", "phone", "role", "is_active"}
 
 
 class UserService:
