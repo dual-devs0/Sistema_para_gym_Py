@@ -10,6 +10,7 @@ import AttendancePage from "./pages/attendance/AttendancePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import StaffPage from "./pages/staff/StaffPage";
+import ReceptionPage from "./pages/reception/ReceptionPage";
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/useAuth";
 import { allowedNavPaths, canManageStaff, canViewGymSettings, defaultRouteForRole } from "./utils/roles";
@@ -55,6 +56,14 @@ export default function Router() {
           element={
             <ProtectedRoute>
               <RoleHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reception"
+          element={
+            <ProtectedRoute>
+              <ReceptionPage />
             </ProtectedRoute>
           }
         />

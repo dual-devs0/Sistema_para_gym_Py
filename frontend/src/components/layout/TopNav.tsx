@@ -5,6 +5,7 @@ import { allowedNavPaths, canManageStaff, canViewGymSettings, roleLabel } from "
 
 const allNavItems = [
   { to: "/", label: "Panel", icon: "dashboard" },
+  { to: "/reception", label: "Recepción", icon: "front_hand" },
   { to: "/members", label: "Miembros", icon: "group" },
   { to: "/memberships", label: "Membresías", icon: "card_membership" },
   { to: "/attendance", label: "Asistencia", icon: "event_available" },

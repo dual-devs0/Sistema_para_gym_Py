@@ -16,10 +16,10 @@ export const ROLE_LABELS: Record<string, string> = {
 // Which nav items each role can see. Matches backend permission gaps:
 // receptionist/trainer lack dashboard.view and gym.settings.read.
 const NAV_BY_ROLE: Record<string, string[]> = {
-  owner: ["/", "/members", "/memberships", "/attendance", "/payments"],
-  admin: ["/", "/members", "/memberships", "/attendance", "/payments"],
-  receptionist: ["/members", "/memberships", "/attendance", "/payments"],
-  trainer: ["/members", "/memberships", "/attendance"],
+  owner: ["/", "/reception", "/members", "/memberships", "/attendance", "/payments"],
+  admin: ["/", "/reception", "/members", "/memberships", "/attendance", "/payments"],
+  receptionist: ["/reception", "/members", "/memberships", "/attendance", "/payments"],
+  trainer: ["/reception", "/members", "/memberships", "/attendance"],
 };
 
 export function allowedNavPaths(role: string | undefined): string[] {
