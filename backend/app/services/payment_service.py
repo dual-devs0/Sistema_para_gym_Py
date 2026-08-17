@@ -10,6 +10,7 @@ from app.models.payment import Invoice, Payment
 from app.repositories.member_repository import MemberRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.schemas.payment import PaymentResponse
+from app.utils.currency import round_cash_pyg
 
 
 class PaymentService:
@@ -39,6 +40,9 @@ class PaymentService:
         member = await self.member_repo.get_by_id(member_id, gym_id)
         if not member:
             raise NotFoundException("Member not found")
+
+        if payment_method == "cash":
+            amount = round_cash_pyg(amount)
 
         payment = Payment(
             gym_id=gym_id,

@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 interface Props {
   label: string;
-  value: number;
+  value: number | string;
   prefix?: string;
   trend?: { value: number; direction: "up" | "down"; label: string };
   icon: ReactNode;

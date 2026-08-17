@@ -12,14 +12,14 @@ async function fetchSettings(): Promise<GymSettings> {
 }
 
 const timezoneOptions = [
-  { value: "America/Mexico_City", label: "México (GMT-6)" },
+  { value: "America/Asuncion", label: "Paraguay (GMT-4)" },
   { value: "America/Argentina/Buenos_Aires", label: "Argentina (GMT-3)" },
   { value: "America/Santiago", label: "Chile (GMT-4)" },
   { value: "America/Bogota", label: "Colombia (GMT-5)" },
   { value: "America/Lima", label: "Perú (GMT-5)" },
   { value: "America/Caracas", label: "Venezuela (GMT-4)" },
   { value: "America/Montevideo", label: "Uruguay (GMT-3)" },
-  { value: "America/Asuncion", label: "Paraguay (GMT-4)" },
+  { value: "America/Mexico_City", label: "México (GMT-6)" },
   { value: "America/La_Paz", label: "Bolivia (GMT-4)" },
   { value: "America/Guatemala", label: "Guatemala (GMT-6)" },
   { value: "America/Puerto_Rico", label: "Puerto Rico (GMT-4)" },
@@ -32,14 +32,14 @@ const timezoneOptions = [
 ];
 
 const currencyOptions = [
-  { value: "MXN", label: "MXN - Peso mexicano" },
+  { value: "PYG", label: "PYG - Guaraní paraguayo" },
   { value: "ARS", label: "ARS - Peso argentino" },
   { value: "CLP", label: "CLP - Peso chileno" },
   { value: "COP", label: "COP - Peso colombiano" },
   { value: "PEN", label: "PEN - Sol peruano" },
   { value: "VES", label: "VES - Bolívar venezolano" },
   { value: "UYU", label: "UYU - Peso uruguayo" },
-  { value: "PYG", label: "PYG - Guaraní paraguayo" },
+  { value: "MXN", label: "MXN - Peso mexicano" },
   { value: "BOB", label: "BOB - Boliviano" },
   { value: "GTQ", label: "GTQ - Quetzal guatemalteco" },
   { value: "USD", label: "USD - Dólar estadounidense" },
@@ -67,7 +67,7 @@ export default function SettingsPage() {
   const { data: settings, isLoading } = useQuery({ queryKey: ["gym-settings"], queryFn: fetchSettings });
   const [form, setForm] = useState({
     name: "", slug: "", logo_url: "", address: "", phone: "", email: "",
-    currency: "MXN", timezone: "America/Mexico_City",
+    currency: "PYG", timezone: "America/Asuncion",
   });
 
   useEffect(() => {
@@ -79,8 +79,8 @@ export default function SettingsPage() {
         address: settings.address || "",
         phone: settings.phone || "",
         email: settings.email || "",
-        currency: settings.currency || "MXN",
-        timezone: settings.timezone || "America/Mexico_City",
+        currency: settings.currency || "PYG",
+        timezone: settings.timezone || "America/Asuncion",
       });
     }
   }, [settings]);

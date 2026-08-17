@@ -7,6 +7,7 @@ import MemberStatusDonut from "../../components/feature/MemberStatusDonut";
 import ExpiringTable from "../../components/feature/ExpiringTable";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
+import { formatPYG } from "../../utils";
 import type { DashboardSummary, DashboardRevenueResponse, DashboardExpiringItem } from "../../types/api";
 
 const DAYS_MAP: Record<string, number> = { "7d": 7, "30d": 30, "1a": 365 };
@@ -65,8 +66,7 @@ export default function DashboardPage() {
     {
       key: "revenue_today",
       label: "Ingresos de Hoy",
-      value: summary?.revenue_today ?? 0,
-      prefix: "₲",
+      value: formatPYG(summary?.revenue_today ?? 0),
       trend: { value: 12, direction: "up" as const, label: "vs. ayer" },
       icon: <DollarSign size={20} />,
       iconColor: "primary" as const,
@@ -121,7 +121,6 @@ export default function DashboardPage() {
             key={stat.key}
             label={stat.label}
             value={stat.value}
-            prefix={stat.prefix}
             trend={stat.trend}
             icon={stat.icon}
             iconColor={stat.iconColor}

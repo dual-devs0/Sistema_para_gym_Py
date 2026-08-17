@@ -12,8 +12,8 @@ class Gym(Base, TimestampMixin, UUIDMixin):
     address: Mapped[str | None] = mapped_column(String(300), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    currency: Mapped[str] = mapped_column(String(3), default="MXN")
-    timezone: Mapped[str] = mapped_column(String(50), default="America/Mexico_City")
+    currency: Mapped[str] = mapped_column(String(3), default="PYG")
+    timezone: Mapped[str] = mapped_column(String(50), default="America/Asuncion")
     business_hours: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 

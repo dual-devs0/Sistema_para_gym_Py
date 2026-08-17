@@ -9,6 +9,7 @@ import api from "../../services/api";
 import type { Payment, Member } from "../../types/api";
 import { useAuth } from "../../hooks/useAuth";
 import { canRefundPayments } from "../../utils/roles";
+import { formatPYG } from "../../utils";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -188,7 +189,7 @@ export default function PaymentsPage() {
         <div className="bg-surface-container border border-outline-variant rounded-xl p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Ingresos totales</p>
           <p className="text-3xl font-bold text-on-surface mt-1.5 tabular-nums">
-            ${totalRevenue.toFixed(2)}
+            {formatPYG(totalRevenue)}
           </p>
         </div>
         <div className="bg-surface-container border border-outline-variant rounded-xl p-5">
@@ -268,7 +269,7 @@ export default function PaymentsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-mono text-sm font-semibold text-on-surface tabular-nums">
-                        ${p.amount.toFixed(2)}
+                        {formatPYG(p.amount)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${methodColors[p.payment_method] || "bg-surface-container-higher text-on-surface-variant"}`}>
@@ -385,7 +386,7 @@ export default function PaymentsPage() {
           {formError && (
             <p className="text-xs text-error font-medium">{formError}</p>
           )}
-          <Input label="Monto ($)" type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+          <Input label="Monto (₲)" type="number" step="1" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-on-surface">Método de pago</label>
             <select value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })} className="rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/50">

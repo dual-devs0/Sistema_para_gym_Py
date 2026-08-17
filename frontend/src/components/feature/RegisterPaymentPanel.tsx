@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import SidePanel from "../layout/SidePanel";
+import { formatPYG } from "../../utils";
 
 interface MemberOption {
   id: string;
@@ -40,7 +41,7 @@ const mockDefaultMember: MemberOption = {
   name: "Marcus Aurelio",
   initials: "MA",
   planName: "Plan Básico Mensual",
-  planPrice: 29.00,
+  planPrice: 150000,
   dueDate: "Vence 24 Oct",
 };
 
@@ -48,7 +49,7 @@ export default function RegisterPaymentPanel({ open, onClose, members: _members,
   const [selectedMember, setSelectedMember] = useState<MemberOption>(mockDefaultMember);
   const [memberSearch, setMemberSearch] = useState("Marcus Aurelio");
   const [plan, setPlan] = useState("Monthly Basic");
-  const [amount, setAmount] = useState("29.00");
+  const [amount, setAmount] = useState("150000");
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [date, setDate] = useState("Today, Oct 24, 2023");
   const [reference, setReference] = useState("");
@@ -65,7 +66,7 @@ export default function RegisterPaymentPanel({ open, onClose, members: _members,
     setMemberSearch("Marcus Aurelio");
     setSelectedMember(mockDefaultMember);
     setPlan("Monthly Basic");
-    setAmount("29.00");
+    setAmount("150000");
     setMethod("cash");
     setDate("Today, Oct 24, 2023");
     setReference("");
@@ -141,7 +142,7 @@ export default function RegisterPaymentPanel({ open, onClose, members: _members,
               </div>
               <div className="flex items-center justify-between text-body-sm mb-sm">
                 <span className="text-on-surface-variant">Monto</span>
-                <span className="font-data-mono text-primary font-bold">${amount}</span>
+                <span className="font-data-mono text-primary font-bold">{formatPYG(Number(amount) || 0)}</span>
               </div>
               <div className="flex items-center justify-between text-body-sm">
                 <span className="text-on-surface-variant">Método</span>
@@ -185,7 +186,7 @@ export default function RegisterPaymentPanel({ open, onClose, members: _members,
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-primary font-data-mono font-bold">${selectedMember.planPrice.toFixed(2)}</span>
+                  <span className="text-primary font-data-mono font-bold">{formatPYG(selectedMember.planPrice)}</span>
                   <div className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">{selectedMember.dueDate}</div>
                 </div>
               </div>
@@ -208,15 +209,15 @@ export default function RegisterPaymentPanel({ open, onClose, members: _members,
               <div className="space-y-sm">
                 <label className="font-label-caps text-label-caps text-on-surface-variant">Monto</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-primary font-bold pointer-events-none">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-primary font-bold pointer-events-none">₲</span>
                   <input
                     value={amount}
                     onChange={(e) => { setAmount(e.target.value); setAmountError(""); }}
-                    className={`w-full bg-surface border rounded-lg pl-7 pr-4 py-3 min-h-[44px] text-body-md font-data-mono font-bold text-primary focus:outline-none transition-colors ${
+                    className={`w-full bg-surface border rounded-lg pl-8 pr-4 py-3 min-h-[44px] text-body-md font-data-mono font-bold text-primary focus:outline-none transition-colors ${
                       amountError ? "border-error" : "border-outline-variant focus:border-primary"
                     }`}
                     type="text"
-                    inputMode="decimal"
+                    inputMode="numeric"
                   />
                 </div>
                 {amountError && (
