@@ -145,6 +145,18 @@ export interface GymSettings {
   currency: string;
   timezone: string;
   business_hours: Record<string, string> | null;
+  notifications_enabled: boolean;
+}
+
+export interface NotificationLog {
+  id: string;
+  member_id: string;
+  member_membership_id: string | null;
+  type: "payment_confirmation" | "expiry_reminder";
+  status: "sent" | "failed" | "disabled";
+  error_message: string | null;
+  sent_at: string | null;
+  created_at: string;
 }
 
 export interface User {

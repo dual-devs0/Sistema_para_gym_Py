@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     db_pool_timeout: int = Field(default=30, alias="DB_POOL_TIMEOUT")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
+    whatsapp_api_key: str | None = Field(default=None, alias="WHATSAPP_360DIALOG_API_KEY")
+    whatsapp_base_url: str = Field(default="https://waba-v2.360dialog.io", alias="WHATSAPP_360DIALOG_BASE_URL")
+    whatsapp_sender_channel: str | None = Field(default=None, alias="WHATSAPP_360DIALOG_CHANNEL_ID")
+    whatsapp_expiry_reminder_days: int = Field(default=3, alias="WHATSAPP_EXPIRY_REMINDER_DAYS")
+
     cors_allow_methods: str = Field(default="GET,POST,PUT,DELETE,OPTIONS,PATCH", alias="CORS_ALLOW_METHODS")
     cors_allow_headers: str = Field(
         default="Authorization,Content-Type,X-Requested-With,Accept,Origin", alias="CORS_ALLOW_HEADERS"
@@ -54,6 +59,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def whatsapp_enabled(self) -> bool:
+        return bool(self.whatsapp_api_key)
 
     @field_validator("secret_key")
     @classmethod

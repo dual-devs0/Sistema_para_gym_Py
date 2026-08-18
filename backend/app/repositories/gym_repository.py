@@ -18,3 +18,9 @@ class GymRepository:
         await self.db.flush()
         await self.db.refresh(gym)
         return gym
+
+    async def list_active_with_notifications_enabled(self) -> list[Gym]:
+        result = await self.db.execute(
+            select(Gym).where(Gym.is_active.is_(True), Gym.notifications_enabled.is_(True))
+        )
+        return list(result.scalars().all())

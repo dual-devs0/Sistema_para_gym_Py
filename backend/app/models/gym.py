@@ -16,6 +16,7 @@ class Gym(Base, TimestampMixin, UUIDMixin):
     timezone: Mapped[str] = mapped_column(String(50), default="America/Asuncion")
     business_hours: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
 
     users = relationship("User", back_populates="gym", lazy="selectin")
     members = relationship("Member", back_populates="gym", lazy="selectin")

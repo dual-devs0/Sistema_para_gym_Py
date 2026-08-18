@@ -6,7 +6,17 @@ from app.core.exceptions import NotFoundException
 from app.models.gym import Gym
 from app.repositories.gym_repository import GymRepository
 
-ALLOWED_GYM_FIELDS = {"name", "logo_url", "address", "phone", "email", "currency", "timezone", "business_hours"}
+ALLOWED_GYM_FIELDS = {
+    "name",
+    "logo_url",
+    "address",
+    "phone",
+    "email",
+    "currency",
+    "timezone",
+    "business_hours",
+    "notifications_enabled",
+}
 
 
 class GymService:

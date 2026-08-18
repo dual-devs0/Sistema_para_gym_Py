@@ -8,7 +8,24 @@ import MembersTable from "../../components/feature/MembersTable";
 import FilterBar from "../../components/feature/FilterBar";
 import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
-import type { Member, MemberListItem, MemberMembership, AttendanceLog, MembershipPlan } from "../../types/api";
+import type { Member, MemberListItem, MemberMembership, AttendanceLog, MembershipPlan, NotificationLog } from "../../types/api";
+
+const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
+  payment_confirmation: "Confirmación de pago",
+  expiry_reminder: "Recordatorio de vencimiento",
+};
+
+const NOTIFICATION_STATUS_STYLES: Record<string, string> = {
+  sent: "bg-secondary/10 text-secondary",
+  failed: "bg-error/10 text-error",
+  disabled: "bg-surface-container-highest text-on-surface-variant",
+};
+
+const NOTIFICATION_STATUS_LABELS: Record<string, string> = {
+  sent: "Enviado",
+  failed: "Fallido",
+  disabled: "No enviado",
+};
 
 const dateOpts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
 const dateFmt = (d: string) => d ? new Date(d).toLocaleDateString("es", dateOpts) : "—";
@@ -77,6 +94,15 @@ export default function MembersPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [viewMember, setViewMember] = useState<Member | null>(null);
+
+  const { data: memberNotifications } = useQuery({
+    queryKey: ["notifications", viewMember?.id],
+    queryFn: async () => {
+      const { data } = await api.get<NotificationLog[]>(`/notifications/member/${viewMember!.id}`);
+      return data;
+    },
+    enabled: !!viewMember,
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<{ first_name: string; last_name: string; email: string; phone: string; document_number: string }>({ first_name: "", last_name: "", email: "", phone: "", document_number: "" });
 
@@ -282,6 +308,28 @@ export default function MembersPage() {
                 <p className="text-on-surface mt-0.5">{dateFmt(viewMember.created_at)}</p>
               </div>
             </div>
+
+            <div className="pt-4 border-t border-outline-variant/30">
+              <p className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold mb-2">
+                Historial de notificaciones
+              </p>
+              {!memberNotifications || memberNotifications.length === 0 ? (
+                <p className="text-sm text-on-surface-variant">Sin notificaciones enviadas.</p>
+              ) : (
+                <ul className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {memberNotifications.map((n) => (
+                    <li key={n.id} className="flex items-center justify-between text-sm gap-2">
+                      <span className="text-on-surface">{NOTIFICATION_TYPE_LABELS[n.type] || n.type}</span>
+                      <span className="text-on-surface-variant text-xs">{dateFmt(n.created_at)}</span>
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${NOTIFICATION_STATUS_STYLES[n.status] || ""}`}>
+                        {NOTIFICATION_STATUS_LABELS[n.status] || n.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <div className="flex justify-end pt-2">
               <Button variant="secondary" onClick={() => setViewMember(null)}>Cerrar</Button>
             </div>

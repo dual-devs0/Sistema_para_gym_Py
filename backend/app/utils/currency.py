@@ -9,3 +9,12 @@ def round_cash_pyg(amount: float) -> int:
     final amount actually collected in cash, not to plan base prices.
     """
     return round(amount / CASH_ROUNDING_STEP) * CASH_ROUNDING_STEP
+
+
+def format_pyg(amount: float) -> str:
+    """Render an amount as ₲-prefixed, thousands-dotted, no-decimals PYG text.
+
+    Mirrors frontend/src/utils/index.ts formatPYG so WhatsApp templates show
+    the same "₲ 850.000" format members see in the app.
+    """
+    return f"₲ {round(amount):,}".replace(",", ".")

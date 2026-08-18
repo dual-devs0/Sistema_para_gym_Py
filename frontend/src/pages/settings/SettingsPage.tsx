@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Building2, Clock, MapPin, Globe } from "lucide-react";
+import { Save, Building2, Clock, MapPin, Globe, MessageCircle } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import api from "../../services/api";
@@ -67,7 +67,7 @@ export default function SettingsPage() {
   const { data: settings, isLoading } = useQuery({ queryKey: ["gym-settings"], queryFn: fetchSettings });
   const [form, setForm] = useState({
     name: "", slug: "", logo_url: "", address: "", phone: "", email: "",
-    currency: "PYG", timezone: "America/Asuncion",
+    currency: "PYG", timezone: "America/Asuncion", notifications_enabled: false,
   });
 
   useEffect(() => {
@@ -81,6 +81,7 @@ export default function SettingsPage() {
         email: settings.email || "",
         currency: settings.currency || "PYG",
         timezone: settings.timezone || "America/Asuncion",
+        notifications_enabled: settings.notifications_enabled ?? false,
       });
     }
   }, [settings]);
@@ -102,6 +103,7 @@ export default function SettingsPage() {
       email: form.email || undefined,
       currency: form.currency,
       timezone: form.timezone,
+      notifications_enabled: form.notifications_enabled,
     });
   };
 
@@ -165,6 +167,24 @@ export default function SettingsPage() {
               </select>
             </div>
           </div>
+        </SectionCard>
+
+        <SectionCard icon={<MessageCircle className="w-5 h-5" />} title="Notificaciones">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.notifications_enabled}
+              onChange={(e) => setForm({ ...form, notifications_enabled: e.target.checked })}
+              className="mt-1 w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/50"
+            />
+            <div>
+              <span className="text-sm font-medium text-on-surface">Enviar notificaciones automáticas por WhatsApp</span>
+              <p className="text-[11px] text-on-surface-variant mt-0.5">
+                Confirmación de pago y recordatorio de vencimiento. Los mensajes se envían desde
+                el número de WhatsApp de GymPro (número compartido).
+              </p>
+            </div>
+          </label>
         </SectionCard>
 
         <div className="flex items-center gap-4">
