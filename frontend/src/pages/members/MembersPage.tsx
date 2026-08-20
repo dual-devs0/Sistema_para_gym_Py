@@ -363,7 +363,7 @@ export default function MembersPage() {
                   </button>
                 )}
               </div>
-              <p className={`text-lg font-bold mb-2 ${(displayMember?.balance ?? 0) < 0 ? "text-error" : (displayMember?.balance ?? 0) > 0 ? "text-secondary" : "text-on-surface"}`}>
+              <p className={`text-lg font-bold mb-2 font-mono ${(displayMember?.balance ?? 0) < 0 ? "text-error" : (displayMember?.balance ?? 0) > 0 ? "text-secondary" : "text-on-surface"}`}>
                 {formatPYG(Math.abs(displayMember?.balance ?? 0))}
                 {(displayMember?.balance ?? 0) < 0 && " (deudor)"}
                 {(displayMember?.balance ?? 0) > 0 && " (a favor)"}

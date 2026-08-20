@@ -33,7 +33,7 @@ export default function StatCard({ label, value, trend, icon, iconColor, variant
         </div>
       </div>
       <div className="flex items-baseline gap-sm">
-        <span className="font-display-lg text-[28px] leading-tight font-bold text-on-surface font-data-mono tabular-nums">
+        <span className="font-display-lg text-[28px] leading-tight font-bold text-on-surface font-mono tabular-nums">
           {value}
         </span>
         {trend && (

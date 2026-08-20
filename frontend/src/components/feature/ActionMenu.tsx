@@ -43,7 +43,7 @@ export default function ActionMenu({ actions, children }: ActionMenuProps) {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 min-w-[140px] bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 animate-fade-in"
+          className="absolute right-0 top-full mt-1 min-w-[140px] bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 animate-fade-in"
         >
           {actions.map((action, index) => (
             <button

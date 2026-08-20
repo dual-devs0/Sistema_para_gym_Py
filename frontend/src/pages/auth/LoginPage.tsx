@@ -64,7 +64,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="relative rounded-2xl bg-surface-container border border-outline-variant px-8 py-8 shadow-xl overflow-hidden">
+            <div className="relative rounded-2xl bg-surface-container border border-outline-variant px-8 py-8 overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
               <form onSubmit={handleSubmit} className="space-y-5">
                 <Input

@@ -46,7 +46,7 @@ function Select({ options, value, onChange }: { options: { value: string; label:
         </span>
       </button>
       {open && (
-        <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 overflow-hidden">
+        <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 overflow-hidden">
           {options.map((opt) => (
             <li key={opt.value}>
               <button

@@ -70,6 +70,7 @@ export default function DashboardPage() {
       trend: { value: 12, direction: "up" as const, label: "vs. ayer" },
       icon: <DollarSign size={20} />,
       iconColor: "primary" as const,
+      mono: true,
     },
     {
       key: "active_members",
@@ -78,6 +79,7 @@ export default function DashboardPage() {
       trend: { value: 3, direction: "up" as const, label: "crecimiento este mes" },
       icon: <Users size={20} />,
       iconColor: "secondary" as const,
+      mono: false,
     },
     {
       key: "checkins_today",
@@ -86,6 +88,7 @@ export default function DashboardPage() {
       trend: { value: 2, direction: "down" as const, label: "vs. semana pasada" },
       icon: <CalendarCheck size={20} />,
       iconColor: "tertiary" as const,
+      mono: false,
     },
       {
         key: "expiring",
@@ -93,6 +96,7 @@ export default function DashboardPage() {
         value: summary?.members_expiring_soon ?? 0,
         icon: <AlertTriangle size={20} />,
         iconColor: "error" as const,
+        mono: false,
       },
   ];
 
@@ -124,6 +128,7 @@ export default function DashboardPage() {
             trend={stat.trend}
             icon={stat.icon}
             iconColor={stat.iconColor}
+            mono={stat.mono}
           />
         ))}
       </div>

@@ -18,9 +18,9 @@ interface Props {
 }
 
 const planColors: Record<string, string> = {
-  premium: "bg-[#c0c1ff1a] text-primary",
-  basic: "bg-[#4ede3a1a] text-secondary",
-  student: "bg-[#ffb95f1a] text-tertiary",
+  premium: "bg-primary/10 text-primary",
+  basic: "bg-secondary/10 text-secondary",
+  student: "bg-tertiary/10 text-tertiary",
   other: "bg-surface-container-high text-on-surface-variant",
 };
 

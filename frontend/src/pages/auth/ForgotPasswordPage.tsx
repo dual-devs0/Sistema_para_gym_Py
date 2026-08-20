@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
           <h1 className="text-3xl font-bold text-on-surface tracking-tight">Recuperar acceso</h1>
         </div>
 
-        <div className="animate-slide-in-up rounded-2xl bg-surface-container border border-outline-variant px-lg py-xl shadow-2xl">
+        <div className="animate-slide-in-up rounded-2xl bg-surface-container border border-outline-variant px-lg py-xl">
           <p className="text-sm text-on-surface-variant text-center">
             Tu cuenta fue creada por el equipo de GymPro. Contactá a soporte para recuperar tu acceso.
           </p>

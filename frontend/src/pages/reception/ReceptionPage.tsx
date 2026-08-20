@@ -118,7 +118,8 @@ function CashShiftBanner() {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-secondary" />
                 <p className="text-sm font-medium text-on-surface">
-                  Turno abierto desde las {timeFmt(shift.opened_at)} — Efectivo inicial {formatPYG(shift.opening_amount)}
+                  Turno abierto desde las {timeFmt(shift.opened_at)} — Efectivo inicial{" "}
+                  <span className="font-mono">{formatPYG(shift.opening_amount)}</span>
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -194,7 +195,7 @@ function CashShiftBanner() {
           />
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" type="button" onClick={() => setOpenModalOpen(false)}>Cancelar</Button>
-            <Button type="submit" loading={openMutation.isPending}>Abrir turno</Button>
+            <Button variant="accent" type="submit" loading={openMutation.isPending}>Abrir turno</Button>
           </div>
         </form>
       </Modal>
@@ -205,27 +206,27 @@ function CashShiftBanner() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Efectivo</p>
-                <p className="font-semibold text-on-surface">{formatPYG(closedShift.cash_total || 0)}</p>
+                <p className="font-semibold text-on-surface font-mono">{formatPYG(closedShift.cash_total || 0)}</p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Tarjeta</p>
-                <p className="font-semibold text-on-surface">{formatPYG(closedShift.card_total || 0)}</p>
+                <p className="font-semibold text-on-surface font-mono">{formatPYG(closedShift.card_total || 0)}</p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Transferencia</p>
-                <p className="font-semibold text-on-surface">{formatPYG(closedShift.transfer_total || 0)}</p>
+                <p className="font-semibold text-on-surface font-mono">{formatPYG(closedShift.transfer_total || 0)}</p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Otro</p>
-                <p className="font-semibold text-on-surface">{formatPYG(closedShift.other_total || 0)}</p>
+                <p className="font-semibold text-on-surface font-mono">{formatPYG(closedShift.other_total || 0)}</p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Salidas de dinero</p>
-                <p className="font-semibold text-error">{formatPYG(closedShift.withdrawals_total || 0)}</p>
+                <p className="font-semibold text-error font-mono">{formatPYG(closedShift.withdrawals_total || 0)}</p>
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Efectivo esperado</p>
-                <p className="font-semibold text-secondary">{formatPYG(closedShift.expected_cash || 0)}</p>
+                <p className="font-semibold text-secondary font-mono">{formatPYG(closedShift.expected_cash || 0)}</p>
               </div>
             </div>
             <div className="flex justify-end pt-2">
@@ -343,7 +344,7 @@ export default function ReceptionPage() {
           />
         </div>
         {showDropdown && suggestions.length > 0 && (
-          <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-64 overflow-y-auto">
+          <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-64 overflow-y-auto">
             {suggestions.map((m) => (
               <li key={m.id}>
                 <button

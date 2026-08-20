@@ -256,7 +256,7 @@ export default function PaymentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-container border border-outline-variant rounded-xl p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Ingresos totales</p>
-          <p className="text-3xl font-bold text-on-surface mt-1.5 tabular-nums">
+          <p className="text-3xl font-bold text-on-surface mt-1.5 tabular-nums font-mono">
             {formatPYG(totalRevenue)}
           </p>
         </div>
@@ -443,7 +443,7 @@ export default function PaymentsPage() {
               required
             />
             {showMemberDropdown && memberSuggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
+              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
                 {memberSuggestions.map((m) => (
                   <li key={m.id}>
                     <button
@@ -500,7 +500,7 @@ export default function PaymentsPage() {
               placeholder="Buscar producto..."
             />
             {showProductDropdown && productSuggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
+              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
                 {productSuggestions.map((p) => (
                   <li key={p.id}>
                     <button
@@ -552,7 +552,7 @@ export default function PaymentsPage() {
             >
               Cancelar
             </Button>
-            <Button type="submit" loading={createMutation.isPending}>Registrar</Button>
+            <Button variant="accent" type="submit" loading={createMutation.isPending}>Registrar</Button>
           </div>
         </form>
       </Modal>

@@ -22,19 +22,19 @@ interface MembersTableProps {
 
 const statusConfig = {
   active: {
-    bg: "bg-[#4ede3a1a]",
+    bg: "bg-secondary/10",
     text: "text-secondary",
     icon: CheckCircle,
     label: "Activo",
   },
   frozen: {
-    bg: "bg-[#ffb95f1a]",
-    text: "text-tertiary",
+    bg: "bg-frozen/10",
+    text: "text-frozen",
     icon: PauseCircle,
     label: "Congelado",
   },
   cancelled: {
-    bg: "bg-[#ffb4ab1a]",
+    bg: "bg-error/10",
     text: "text-error",
     icon: XCircle,
     label: "Cancelado",
