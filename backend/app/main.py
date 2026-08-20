@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     audit,
     auth,
     balance,
+    cash_register,
     dashboard,
     gym,
     health,
@@ -19,6 +20,7 @@ from app.api.v1.endpoints import (
     notifications,
     payments,
     plans,
+    products,
     users,
 )
 from app.core.config import settings
@@ -106,6 +108,8 @@ app.include_router(memberships.router, prefix="/api/v1")
 app.include_router(attendance.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(balance.router, prefix="/api/v1")
+app.include_router(cash_register.router, prefix="/api/v1")
+app.include_router(products.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(invoicing.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")

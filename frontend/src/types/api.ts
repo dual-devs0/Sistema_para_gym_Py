@@ -69,6 +69,15 @@ export interface AttendanceLog {
   check_out: string | null;
 }
 
+export interface PaymentItem {
+  id: string;
+  product_id: string;
+  product_name: string | null;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
 export interface Payment {
   id: string;
   gym_id: string;
@@ -81,6 +90,43 @@ export interface Payment {
   paid_at: string | null;
   notes: string | null;
   sifen_status: "pending_stamping" | "signed" | "transmitted" | "approved" | "rejected" | "error" | null;
+  items: PaymentItem[];
+}
+
+export interface Product {
+  id: string;
+  gym_id: string;
+  name: string;
+  price: number;
+  stock: number;
+  low_stock_threshold: number;
+  is_active: boolean;
+}
+
+export interface CashWithdrawal {
+  id: string;
+  shift_id: string;
+  amount: number;
+  motivo: string;
+  created_by_user_id: string | null;
+  created_at: string;
+}
+
+export interface CashRegisterShift {
+  id: string;
+  opened_by_user_id: string | null;
+  opened_at: string;
+  opening_amount: number;
+  status: "open" | "closed";
+  closed_by_user_id: string | null;
+  closed_at: string | null;
+  cash_total: number | null;
+  card_total: number | null;
+  transfer_total: number | null;
+  other_total: number | null;
+  withdrawals_total: number | null;
+  expected_cash: number | null;
+  withdrawals: CashWithdrawal[];
 }
 
 export interface GymFiscalConfig {

@@ -16,8 +16,8 @@ export const ROLE_LABELS: Record<string, string> = {
 // Which nav items each role can see. Matches backend permission gaps:
 // receptionist/trainer lack dashboard.view and gym.settings.read.
 const NAV_BY_ROLE: Record<string, string[]> = {
-  owner: ["/", "/reception", "/members", "/memberships", "/attendance", "/payments"],
-  admin: ["/", "/reception", "/members", "/memberships", "/attendance", "/payments"],
+  owner: ["/", "/reception", "/members", "/memberships", "/attendance", "/payments", "/products"],
+  admin: ["/", "/reception", "/members", "/memberships", "/attendance", "/payments", "/products"],
   receptionist: ["/reception", "/members", "/memberships", "/attendance", "/payments"],
   trainer: ["/reception", "/members", "/memberships", "/attendance"],
 };
@@ -59,6 +59,12 @@ export function canRefundPayments(role: string | undefined): boolean {
 // members.balance.adjust is owner/admin only — everyone can view a member's
 // saldo, but only owner/admin can register a manual adjustment.
 export function canAdjustBalance(role: string | undefined): boolean {
+  return role === "owner" || role === "admin";
+}
+
+// products.manage is owner/admin only — receptionist can sell cantina
+// products (via Registrar pago) but not create/edit price/stock/threshold.
+export function canManageProducts(role: string | undefined): boolean {
   return role === "owner" || role === "admin";
 }
 

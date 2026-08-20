@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, Wallet, Plus } from "lucide-react";
 import CheckInCard, { type MembershipStatus } from "../../components/feature/CheckInCard";
+import Modal from "../../components/ui/Modal";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
 import api from "../../services/api";
-import type { Member, MemberMembership, AttendanceLog } from "../../types/api";
+import type { Member, MemberMembership, AttendanceLog, CashRegisterShift } from "../../types/api";
+import { formatPYG } from "../../utils";
 
 async function fetchMembers(): Promise<Member[]> {
   const { data } = await api.get("/members");
@@ -20,6 +24,11 @@ async function fetchTodayAttendance(): Promise<AttendanceLog[]> {
   return data;
 }
 
+async function fetchCurrentShift(): Promise<CashRegisterShift | null> {
+  const { data } = await api.get("/cash-register/current");
+  return data;
+}
+
 function daysUntil(dateStr: string): number {
   const end = new Date(dateStr);
   const today = new Date();
@@ -32,10 +41,201 @@ function dateFmt(d: string) {
   return new Date(d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function timeFmt(d: string) {
+  return new Date(d).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+}
+
 function isToday(d: string) {
   const t = new Date(d);
   const n = new Date();
   return t.getDate() === n.getDate() && t.getMonth() === n.getMonth() && t.getFullYear() === n.getFullYear();
+}
+
+function CashShiftBanner() {
+  const qc = useQueryClient();
+  const { data: shift } = useQuery({ queryKey: ["cash-shift-current"], queryFn: fetchCurrentShift });
+
+  const [openModalOpen, setOpenModalOpen] = useState(false);
+  const [openingAmount, setOpeningAmount] = useState("");
+  const [withdrawFormOpen, setWithdrawFormOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawMotivo, setWithdrawMotivo] = useState("");
+  const [closedShift, setClosedShift] = useState<CashRegisterShift | null>(null);
+  const [shiftError, setShiftError] = useState("");
+
+  const openMutation = useMutation({
+    mutationFn: (opening_amount: number) => api.post("/cash-register/open", { opening_amount }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cash-shift-current"] });
+      setOpenModalOpen(false);
+      setOpeningAmount("");
+      setShiftError("");
+    },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setShiftError(detail || "No se pudo abrir el turno.");
+    },
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: (body: { amount: number; motivo: string }) => api.post("/cash-register/withdrawals", body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cash-shift-current"] });
+      setWithdrawFormOpen(false);
+      setWithdrawAmount("");
+      setWithdrawMotivo("");
+    },
+  });
+
+  const closeMutation = useMutation({
+    mutationFn: () => api.post("/cash-register/close"),
+    onSuccess: ({ data }) => {
+      qc.invalidateQueries({ queryKey: ["cash-shift-current"] });
+      setClosedShift(data);
+    },
+  });
+
+  const handleWithdrawSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0 || !withdrawMotivo.trim()) return;
+    withdrawMutation.mutate({ amount, motivo: withdrawMotivo.trim() });
+  };
+
+  const handleOpenSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(openingAmount);
+    if (isNaN(amount) || amount < 0) return;
+    openMutation.mutate(amount);
+  };
+
+  return (
+    <>
+      <div className="max-w-[36rem] mb-6 bg-surface-container border border-outline-variant rounded-xl p-4">
+        {shift ? (
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-secondary" />
+                <p className="text-sm font-medium text-on-surface">
+                  Turno abierto desde las {timeFmt(shift.opened_at)} — Efectivo inicial {formatPYG(shift.opening_amount)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => setWithdrawFormOpen((v) => !v)}>
+                  Registrar salida
+                </Button>
+                <Button variant="secondary" size="sm" loading={closeMutation.isPending} onClick={() => closeMutation.mutate()}>
+                  Cerrar turno
+                </Button>
+              </div>
+            </div>
+            {shift.withdrawals.length > 0 && (
+              <p className="text-xs text-on-surface-variant mt-2">
+                {shift.withdrawals.length} salida(s) registrada(s) en este turno.
+              </p>
+            )}
+            {withdrawFormOpen && (
+              <form onSubmit={handleWithdrawSubmit} className="mt-3 bg-surface-container-high rounded-lg p-3 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="Monto (₲)"
+                    className="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/50 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={withdrawMotivo}
+                    onChange={(e) => setWithdrawMotivo(e.target.value)}
+                    placeholder="Motivo (obligatorio)"
+                    className="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/50 focus:outline-none"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" size="sm" type="button" onClick={() => setWithdrawFormOpen(false)}>Cancelar</Button>
+                  <Button
+                    size="sm"
+                    type="submit"
+                    disabled={!withdrawAmount || !withdrawMotivo.trim()}
+                    loading={withdrawMutation.isPending}
+                  >
+                    Guardar
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-on-surface-variant" />
+              <p className="text-sm font-medium text-on-surface">Turno de caja cerrado</p>
+            </div>
+            <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setOpenModalOpen(true)}>
+              Abrir turno
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Modal open={openModalOpen} onClose={() => { setOpenModalOpen(false); setShiftError(""); }} title="Abrir turno de caja" size="sm">
+        <form onSubmit={handleOpenSubmit} className="space-y-4">
+          {shiftError && <p className="text-xs text-error font-medium">{shiftError}</p>}
+          <Input
+            label="Efectivo inicial (₲)"
+            type="number"
+            step="1"
+            value={openingAmount}
+            onChange={(e) => setOpeningAmount(e.target.value)}
+            required
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setOpenModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" loading={openMutation.isPending}>Abrir turno</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={!!closedShift} onClose={() => setClosedShift(null)} title="Turno cerrado" size="sm">
+        {closedShift && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Efectivo</p>
+                <p className="font-semibold text-on-surface">{formatPYG(closedShift.cash_total || 0)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Tarjeta</p>
+                <p className="font-semibold text-on-surface">{formatPYG(closedShift.card_total || 0)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Transferencia</p>
+                <p className="font-semibold text-on-surface">{formatPYG(closedShift.transfer_total || 0)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Otro</p>
+                <p className="font-semibold text-on-surface">{formatPYG(closedShift.other_total || 0)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Salidas de dinero</p>
+                <p className="font-semibold text-error">{formatPYG(closedShift.withdrawals_total || 0)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-on-surface-variant">Efectivo esperado</p>
+                <p className="font-semibold text-secondary">{formatPYG(closedShift.expected_cash || 0)}</p>
+              </div>
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button onClick={() => setClosedShift(null)}>Cerrar</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
+  );
 }
 
 export default function ReceptionPage() {
@@ -127,7 +327,9 @@ export default function ReceptionPage() {
         <p className="text-sm text-on-surface-variant mt-0.5">Buscá un socio para registrar su ingreso o salida.</p>
       </div>
 
-      <div className="relative mb-6" ref={searchRef}>
+      <CashShiftBanner />
+
+      <div className="relative mb-6 max-w-[36rem]" ref={searchRef}>
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" />
           <input

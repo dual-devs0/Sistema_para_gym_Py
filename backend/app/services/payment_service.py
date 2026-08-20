@@ -12,9 +12,11 @@ from app.core.database import async_session_factory
 from app.core.exceptions import AppException, NotFoundException
 from app.models.member import Member
 from app.models.payment import Invoice, Payment
+from app.models.product import PaymentItem
 from app.repositories.member_repository import MemberRepository
 from app.repositories.payment_repository import PaymentRepository
-from app.schemas.payment import PaymentResponse
+from app.repositories.product_repository import ProductRepository
+from app.schemas.payment import PaymentItemRequest, PaymentResponse
 from app.services.invoicing_service import InvoicingService
 from app.services.notification_service import NotificationService
 from app.utils.currency import round_cash_pyg
@@ -30,6 +32,7 @@ class PaymentService:
     def __init__(self, db: AsyncSession):
         self.repo = PaymentRepository(db)
         self.member_repo = MemberRepository(db)
+        self.product_repo = ProductRepository(db)
         self.db = db
 
     async def list_by_gym(self, gym_id: uuid.UUID) -> list[PaymentResponse]:
@@ -49,19 +52,45 @@ class PaymentService:
         reference: str | None = None,
         notes: str | None = None,
         member_membership_id: uuid.UUID | None = None,
+        items: list[PaymentItemRequest] | None = None,
     ) -> PaymentResponse:
         member = await self.member_repo.get_by_id(member_id, gym_id)
         if not member:
             raise NotFoundException("Member not found")
 
+        # Resolve cantina items BEFORE creating the payment: price is
+        # snapshotted from the product (never trusted from the client), and
+        # stock is decremented atomically per item — if any item is out of
+        # stock, abort before anything is written.
+        resolved_items: list[dict] = []
+        items_subtotal = 0.0
+        for item in items or []:
+            product_id = uuid.UUID(item.product_id)
+            product = await self.product_repo.get_by_id(product_id, gym_id)
+            if not product or not product.is_active:
+                raise NotFoundException("Product not found")
+            ok = await self.product_repo.decrement_stock(product_id, item.quantity)
+            if not ok:
+                raise AppException(f"Stock insuficiente de {product.name}", status_code=409)
+            unit_price = float(product.price)
+            subtotal = unit_price * item.quantity
+            items_subtotal += subtotal
+            resolved_items.append(
+                {"product_id": product_id, "quantity": item.quantity, "unit_price": unit_price, "subtotal": subtotal}
+            )
+
+        total_amount = amount + items_subtotal
+        if total_amount <= 0:
+            raise AppException("El monto total del pago debe ser mayor a cero", status_code=422)
+
         if payment_method == "cash":
-            amount = round_cash_pyg(amount)
+            total_amount = round_cash_pyg(total_amount)
 
         payment = Payment(
             gym_id=gym_id,
             member_id=member_id,
             member_membership_id=member_membership_id,
-            amount=amount,
+            amount=total_amount,
             payment_method=payment_method,
             reference=reference,
             notes=notes,
@@ -69,6 +98,27 @@ class PaymentService:
             paid_at=datetime.now(UTC),
         )
         created = await self.repo.create(payment)
+
+        payment_items = [
+            PaymentItem(
+                payment_id=created.id,
+                product_id=ri["product_id"],
+                quantity=ri["quantity"],
+                unit_price=ri["unit_price"],
+                subtotal=ri["subtotal"],
+            )
+            for ri in resolved_items
+        ]
+        for pi in payment_items:
+            self.db.add(pi)
+        await self.db.flush()
+        # Always refresh the relationship (even with zero items) instead of
+        # assigning `created.items` directly: SQLAlchemy's collection setter
+        # loads the *old* value first to diff against the new one, which is
+        # a lazy load and crashes on an AsyncSession (MissingGreenlet) since
+        # `items` was never eager-loaded on this freshly-created instance.
+        await self.db.refresh(created, attribute_names=["items"])
+
         await self._generate_invoice_number(created)
         sifen_document = await self._generate_sifen_document(gym_id, created.id)
         if sifen_document:
@@ -140,6 +190,11 @@ class PaymentService:
         updated = await self.repo.update(payment)
         if sifen_document:
             updated.sifen_document = sifen_document
+        # `items` is a one-to-many collection — same expiry problem as
+        # sifen_document, but reassigning a collection (unlike a scalar
+        # relationship) forces SQLAlchemy to diff against the old value
+        # first, which is itself a lazy load. Refresh it directly instead.
+        await self.db.refresh(updated, attribute_names=["items"])
         return await self._to_response(updated)
 
     async def get_invoice(self, payment_id: uuid.UUID, gym_id: uuid.UUID) -> Invoice:
@@ -188,6 +243,9 @@ class PaymentService:
             resp.member_name = f"{payment.member.first_name} {payment.member.last_name}"
         if payment.sifen_document:
             resp.sifen_status = payment.sifen_document.status
+        for i, item in enumerate(payment.items or []):
+            if item.product:
+                resp.items[i].product_name = item.product.name
         return resp
 
 

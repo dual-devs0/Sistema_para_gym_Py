@@ -10,6 +10,7 @@ const allNavItems = [
   { to: "/memberships", label: "Membresías", icon: "card_membership" },
   { to: "/attendance", label: "Asistencia", icon: "event_available" },
   { to: "/payments", label: "Pagos", icon: "payments" },
+  { to: "/products", label: "Cantina", icon: "local_cafe" },
 ];
 
 export default function TopNav() {

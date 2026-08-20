@@ -12,8 +12,10 @@ from app.repositories.notification_repository import NotificationRepository
 from app.services.notification_templates import (
     EXPIRY_REMINDER_TEMPLATE,
     PAYMENT_CONFIRMATION_TEMPLATE,
+    SHIFT_CLOSE_SUMMARY_TEMPLATE,
     build_expiry_reminder_params,
     build_payment_confirmation_params,
+    build_shift_close_summary_params,
 )
 from app.services.whatsapp_client import WhatsAppClient
 from app.utils.currency import format_pyg
@@ -93,6 +95,23 @@ class NotificationService:
             )
             logs.append(await self.repo.create(log))
         return logs
+
+    async def send_shift_close_summary(self, gym_name: str, owner_phone: str, summary: dict) -> dict:
+        # Not tied to a member — unlike payment_confirmation/expiry_reminder,
+        # this doesn't create a NotificationLog row (that table requires a
+        # member_id, and a shift summary isn't per-member). Caller (cash
+        # register close, fire-and-forget) already checked whatsapp_enabled
+        # and gym.notifications_enabled before dispatching.
+        params = build_shift_close_summary_params(
+            gym_name=gym_name,
+            cash_text=format_pyg(summary["cash_total"]),
+            card_text=format_pyg(summary["card_total"]),
+            transfer_text=format_pyg(summary["transfer_total"]),
+            other_text=format_pyg(summary["other_total"]),
+            withdrawals_text=format_pyg(summary["withdrawals_total"]),
+            expected_cash_text=format_pyg(summary["expected_cash"]),
+        )
+        return await self._send(owner_phone, SHIFT_CLOSE_SUMMARY_TEMPLATE, params)
 
     async def list_by_member(self, member_id: uuid.UUID, gym_id: uuid.UUID) -> list[NotificationLog]:
         return await self.repo.list_by_member(member_id, gym_id)
