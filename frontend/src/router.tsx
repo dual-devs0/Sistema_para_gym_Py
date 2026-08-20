@@ -9,7 +9,41 @@ import PaymentsPage from "./pages/payments/PaymentsPage";
 import AttendancePage from "./pages/attendance/AttendancePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import StaffPage from "./pages/staff/StaffPage";
+import ReceptionPage from "./pages/reception/ReceptionPage";
 import PageLayout from "./components/layout/PageLayout";
+import { useAuth } from "./hooks/useAuth";
+import { allowedNavPaths, canManageStaff, canViewGymSettings, defaultRouteForRole } from "./utils/roles";
+
+// Roles without dashboard.view (receptionist, trainer) would otherwise land
+// on "/" and get a 403 from every dashboard endpoint. Send them to whatever
+// they can actually use instead.
+function RoleHome() {
+  const { user } = useAuth();
+  if (user && !allowedNavPaths(user.role).includes("/")) {
+    return <Navigate to={defaultRouteForRole(user.role)} replace />;
+  }
+  return <DashboardPage />;
+}
+
+// gym.settings.read is owner/admin only on the backend — don't let other
+// roles land on a form that will 403 on submit.
+function GuardedSettings() {
+  const { user } = useAuth();
+  if (user && !canViewGymSettings(user.role)) {
+    return <Navigate to={defaultRouteForRole(user.role)} replace />;
+  }
+  return <SettingsPage />;
+}
+
+// users.create/users.update are owner/admin only on the backend.
+function GuardedStaff() {
+  const { user } = useAuth();
+  if (user && !canManageStaff(user.role)) {
+    return <Navigate to={defaultRouteForRole(user.role)} replace />;
+  }
+  return <StaffPage />;
+}
 
 export default function Router() {
   return (
@@ -21,7 +55,15 @@ export default function Router() {
           path="/"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <RoleHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reception"
+          element={
+            <ProtectedRoute>
+              <ReceptionPage />
             </ProtectedRoute>
           }
         />
@@ -61,7 +103,15 @@ export default function Router() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <SettingsPage />
+              <GuardedSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute>
+              <GuardedStaff />
             </ProtectedRoute>
           }
         />

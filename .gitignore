@@ -47,3 +47,7 @@ changelog/**/*.jpg
 # Local agent tooling (Claude Code, etc.) — not project source
 .agents/
 .claude/
+
+# Old snapshots — Git is source of truth
+backend.zip
+*.zip

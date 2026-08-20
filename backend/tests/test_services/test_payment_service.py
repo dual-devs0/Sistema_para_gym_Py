@@ -3,7 +3,6 @@ import uuid
 import pytest
 
 from app.core.exceptions import AppException, NotFoundException
-from app.models.member import Member
 from app.services.payment_service import PaymentService
 
 
@@ -15,14 +14,9 @@ async def test_register_payment_member_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_register_payment_creates_invoice(db_session):
-    gym_id = uuid.uuid4()
-    member = Member(gym_id=gym_id, first_name="Test", last_name="User")
-    db_session.add(member)
-    await db_session.flush()
-
+async def test_register_payment_creates_invoice(db_session, gym_id, member_id):
     service = PaymentService(db_session)
-    result = await service.register(gym_id, member.id, 499, "efectivo")
+    result = await service.register(gym_id, member_id, 499, "efectivo")
     assert result.amount == 499
     assert result.status == "paid"
 
@@ -35,27 +29,17 @@ async def test_refund_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_refund_payment(db_session):
-    gym_id = uuid.uuid4()
-    member = Member(gym_id=gym_id, first_name="Test", last_name="User")
-    db_session.add(member)
-    await db_session.flush()
-
+async def test_refund_payment(db_session, gym_id, member_id):
     service = PaymentService(db_session)
-    result = await service.register(gym_id, member.id, 499, "efectivo")
+    result = await service.register(gym_id, member_id, 499, "efectivo")
     refunded = await service.refund(uuid.UUID(result.id), gym_id)
     assert refunded.status == "refunded"
 
 
 @pytest.mark.asyncio
-async def test_refund_already_refunded(db_session):
-    gym_id = uuid.uuid4()
-    member = Member(gym_id=gym_id, first_name="Test", last_name="User")
-    db_session.add(member)
-    await db_session.flush()
-
+async def test_refund_already_refunded(db_session, gym_id, member_id):
     service = PaymentService(db_session)
-    result = await service.register(gym_id, member.id, 499, "efectivo")
+    result = await service.register(gym_id, member_id, 499, "efectivo")
     payment_id = uuid.UUID(result.id)
     await service.refund(payment_id, gym_id)
     with pytest.raises(AppException):
@@ -63,14 +47,9 @@ async def test_refund_already_refunded(db_session):
 
 
 @pytest.mark.asyncio
-async def test_list_payments_by_gym(db_session):
-    gym_id = uuid.uuid4()
-    member = Member(gym_id=gym_id, first_name="Test", last_name="User")
-    db_session.add(member)
-    await db_session.flush()
-
+async def test_list_payments_by_gym(db_session, gym_id, member_id):
     service = PaymentService(db_session)
-    await service.register(gym_id, member.id, 100, "efectivo")
-    await service.register(gym_id, member.id, 200, "tarjeta")
+    await service.register(gym_id, member_id, 100, "efectivo")
+    await service.register(gym_id, member_id, 200, "tarjeta")
     payments = await service.list_by_gym(gym_id)
     assert len(payments) == 2

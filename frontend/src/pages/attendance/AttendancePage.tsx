@@ -60,6 +60,15 @@ export default function AttendancePage() {
   const [searchValue, setSearchValue] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [actionError, setActionError] = useState("");
+
+  function extractErrorMessage(err: unknown, fallback: string): string {
+    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+    if (detail === "Member already checked in today") return "Este miembro ya tiene una entrada activa hoy.";
+    if (detail === "Already checked out") return "Esta asistencia ya tiene salida registrada.";
+    if (detail === "Member not found") return "Miembro no encontrado.";
+    return detail || fallback;
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -78,6 +87,11 @@ export default function AttendancePage() {
       qc.invalidateQueries({ queryKey: ["attendance-today"] });
       setSelectedMember(null);
       setMemberSearch("");
+      setActionError("");
+    },
+    onError: (err: unknown) => {
+      setActionError(extractErrorMessage(err, "No se pudo registrar la entrada. Intentá de nuevo."));
+      setTimeout(() => setActionError(""), 5000);
     },
   });
 
@@ -86,6 +100,11 @@ export default function AttendancePage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["attendance"] });
       qc.invalidateQueries({ queryKey: ["attendance-today"] });
+      setActionError("");
+    },
+    onError: (err: unknown) => {
+      setActionError(extractErrorMessage(err, "No se pudo registrar la salida. Intentá de nuevo."));
+      setTimeout(() => setActionError(""), 5000);
     },
   });
 
@@ -146,6 +165,12 @@ export default function AttendancePage() {
 
       <div className="bg-surface-container border border-outline-variant rounded-xl p-5 mb-6">
         <p className="text-sm font-semibold text-on-surface mb-3">Registrar entrada</p>
+        {actionError && (
+          <div className="flex items-center gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2 mb-3">
+            <span className="material-symbols-outlined text-error shrink-0" style={{ fontSize: "16px" }}>error</span>
+            <p className="text-xs text-error">{actionError}</p>
+          </div>
+        )}
         <div className="flex items-end gap-3">
           <div className="relative flex-1" ref={memberInputRef}>
             <input

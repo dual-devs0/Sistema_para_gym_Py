@@ -38,6 +38,7 @@ export async function logout() {
   }
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
+  localStorage.removeItem("gympro-query-cache");
 }
 
 export function isAuthenticated(): boolean {

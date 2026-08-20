@@ -12,11 +12,13 @@ interface SidePanelProps {
   submitLoading?: boolean;
 }
 
+// Arbitrary values on purpose — see Modal.tsx for why max-w-{sm,md,lg,xl}
+// can't be used directly (collides with the --spacing-* theme scale).
 const sizeStyles = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  sm: "max-w-[28rem]",
+  md: "max-w-[32rem]",
+  lg: "max-w-[42rem]",
+  xl: "max-w-[56rem]",
 };
 
 export default function SidePanel({

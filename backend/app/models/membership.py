@@ -37,3 +37,10 @@ class MemberMembership(Base, TimestampMixin, UUIDMixin):
 
     member = relationship("Member", back_populates="memberships")
     plan = relationship("MembershipPlan", back_populates="member_assignments")
+
+    @property
+    def plan_name(self) -> str | None:
+        # MemberMembershipResponse.plan_name has no backing column — every
+        # repo method eager-loads `plan` via selectinload, so this is safe
+        # to read without triggering a lazy load in the async session.
+        return self.plan.name if self.plan else None

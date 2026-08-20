@@ -27,7 +27,7 @@ async function fetchExpiring(): Promise<DashboardExpiringItem[]> {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, isAuth } = useAuth();
   const firstName = user?.full_name?.split(" ")[0] || "Admin";
 
   const [revenuePeriod, setRevenuePeriod] = useState<"7d" | "30d" | "1a">("30d");
@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const { data: summary } = useQuery({
     queryKey: ["dashboard-summary"],
     queryFn: fetchSummary,
+    enabled: isAuth,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -42,6 +43,7 @@ export default function DashboardPage() {
   const { data: revenue } = useQuery({
     queryKey: ["dashboard-revenue", revenuePeriod],
     queryFn: () => fetchRevenue(DAYS_MAP[revenuePeriod]),
+    enabled: isAuth,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -49,6 +51,7 @@ export default function DashboardPage() {
   const { data: expiring } = useQuery({
     queryKey: ["dashboard-expiring"],
     queryFn: fetchExpiring,
+    enabled: isAuth,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });

@@ -32,9 +32,21 @@ class UserCreate(BaseModel):
     role: str = Field(default="trainer", max_length=30)
 
 
+ASSIGNABLE_ROLES = {"owner", "admin", "trainer", "receptionist"}
+
+
 class UserUpdate(BaseModel):
     full_name: str | None = Field(None, min_length=1, max_length=200)
     phone: str | None = Field(None, max_length=50)
+    role: str | None = Field(None, max_length=30)
+    is_active: bool | None = None
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v):
+        if v is not None and v not in ASSIGNABLE_ROLES:
+            raise ValueError(f"role must be one of {sorted(ASSIGNABLE_ROLES)}")
+        return v
 
 
 class UserInvite(BaseModel):
@@ -46,3 +58,8 @@ class UserInvite(BaseModel):
 class InviteResponse(BaseModel):
     user: UserResponse
     temporary_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)

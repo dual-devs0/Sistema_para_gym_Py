@@ -8,7 +8,10 @@
 ## Backend (Docker)
 
 ```bash
-# Copiar env
+# Copiar env (raíz — usado por docker-compose.yml para SECRET_KEY/DB_PASSWORD)
+cp .env.example .env
+
+# Copiar env backend
 cp backend/.env.example backend/.env
 
 # Levantar todo

@@ -10,7 +10,9 @@ interface CheckInCardProps {
   status: MembershipStatus;
   visitsLeft: string | number;
   expiryLabel: string;
-  onCheckIn: () => void;
+  checkedIn?: boolean;
+  checkInLoading?: boolean;
+  onCheckIn: () => Promise<void> | void;
   onGoToPayments?: () => void;
 }
 
@@ -24,28 +26,29 @@ const statusConfig: Record<MembershipStatus, { label: string; icon: string; bg: 
 const isReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export default function CheckInCard({
-  name, initials, memberId, planName, status, visitsLeft, expiryLabel, onCheckIn, onGoToPayments,
+  name, initials, memberId, planName, status, visitsLeft, expiryLabel,
+  checkedIn = false, checkInLoading = false, onCheckIn, onGoToPayments,
 }: CheckInCardProps) {
-  const [checkedIn, setCheckedIn] = useState(false);
   const [animating, setAnimating] = useState(false);
   const reduceMotion = isReducedMotion();
   const config = statusConfig[status];
   const canCheckIn = status === "active" || status === "expiring";
 
-  const handleCheckIn = useCallback(() => {
-    if (!canCheckIn || checkedIn || animating) return;
-    setCheckedIn(true);
-    if (!reduceMotion) {
-      setAnimating(true);
-      setTimeout(() => setAnimating(false), 2000);
-    }
-    onCheckIn();
-  }, [canCheckIn, checkedIn, animating, reduceMotion, onCheckIn]);
-
+  // Only animate the "success pulse" once the check-in actually succeeded
+  // (checkedIn flips true from the parent's mutation state) — never before,
+  // so a failed request never shows a false "checked in" state.
   useEffect(() => {
-    setCheckedIn(false);
-    setAnimating(false);
-  }, [name, memberId]);
+    if (checkedIn && !reduceMotion) {
+      setAnimating(true);
+      const t = setTimeout(() => setAnimating(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [checkedIn, reduceMotion]);
+
+  const handleCheckIn = useCallback(() => {
+    if (!canCheckIn || checkedIn || checkInLoading) return;
+    onCheckIn();
+  }, [canCheckIn, checkedIn, checkInLoading, onCheckIn]);
 
   const borderColor = status === "active" ? "border-primary" : status === "expiring" ? "border-tertiary" : status === "expired" ? "border-error" : "border-outline";
   const opacityClass = status === "frozen" || status === "expired" ? "opacity-60" : "";
@@ -97,17 +100,17 @@ export default function CheckInCard({
       {canCheckIn ? (
         <button
           onClick={handleCheckIn}
-          disabled={checkedIn}
+          disabled={checkedIn || checkInLoading}
           className={`w-full min-h-[56px] rounded-lg font-headline-sm text-headline-sm flex items-center justify-center gap-md transition-all touch-target ${
             checkedIn
               ? "bg-secondary text-on-secondary cursor-default"
-              : "bg-primary text-on-primary hover:opacity-90 active:scale-[0.97]"
+              : "bg-primary text-on-primary hover:opacity-90 active:scale-[0.97] disabled:opacity-60"
           } ${animating ? "animate-pulse-check" : ""}`}
           style={animating && !reduceMotion ? { animation: "pulse-check 0.5s ease-out" } : {}}
           aria-label={checkedIn ? "Ya registrado" : "Registrar ingreso"}
         >
-          <span className="material-symbols-outlined">{checkedIn ? "check" : "login"}</span>
-          {checkedIn ? "¡Ingresado!" : "Registrar Ingreso"}
+          <span className="material-symbols-outlined">{checkedIn ? "check" : checkInLoading ? "hourglass_top" : "login"}</span>
+          {checkedIn ? "¡Ingresado!" : checkInLoading ? "Registrando..." : "Registrar Ingreso"}
         </button>
       ) : (
         <div className="flex flex-col gap-sm">

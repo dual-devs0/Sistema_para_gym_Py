@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { allowedNavPaths, canManageStaff, canViewGymSettings, roleLabel } from "../../utils/roles";
 
-const navItems = [
+const allNavItems = [
   { to: "/", label: "Panel", icon: "dashboard" },
+  { to: "/reception", label: "Recepción", icon: "front_hand" },
   { to: "/members", label: "Miembros", icon: "group" },
   { to: "/memberships", label: "Membresías", icon: "card_membership" },
   { to: "/attendance", label: "Asistencia", icon: "event_available" },
@@ -17,6 +19,11 @@ export default function TopNav() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuRef = useOutsideClick(() => setMenuOpen(false));
   const mobileNavRef = useOutsideClick(() => setMobileNavOpen(false));
+
+  const allowedPaths = allowedNavPaths(user?.role);
+  const navItems = allNavItems.filter((i) => allowedPaths.includes(i.to));
+  const showSettings = canViewGymSettings(user?.role);
+  const showStaff = canManageStaff(user?.role);
 
   const initials =
     user?.full_name
@@ -104,6 +111,7 @@ export default function TopNav() {
                 <div className="px-md py-sm border-b border-outline-variant">
                   <p className="text-sm font-medium text-on-surface">{user?.full_name}</p>
                   <p className="text-[11px] text-on-surface-variant truncate">{user?.email}</p>
+                  <p className="text-[10px] text-primary font-semibold uppercase tracking-wide mt-0.5">{roleLabel(user?.role)}</p>
                 </div>
                 <Link
                   to="/profile"
@@ -113,14 +121,26 @@ export default function TopNav() {
                   <span className="material-symbols-outlined">person</span>
                   <span>Perfil</span>
                 </Link>
-                <Link
-                  to="/settings"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-sm px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors text-sm"
-                >
-                  <span className="material-symbols-outlined">settings</span>
-                  <span>Configuración</span>
-                </Link>
+                {showStaff && (
+                  <Link
+                    to="/staff"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-sm px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors text-sm"
+                  >
+                    <span className="material-symbols-outlined">badge</span>
+                    <span>Staff</span>
+                  </Link>
+                )}
+                {showSettings && (
+                  <Link
+                    to="/settings"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-sm px-md py-sm text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-colors text-sm"
+                  >
+                    <span className="material-symbols-outlined">settings</span>
+                    <span>Configuración</span>
+                  </Link>
+                )}
                 <hr className="my-1 border-outline-variant/30" />
                 <button
                   onClick={handleLogout}

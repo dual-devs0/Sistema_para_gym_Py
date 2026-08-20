@@ -1,7 +1,7 @@
 .PHONY: dev up down backend frontend migrate logs
 
 dev:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+	docker compose up --build
 
 up:
 	docker compose up --build -d

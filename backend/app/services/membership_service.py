@@ -53,7 +53,7 @@ class MemberMembershipService:
 
     async def assign(self, member_id: uuid.UUID, plan_id: uuid.UUID, gym_id: uuid.UUID, data: dict) -> MemberMembership:
         plan = await self.plan_repo.get_by_id(plan_id)
-        if not plan or plan.gym_id != gym_id:
+        if not plan or plan.gym_id != gym_id or not plan.is_active:
             raise NotFoundException("Plan not found")
         start_date = data.get("start_date") or date.today()
         price_paid = data.get("price_paid")

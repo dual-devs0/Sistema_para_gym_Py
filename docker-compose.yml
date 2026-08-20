@@ -9,6 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gympro"]
       interval: 5s
@@ -37,6 +38,7 @@ services:
       - ./backend/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://gympro:${DB_PASSWORD:-gympro_dev}@postgres:5432/gympro
+      TEST_DATABASE_URL: postgresql+asyncpg://gympro:${DB_PASSWORD:-gympro_dev}@postgres:5432/gympro_test
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
       ENVIRONMENT: ${ENVIRONMENT:-development}

@@ -7,6 +7,8 @@ from app.api.v1.deps import get_current_gym_id, require_permission
 from app.core.database import get_db
 from app.core.permissions import Perm
 from app.schemas.membership import MemberMembershipResponse
+from app.services.audit_service import AuditService
+from app.services.member_service import MemberService
 from app.services.membership_service import MemberMembershipService
 
 router = APIRouter(prefix="/memberships", tags=["memberships"])
@@ -30,6 +32,7 @@ async def list_member_memberships(
     db: AsyncSession = Depends(get_db),
     user=Depends(require_permission(Perm.MEMBERSHIP_READ)),
 ):
+    await MemberService(db).get_by_id(member_id, gym_id)
     service = MemberMembershipService(db)
     return await service.list_by_member(member_id)
 
@@ -42,7 +45,11 @@ async def cancel_membership(
     user=Depends(require_permission(Perm.MEMBERSHIP_CANCEL)),
 ):
     service = MemberMembershipService(db)
-    return await service.cancel(membership_id, gym_id)
+    result = await service.cancel(membership_id, gym_id)
+    await AuditService(db, user_id=user.id, gym_id=gym_id).log(
+        AuditService.ACTIONS["CANCEL"], "membermembership", record_id=str(membership_id)
+    )
+    return result
 
 
 @router.put("/{membership_id}/renew", response_model=MemberMembershipResponse)

@@ -72,5 +72,31 @@ descartaron porque `main` ya tiene el dark theme actual.
 
 ## Pendiente
 
-- `backend.zip` (snapshot viejo) — eliminar; Git es la fuente de verdad.
-- Confirmar pruebas manuales contra la demo en entorno con Docker.
+- ~~`backend.zip` (snapshot viejo) — eliminar; Git es la fuente de verdad.~~ Hecho (2026-08-10): eliminado del repo, agregado `*.zip` a `.gitignore`.
+- ~~Confirmar pruebas manuales contra la demo en entorno con Docker.~~ Hecho (2026-08-11): Docker Desktop instalado (WSL2 ya estaba disponible), stack completo levantado y validado.
+
+### Bugs encontrados y arreglados al levantar el stack Docker
+
+- `docker-compose.yml` sustituía `${SECRET_KEY}` / `${DB_PASSWORD}` desde un `.env` en la raíz que no existía — el backend crasheaba al levantar (`secret_key` exige `min_length=32`, quedaba vacío). **Fix**: agregado `.env.example` en la raíz + `docs/setup.md` actualizado para copiarlo.
+- `make dev` apuntaba a `docker-compose.dev.yml`, archivo inexistente. **Fix**: target simplificado a `docker compose up --build`.
+- `backend/alembic/alembic.ini` estaba anidado dentro de `alembic/` en vez de la raíz de `backend/` (layout no estándar) y sin `prepend_sys_path` → `alembic upgrade head` fallaba con `ModuleNotFoundError: No module named 'app'`. **Fix**: movido a `backend/alembic.ini` + `prepend_sys_path = .` agregado.
+- `backend/alembic/env.py` usaba `connectable.connect()` en vez de `connectable.begin()` para las migraciones async → la transacción externa (auto-begin de SQLAlchemy 2.0) nunca se commiteaba: `alembic_version` quedaba en `head` pero **ninguna tabla se creaba de verdad** (bug silencioso, sin error). **Fix**: `connectable.begin()` (auto-commit en el `async with`).
+
+### Validación manual end-to-end (Docker, 2026-08-11)
+
+Con el stack completo arriba (`postgres`, `redis`, `backend`, `frontend`) + `scripts/create_demo_user.py`:
+
+- **1.1** `gym_id` presente en el payload del access token (verificado por curl + decode).
+- **1.2** `member_name` poblado en `/api/v1/attendance` (ej. "Sarah Jenkins").
+- **1.3/1.4** `/api/v1/dashboard/summary` y `/api/v1/dashboard/expiring` responden 200 sin `AttributeError`, `checkins_today` cuadra con la timezone del gym.
+- **1.5** `/api/v1/auth/me` expone `gym.currency` (`PYG`) y `gym.timezone` (`America/Asuncion`); el Dashboard del frontend renderiza `₲` correctamente.
+- **2.1** Login vía UI funciona, tokens persistidos.
+- **2.2** Modal "Detalle del Miembro" muestra `REGISTRADO: 11 ago 2026` (antes quedaba en "—").
+
+### Bug menor sin arreglar (no bloqueante, fuera de alcance fase 0)
+
+- Al cargar el Dashboard, un primer `GET /api/v1/dashboard/summary` sale sin header `Authorization` (422) antes de que el interceptor lo adjunte; un segundo fetch inmediato sí trae el token y responde 200. Parece condición de carrera en el mount inicial — no rompe la UX porque se autocorrige, pero vale la pena revisar el hook que dispara el fetch inicial de auth/dashboard.
+
+### Pendiente real (suite pytest)
+
+- `pytest` dentro del container falla en masa (68 failed / 20 errors) corriendo contra la DB de dev — no relacionado a los fixes de este documento. Requiere revisar `backend/tests/conftest.py` / `DATABASE_URL` de test (el commit `7202db0` ya tocó este tema para CI; falta confirmar que aplica igual en local).

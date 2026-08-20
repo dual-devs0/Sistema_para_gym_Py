@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 
 from app.core.exceptions import ConflictException, UnauthorizedException
@@ -7,9 +5,8 @@ from app.services.auth_service import AuthService
 
 
 @pytest.mark.asyncio
-async def test_register_owner_creates_user(db_session):
+async def test_register_owner_creates_user(db_session, gym_id):
     service = AuthService(db_session)
-    gym_id = uuid.uuid4()
     user = await service.register_owner("owner@test.com", "pass123", "Owner", gym_id)
     assert user.email == "owner@test.com"
     assert user.role == "owner"
@@ -17,9 +14,8 @@ async def test_register_owner_creates_user(db_session):
 
 
 @pytest.mark.asyncio
-async def test_register_owner_duplicate_email(db_session):
+async def test_register_owner_duplicate_email(db_session, gym_id):
     service = AuthService(db_session)
-    gym_id = uuid.uuid4()
     await service.register_owner("dup@test.com", "pass123", "Dup", gym_id)
     with pytest.raises(ConflictException):
         await service.register_owner("dup@test.com", "other", "Dup2", gym_id)

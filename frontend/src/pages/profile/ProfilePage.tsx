@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Settings, Mail, Phone, Calendar, Building2 } from "lucide-react";
+import { Save, Settings, Mail, Phone, Calendar, Building2, KeyRound } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import api from "../../services/api";
@@ -12,6 +12,7 @@ interface UserWithPhone extends UserInfo {
 }
 
 const emptyForm = { full_name: "", phone: "" };
+const emptyPasswordForm = { current_password: "", new_password: "", confirm_password: "" };
 
 async function fetchUser(userId: string): Promise<UserInfo> {
   const { data } = await api.get(`/users/${userId}`);
@@ -23,9 +24,33 @@ export default function ProfilePage() {
   const { user, loadUser } = useAuth();
 
   const [form, setForm] = useState(emptyForm);
-  const [activeTab, setActiveTab] = useState<"profile">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [passwordForm, setPasswordForm] = useState(emptyPasswordForm);
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const changePasswordMutation = useMutation({
+    mutationFn: (body: { current_password: string; new_password: string }) =>
+      api.put("/users/me/password", body),
+    onSuccess: () => {
+      setPasswordForm(emptyPasswordForm);
+      setPasswordSuccess("Contraseña actualizada correctamente");
+      setTimeout(() => setPasswordSuccess(""), 4000);
+    },
+    onError: (err: unknown) => {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setPasswordError(
+        detail === "Current password is incorrect"
+          ? "La contraseña actual no es correcta."
+          : "No se pudo cambiar la contraseña. Intentá de nuevo."
+      );
+      setTimeout(() => setPasswordError(""), 4000);
+    },
+  });
 
   const { data: userDetails, isLoading } = useQuery({
     queryKey: ["user", user?.id],
@@ -63,7 +88,26 @@ export default function ProfilePage() {
     updateProfileMutation.mutate({ full_name: form.full_name, phone: form.phone || undefined });
   };
 
-  const displayUser = (userDetails || user) as UserWithPhone;
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordSuccess("");
+    setPasswordError("");
+    if (passwordForm.new_password.length < 8) {
+      setPasswordError("La nueva contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      setPasswordError("Las contraseñas nuevas no coinciden.");
+      return;
+    }
+    changePasswordMutation.mutate({
+      current_password: passwordForm.current_password,
+      new_password: passwordForm.new_password,
+    });
+  };
+
+  // /users/{id} (userDetails) doesn't return `gym` — only /auth/me (user) does.
+  const displayUser = { ...user, ...userDetails, gym: user?.gym } as UserWithPhone;
 
   if (isLoading && !user) {
     return (
@@ -140,10 +184,20 @@ export default function ProfilePage() {
               >
                 Datos personales
               </button>
+              <button
+                onClick={() => setActiveTab("security")}
+                className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                  activeTab === "security"
+                    ? "bg-surface-container-highest text-on-surface border-b-2 border-primary -mb-px"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                Seguridad
+              </button>
             </div>
 
             {activeTab === "profile" && (
-              <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-xl">
+              <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-[36rem]">
                 {successMessage && (
                   <div className="text-xs text-secondary bg-secondary/10 px-3 py-2 rounded-lg flex items-center gap-2">
                     <Save className="w-3.5 h-3.5 flex-shrink-0" />
@@ -167,6 +221,56 @@ export default function ProfilePage() {
                 <div className="pt-2">
                   <Button type="submit" loading={updateProfileMutation.isPending} icon={<Save className="w-4 h-4" />}>
                     Guardar cambios
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {activeTab === "security" && (
+              <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-[36rem]">
+                {passwordSuccess && (
+                  <div className="text-xs text-secondary bg-secondary/10 px-3 py-2 rounded-lg flex items-center gap-2">
+                    <Save className="w-3.5 h-3.5 flex-shrink-0" />
+                    {passwordSuccess}
+                  </div>
+                )}
+                {passwordError && (
+                  <div className="text-xs text-error bg-error/10 px-3 py-2 rounded-lg">{passwordError}</div>
+                )}
+                <Input
+                  label="Contraseña actual"
+                  type="password"
+                  autoComplete="current-password"
+                  value={passwordForm.current_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                  required
+                />
+                <Input
+                  label="Nueva contraseña"
+                  type="password"
+                  autoComplete="new-password"
+                  helperText="Mínimo 8 caracteres"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                  required
+                  minLength={8}
+                />
+                <Input
+                  label="Confirmar nueva contraseña"
+                  type="password"
+                  autoComplete="new-password"
+                  value={passwordForm.confirm_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                  required
+                  minLength={8}
+                />
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    loading={changePasswordMutation.isPending}
+                    icon={<KeyRound className="w-4 h-4" />}
+                  >
+                    Cambiar contraseña
                   </Button>
                 </div>
               </form>
