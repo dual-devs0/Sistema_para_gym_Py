@@ -8,7 +8,10 @@ import MembersTable from "../../components/feature/MembersTable";
 import FilterBar from "../../components/feature/FilterBar";
 import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
-import type { Member, MemberListItem, MemberMembership, AttendanceLog, MembershipPlan, NotificationLog } from "../../types/api";
+import type { Member, MemberListItem, MemberMembership, AttendanceLog, MembershipPlan, NotificationLog, MemberBalanceMovement } from "../../types/api";
+import { useAuth } from "../../hooks/useAuth";
+import { canAdjustBalance } from "../../utils/roles";
+import { formatPYG } from "../../utils";
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   payment_confirmation: "Confirmación de pago",
@@ -87,6 +90,8 @@ const ITEMS_PER_PAGE = 10;
 
 export default function MembersPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const canAdjust = canAdjustBalance(user?.role);
   const { data: members, isLoading } = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
   const { data: memberships } = useQuery({ queryKey: ["memberships"], queryFn: fetchMemberships });
   const { data: attendance } = useQuery({ queryKey: ["attendance"], queryFn: fetchAttendance });
@@ -103,6 +108,37 @@ export default function MembersPage() {
     },
     enabled: !!viewMember,
   });
+
+  const { data: balanceMovements } = useQuery({
+    queryKey: ["balance", viewMember?.id],
+    queryFn: async () => {
+      const { data } = await api.get<MemberBalanceMovement[]>(`/balance/${viewMember!.id}`);
+      return data;
+    },
+    enabled: !!viewMember,
+  });
+
+  const [adjustFormOpen, setAdjustFormOpen] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustMotivo, setAdjustMotivo] = useState("");
+
+  const adjustMutation = useMutation({
+    mutationFn: (body: { amount: number; motivo: string }) => api.post(`/balance/${viewMember!.id}/adjust`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["balance", viewMember?.id] });
+      qc.invalidateQueries({ queryKey: ["members"] });
+      setAdjustFormOpen(false);
+      setAdjustAmount("");
+      setAdjustMotivo("");
+    },
+  });
+
+  const handleAdjustSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = Number(adjustAmount);
+    if (!amount || !adjustMotivo.trim()) return;
+    adjustMutation.mutate({ amount, motivo: adjustMotivo.trim() });
+  };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<{ first_name: string; last_name: string; email: string; phone: string; document_number: string }>({ first_name: "", last_name: "", email: "", phone: "", document_number: "" });
 
@@ -163,6 +199,11 @@ export default function MembersPage() {
     const m = members?.find((x) => x.id === id);
     if (m) setViewMember(m);
   };
+
+  // Balance can change (via adjustment) while the modal is open — re-derive
+  // from the freshly-refetched members list instead of the stale snapshot
+  // captured in viewMember at open-time.
+  const displayMember = members?.find((m) => m.id === viewMember?.id) || viewMember;
 
   const handleFreeze = (id: string) => {
     const m = members?.find((x) => x.id === id);
@@ -307,6 +348,73 @@ export default function MembersPage() {
                 <p className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Registrado</p>
                 <p className="text-on-surface mt-0.5">{dateFmt(viewMember.created_at)}</p>
               </div>
+            </div>
+
+            <div className="pt-4 border-t border-outline-variant/30">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Saldo</p>
+                {canAdjust && (
+                  <button
+                    type="button"
+                    onClick={() => setAdjustFormOpen((v) => !v)}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Ajustar saldo
+                  </button>
+                )}
+              </div>
+              <p className={`text-lg font-bold mb-2 ${(displayMember?.balance ?? 0) < 0 ? "text-error" : (displayMember?.balance ?? 0) > 0 ? "text-secondary" : "text-on-surface"}`}>
+                {formatPYG(Math.abs(displayMember?.balance ?? 0))}
+                {(displayMember?.balance ?? 0) < 0 && " (deudor)"}
+                {(displayMember?.balance ?? 0) > 0 && " (a favor)"}
+              </p>
+
+              {adjustFormOpen && canAdjust && (
+                <form onSubmit={handleAdjustSubmit} className="bg-surface-container-high rounded-lg p-3 mb-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      value={adjustAmount}
+                      onChange={(e) => setAdjustAmount(e.target.value)}
+                      placeholder="Monto (+/-)"
+                      className="rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/50"
+                      required
+                    />
+                    <input
+                      type="text"
+                      value={adjustMotivo}
+                      onChange={(e) => setAdjustMotivo(e.target.value)}
+                      placeholder="Motivo (obligatorio)"
+                      className="rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/50"
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="secondary" size="sm" type="button" onClick={() => setAdjustFormOpen(false)}>Cancelar</Button>
+                    <Button
+                      size="sm"
+                      type="submit"
+                      loading={adjustMutation.isPending}
+                      disabled={!adjustAmount || !adjustMotivo.trim()}
+                    >
+                      Guardar ajuste
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {balanceMovements && balanceMovements.length > 0 && (
+                <ul className="space-y-1.5 max-h-32 overflow-y-auto mb-4">
+                  {balanceMovements.map((mv) => (
+                    <li key={mv.id} className="flex items-center justify-between text-sm gap-2">
+                      <span className="text-on-surface truncate">{mv.motivo}</span>
+                      <span className={`shrink-0 font-mono text-xs ${mv.amount < 0 ? "text-error" : "text-secondary"}`}>
+                        {mv.amount < 0 ? "-" : "+"}{formatPYG(Math.abs(mv.amount))}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="pt-4 border-t border-outline-variant/30">

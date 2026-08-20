@@ -36,6 +36,9 @@ class Perm:
     INVOICING_READ = "invoicing.read"
     INVOICING_MANAGE = "invoicing.manage"
 
+    MEMBER_BALANCE_READ = "members.balance.read"
+    MEMBER_BALANCE_ADJUST = "members.balance.adjust"
+
     DASHBOARD_VIEW = "dashboard.view"
 
     AUDIT_VIEW = "audit.view"
@@ -78,6 +81,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.GYM_SETTINGS_UPDATE,
         Perm.INVOICING_READ,
         Perm.INVOICING_MANAGE,
+        Perm.MEMBER_BALANCE_READ,
+        Perm.MEMBER_BALANCE_ADJUST,
         Perm.DASHBOARD_VIEW,
         Perm.AUDIT_VIEW,
     },
@@ -107,6 +112,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.GYM_SETTINGS_UPDATE,
         Perm.INVOICING_READ,
         Perm.INVOICING_MANAGE,
+        Perm.MEMBER_BALANCE_READ,
+        Perm.MEMBER_BALANCE_ADJUST,
         Perm.DASHBOARD_VIEW,
     },
     "trainer": {
@@ -119,6 +126,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.ATTENDANCE_CHECKIN,
         Perm.ATTENDANCE_CHECKOUT,
         Perm.USER_READ,
+        Perm.MEMBER_BALANCE_READ,
     },
     "receptionist": {
         Perm.MEMBER_READ,
@@ -134,6 +142,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.ATTENDANCE_CHECKIN,
         Perm.ATTENDANCE_CHECKOUT,
         Perm.USER_READ,
+        Perm.MEMBER_BALANCE_READ,
     },
 }
 

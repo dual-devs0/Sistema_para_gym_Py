@@ -1,5 +1,6 @@
 from app.models.attendance import AttendanceLog
 from app.models.audit_log import AuditLog
+from app.models.balance import MemberBalanceMovement
 from app.models.gym import Gym
 from app.models.invoicing import GymFiscalConfig, SifenDocument, Timbrado
 from app.models.member import Member
@@ -14,6 +15,7 @@ __all__ = [
     "Gym",
     "GymFiscalConfig",
     "Member",
+    "MemberBalanceMovement",
     "MemberMembership",
     "MembershipPlan",
     "NotificationLog",

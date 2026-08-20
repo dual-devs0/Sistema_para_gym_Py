@@ -122,7 +122,7 @@ export default function SettingsPage() {
 
   const [form, setForm] = useState({
     name: "", slug: "", logo_url: "", address: "", phone: "", email: "",
-    currency: "PYG", timezone: "America/Asuncion", notifications_enabled: false,
+    currency: "PYG", timezone: "America/Asuncion", notifications_enabled: false, debt_limit: "",
   });
 
   useEffect(() => {
@@ -137,6 +137,7 @@ export default function SettingsPage() {
         currency: settings.currency || "PYG",
         timezone: settings.timezone || "America/Asuncion",
         notifications_enabled: settings.notifications_enabled ?? false,
+        debt_limit: settings.debt_limit != null ? String(settings.debt_limit) : "",
       });
     }
   }, [settings]);
@@ -159,6 +160,7 @@ export default function SettingsPage() {
       currency: form.currency,
       timezone: form.timezone,
       notifications_enabled: form.notifications_enabled,
+      debt_limit: form.debt_limit !== "" ? Number(form.debt_limit) : undefined,
     });
   };
 
@@ -222,6 +224,15 @@ export default function SettingsPage() {
               </select>
             </div>
           </div>
+          <Input
+            label="Límite de deuda (₲)"
+            type="number"
+            step="1"
+            value={form.debt_limit}
+            onChange={(e) => setForm({ ...form, debt_limit: e.target.value })}
+            placeholder="Sin límite configurado"
+            helperText="Si un socio supera este saldo deudor, se bloquea su check-in. Dejalo vacío para no aplicar límite."
+          />
         </SectionCard>
 
         <SectionCard icon={<MessageCircle className="w-5 h-5" />} title="Notificaciones">

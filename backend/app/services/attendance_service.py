@@ -12,6 +12,7 @@ from app.repositories.gym_repository import GymRepository
 from app.repositories.member_repository import MemberRepository
 from app.repositories.membership_repository import MemberMembershipRepository
 from app.schemas.attendance import AttendanceResponse
+from app.utils.currency import format_pyg
 
 
 class AttendanceService:
@@ -41,6 +42,19 @@ class AttendanceService:
         member = await self.member_repo.get_by_id(member_id, gym_id)
         if not member:
             raise NotFoundException("Member not found")
+
+        gym = await self.gym_repo.get_by_id(gym_id)
+        debt = -float(member.balance)
+        if gym and gym.debt_limit is not None and debt > float(gym.debt_limit):
+            # TODO Fase futura: notificar por WhatsApp al socio (y/o al owner)
+            # cuando el check-in queda bloqueado por deuda. No se implementa
+            # acá para mantener attendance_service/ desacoplado de
+            # notifications/ — solo un punto de integración marcado.
+            raise AppException(
+                f"Saldo deudor de {format_pyg(debt)}, supera el límite de "
+                f"{format_pyg(float(gym.debt_limit))} configurado",
+                status_code=409,
+            )
 
         existing = await self.repo.get_today_checkin(member_id)
         if existing:

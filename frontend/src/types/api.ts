@@ -11,8 +11,18 @@ export interface Member {
   photo_url: string | null;
   notes: string | null;
   status: string;
+  balance: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface MemberBalanceMovement {
+  id: string;
+  member_id: string;
+  amount: number;
+  motivo: string;
+  created_by_user_id: string | null;
+  created_at: string;
 }
 
 export interface MemberListItem {
@@ -167,6 +177,7 @@ export interface GymSettings {
   timezone: string;
   business_hours: Record<string, string> | null;
   notifications_enabled: boolean;
+  debt_limit: number | null;
 }
 
 export interface NotificationLog {

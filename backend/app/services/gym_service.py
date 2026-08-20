@@ -16,6 +16,7 @@ ALLOWED_GYM_FIELDS = {
     "timezone",
     "business_hours",
     "notifications_enabled",
+    "debt_limit",
 }
 
 

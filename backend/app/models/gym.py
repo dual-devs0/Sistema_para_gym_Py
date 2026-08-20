@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, Numeric, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,6 +17,9 @@ class Gym(Base, TimestampMixin, UUIDMixin):
     business_hours: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    # NULL = no limit configured yet (feature off until the owner sets one) — same
+    # opt-in rollout pattern as notifications_enabled/SIFEN in earlier phases.
+    debt_limit: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     users = relationship("User", back_populates="gym", lazy="selectin")
     members = relationship("Member", back_populates="gym", lazy="selectin")

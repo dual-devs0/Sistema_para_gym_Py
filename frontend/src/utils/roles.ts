@@ -56,6 +56,12 @@ export function canRefundPayments(role: string | undefined): boolean {
   return role === "owner" || role === "admin";
 }
 
+// members.balance.adjust is owner/admin only — everyone can view a member's
+// saldo, but only owner/admin can register a manual adjustment.
+export function canAdjustBalance(role: string | undefined): boolean {
+  return role === "owner" || role === "admin";
+}
+
 export function roleLabel(role: string | undefined): string {
   return ROLE_LABELS[role || ""] || role || "Usuario";
 }
