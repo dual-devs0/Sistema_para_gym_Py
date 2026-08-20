@@ -42,6 +42,15 @@ const statusConfig: Record<string, { label: string; dot: string; text: string }>
   refunded: { label: "Reembolsado", dot: "bg-error", text: "text-error" },
 };
 
+const sifenStatusConfig: Record<string, { label: string; dot: string; text: string }> = {
+  pending_stamping: { label: "Pendiente", dot: "bg-tertiary", text: "text-tertiary" },
+  signed: { label: "Firmado", dot: "bg-tertiary", text: "text-tertiary" },
+  transmitted: { label: "Transmitido", dot: "bg-tertiary", text: "text-tertiary" },
+  approved: { label: "Timbrado", dot: "bg-secondary", text: "text-secondary" },
+  rejected: { label: "Error", dot: "bg-error", text: "text-error" },
+  error: { label: "Error", dot: "bg-error", text: "text-error" },
+};
+
 function dateFmt(d: string) {
   return new Date(d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -251,6 +260,7 @@ export default function PaymentsPage() {
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Método</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Referencia</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Estado</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Factura</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Fecha</th>
                   <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Acción</th>
                 </tr>
@@ -284,6 +294,18 @@ export default function PaymentsPage() {
                           <span className={`w-2 h-2 rounded-full ${sc.dot}`} />
                           <span className={`text-xs font-medium ${sc.text}`}>{sc.label}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {p.sifen_status ? (
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${sifenStatusConfig[p.sifen_status]?.dot || "bg-on-surface-variant/40"}`} />
+                            <span className={`text-xs font-medium ${sifenStatusConfig[p.sifen_status]?.text || "text-on-surface-variant"}`}>
+                              {sifenStatusConfig[p.sifen_status]?.label || p.sifen_status}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-on-surface-variant">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-on-surface-variant">
                         {p.paid_at ? dateFmt(p.paid_at) : "—"}

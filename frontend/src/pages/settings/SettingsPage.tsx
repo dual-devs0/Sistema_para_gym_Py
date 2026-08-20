@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Building2, Clock, MapPin, Globe, MessageCircle } from "lucide-react";
+import { Save, Building2, Clock, MapPin, Globe, MessageCircle, FileText } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import api from "../../services/api";
-import type { GymSettings } from "../../types/api";
+import type { GymSettings, GymFiscalConfig, Timbrado } from "../../types/api";
 
 async function fetchSettings(): Promise<GymSettings> {
   const { data } = await api.get("/gym/settings");
+  return data;
+}
+
+async function fetchFiscalConfig(): Promise<GymFiscalConfig | null> {
+  const { data } = await api.get("/invoicing/fiscal-config");
+  return data;
+}
+
+async function fetchTimbrados(): Promise<Timbrado[]> {
+  const { data } = await api.get("/invoicing/timbrado");
   return data;
 }
 
@@ -65,6 +75,51 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
 export default function SettingsPage() {
   const qc = useQueryClient();
   const { data: settings, isLoading } = useQuery({ queryKey: ["gym-settings"], queryFn: fetchSettings });
+  const { data: fiscalConfig } = useQuery({ queryKey: ["fiscal-config"], queryFn: fetchFiscalConfig });
+  const { data: timbrados } = useQuery({ queryKey: ["timbrados"], queryFn: fetchTimbrados });
+  const activeTimbrado = timbrados?.find((t) => t.is_active) ?? null;
+
+  const [fiscalForm, setFiscalForm] = useState({ ruc: "", razon_social: "" });
+  const [timbradoForm, setTimbradoForm] = useState({
+    establecimiento: "", punto_expedicion: "", numero_desde: "", numero_hasta: "", fecha_vencimiento: "",
+  });
+
+  useEffect(() => {
+    if (fiscalConfig) {
+      setFiscalForm({ ruc: fiscalConfig.ruc || "", razon_social: fiscalConfig.razon_social || "" });
+    }
+  }, [fiscalConfig]);
+
+  const fiscalMutation = useMutation({
+    mutationFn: (body: { ruc?: string; razon_social?: string }) => api.put("/invoicing/fiscal-config", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fiscal-config"] }),
+  });
+
+  const timbradoMutation = useMutation({
+    mutationFn: (body: { establecimiento: string; punto_expedicion: string; numero_desde: number; numero_hasta: number; fecha_vencimiento: string }) =>
+      api.post("/invoicing/timbrado", body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["timbrados"] });
+      setTimbradoForm({ establecimiento: "", punto_expedicion: "", numero_desde: "", numero_hasta: "", fecha_vencimiento: "" });
+    },
+  });
+
+  const handleFiscalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fiscalMutation.mutate({ ruc: fiscalForm.ruc || undefined, razon_social: fiscalForm.razon_social || undefined });
+  };
+
+  const handleTimbradoSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    timbradoMutation.mutate({
+      establecimiento: timbradoForm.establecimiento,
+      punto_expedicion: timbradoForm.punto_expedicion,
+      numero_desde: parseInt(timbradoForm.numero_desde, 10),
+      numero_hasta: parseInt(timbradoForm.numero_hasta, 10),
+      fecha_vencimiento: timbradoForm.fecha_vencimiento,
+    });
+  };
+
   const [form, setForm] = useState({
     name: "", slug: "", logo_url: "", address: "", phone: "", email: "",
     currency: "PYG", timezone: "America/Asuncion", notifications_enabled: false,
@@ -199,6 +254,48 @@ export default function SettingsPage() {
           )}
         </div>
       </form>
+
+      <div className="space-y-6 max-w-2xl mt-6">
+        <SectionCard icon={<FileText className="w-5 h-5" />} title="Fiscal y Facturación">
+          <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${activeTimbrado ? "bg-tertiary/10 text-tertiary" : "bg-surface-container-highest text-on-surface-variant"}`}>
+            <span className="material-symbols-outlined text-sm">{activeTimbrado ? "hourglass_top" : "info"}</span>
+            Sin certificado cargado — no se pueden emitir facturas todavía. Los pagos se registran
+            normalmente y quedan pendientes de timbrado hasta que cargues tu certificado digital.
+          </div>
+
+          <form onSubmit={handleFiscalSubmit} className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input label="RUC" value={fiscalForm.ruc} onChange={(e) => setFiscalForm({ ...fiscalForm, ruc: e.target.value })} placeholder="80012345-6" />
+              <Input label="Razón social" value={fiscalForm.razon_social} onChange={(e) => setFiscalForm({ ...fiscalForm, razon_social: e.target.value })} placeholder="Mi Gimnasio SA" />
+            </div>
+            <Button type="submit" size="sm" loading={fiscalMutation.isPending}>Guardar datos fiscales</Button>
+          </form>
+
+          <div className="pt-4 border-t border-outline-variant/30">
+            <p className="text-sm font-medium text-on-surface mb-2">Timbrado</p>
+            {activeTimbrado ? (
+              <div className="text-sm text-on-surface-variant grid grid-cols-2 gap-2 mb-4">
+                <span>Establecimiento: <span className="text-on-surface font-mono">{activeTimbrado.establecimiento}</span></span>
+                <span>Punto exp.: <span className="text-on-surface font-mono">{activeTimbrado.punto_expedicion}</span></span>
+                <span>Rango: <span className="text-on-surface font-mono">{activeTimbrado.numero_desde}–{activeTimbrado.numero_hasta}</span></span>
+                <span>Vence: <span className="text-on-surface">{activeTimbrado.fecha_vencimiento}</span></span>
+              </div>
+            ) : (
+              <p className="text-sm text-on-surface-variant mb-4">Sin timbrado cargado.</p>
+            )}
+            <form onSubmit={handleTimbradoSubmit} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <Input label="Establecimiento" maxLength={3} value={timbradoForm.establecimiento} onChange={(e) => setTimbradoForm({ ...timbradoForm, establecimiento: e.target.value })} placeholder="001" required />
+              <Input label="Punto expedición" maxLength={3} value={timbradoForm.punto_expedicion} onChange={(e) => setTimbradoForm({ ...timbradoForm, punto_expedicion: e.target.value })} placeholder="001" required />
+              <Input label="Vencimiento" type="date" value={timbradoForm.fecha_vencimiento} onChange={(e) => setTimbradoForm({ ...timbradoForm, fecha_vencimiento: e.target.value })} required />
+              <Input label="Número desde" type="number" value={timbradoForm.numero_desde} onChange={(e) => setTimbradoForm({ ...timbradoForm, numero_desde: e.target.value })} placeholder="1" required />
+              <Input label="Número hasta" type="number" value={timbradoForm.numero_hasta} onChange={(e) => setTimbradoForm({ ...timbradoForm, numero_hasta: e.target.value })} placeholder="9999999" required />
+              <div className="flex items-end">
+                <Button type="submit" size="sm" loading={timbradoMutation.isPending}>Guardar timbrado</Button>
+              </div>
+            </form>
+          </div>
+        </SectionCard>
+      </div>
     </div>
   );
 }

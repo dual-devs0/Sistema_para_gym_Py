@@ -27,6 +27,7 @@ class Payment(Base, TimestampMixin, UUIDMixin):
     gym = relationship("Gym", back_populates="payments")
     member = relationship("Member")
     invoice = relationship("Invoice", back_populates="payment", uselist=False)
+    sifen_document = relationship("SifenDocument", back_populates="payment", uselist=False)
 
 
 class Invoice(Base, TimestampMixin, UUIDMixin):

@@ -22,6 +22,17 @@ async def test_register_payment_creates_invoice(db_session, gym_id, member_id):
 
 
 @pytest.mark.asyncio
+async def test_register_payment_without_fiscal_config_still_succeeds(db_session, gym_id, member_id):
+    # Fase 3 closing criterion: a gym with no SIFEN certificate/fiscal config
+    # keeps charging normally — the payment succeeds and the SIFEN document
+    # just sits in pending_stamping instead of blocking or erroring.
+    service = PaymentService(db_session)
+    result = await service.register(gym_id, member_id, 150000, "efectivo")
+    assert result.status == "paid"
+    assert result.sifen_status == "pending_stamping"
+
+
+@pytest.mark.asyncio
 async def test_refund_not_found(db_session):
     service = PaymentService(db_session)
     with pytest.raises(NotFoundException):

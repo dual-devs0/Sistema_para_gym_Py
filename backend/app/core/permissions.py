@@ -33,6 +33,9 @@ class Perm:
     GYM_SETTINGS_READ = "gym.settings.read"
     GYM_SETTINGS_UPDATE = "gym.settings.update"
 
+    INVOICING_READ = "invoicing.read"
+    INVOICING_MANAGE = "invoicing.manage"
+
     DASHBOARD_VIEW = "dashboard.view"
 
     AUDIT_VIEW = "audit.view"
@@ -73,6 +76,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.USER_DELETE,
         Perm.GYM_SETTINGS_READ,
         Perm.GYM_SETTINGS_UPDATE,
+        Perm.INVOICING_READ,
+        Perm.INVOICING_MANAGE,
         Perm.DASHBOARD_VIEW,
         Perm.AUDIT_VIEW,
     },
@@ -100,6 +105,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.USER_UPDATE,
         Perm.GYM_SETTINGS_READ,
         Perm.GYM_SETTINGS_UPDATE,
+        Perm.INVOICING_READ,
+        Perm.INVOICING_MANAGE,
         Perm.DASHBOARD_VIEW,
     },
     "trainer": {

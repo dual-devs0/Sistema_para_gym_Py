@@ -16,6 +16,7 @@ class PaymentResponse(BaseModel):
     status: str
     paid_at: datetime | None = None
     notes: str | None = None
+    sifen_status: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

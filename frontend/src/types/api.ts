@@ -70,6 +70,27 @@ export interface Payment {
   status: string;
   paid_at: string | null;
   notes: string | null;
+  sifen_status: "pending_stamping" | "signed" | "transmitted" | "approved" | "rejected" | "error" | null;
+}
+
+export interface GymFiscalConfig {
+  id: string;
+  gym_id: string;
+  ruc: string | null;
+  razon_social: string | null;
+  sifen_environment: string;
+}
+
+export interface Timbrado {
+  id: string;
+  gym_id: string;
+  establecimiento: string;
+  punto_expedicion: string;
+  numero_desde: number;
+  numero_hasta: number;
+  numero_actual: number;
+  fecha_vencimiento: string;
+  is_active: boolean;
 }
 
 export interface DashboardSummary {

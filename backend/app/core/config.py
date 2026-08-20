@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     whatsapp_sender_channel: str | None = Field(default=None, alias="WHATSAPP_360DIALOG_CHANNEL_ID")
     whatsapp_expiry_reminder_days: int = Field(default=3, alias="WHATSAPP_EXPIRY_REMINDER_DAYS")
 
+    # SIFEN (DNIT Paraguay) — URLs confirmed against Manual Tecnico v150 sec. 7.10.
+    # sifen_environment must stay "test" until Sub-entrega 3b (real PSC certificate).
+    sifen_environment: str = Field(default="test", alias="SIFEN_ENVIRONMENT")
+    sifen_base_url_test: str = Field(default="https://sifen-test.set.gov.py", alias="SIFEN_BASE_URL_TEST")
+    sifen_base_url_prod: str = Field(default="https://sifen.set.gov.py", alias="SIFEN_BASE_URL_PROD")
+
     cors_allow_methods: str = Field(default="GET,POST,PUT,DELETE,OPTIONS,PATCH", alias="CORS_ALLOW_METHODS")
     cors_allow_headers: str = Field(
         default="Authorization,Content-Type,X-Requested-With,Accept,Origin", alias="CORS_ALLOW_HEADERS"
@@ -63,6 +69,18 @@ class Settings(BaseSettings):
     @property
     def whatsapp_enabled(self) -> bool:
         return bool(self.whatsapp_api_key)
+
+    @property
+    def sifen_base_url(self) -> str:
+        return self.sifen_base_url_prod if self.sifen_environment == "production" else self.sifen_base_url_test
+
+    @field_validator("sifen_environment")
+    @classmethod
+    def validate_sifen_environment(cls, v: str) -> str:
+        allowed = {"test", "production"}
+        if v.lower() not in allowed:
+            raise ValueError(f"SIFEN_ENVIRONMENT must be one of: {', '.join(sorted(allowed))}")
+        return v.lower()
 
     @field_validator("secret_key")
     @classmethod

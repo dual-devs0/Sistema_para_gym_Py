@@ -14,7 +14,9 @@ class PaymentRepository:
 
     async def get_by_id(self, payment_id: uuid.UUID) -> Payment | None:
         result = await self.db.execute(
-            select(Payment).where(Payment.id == payment_id).options(selectinload(Payment.member))
+            select(Payment)
+            .where(Payment.id == payment_id)
+            .options(selectinload(Payment.member), selectinload(Payment.sifen_document))
         )
         return result.scalar_one_or_none()
 
@@ -22,7 +24,7 @@ class PaymentRepository:
         result = await self.db.execute(
             select(Payment)
             .where(Payment.gym_id == gym_id)
-            .options(selectinload(Payment.member))
+            .options(selectinload(Payment.member), selectinload(Payment.sifen_document))
             .order_by(Payment.created_at.desc())
         )
         return list(result.scalars().all())
@@ -56,7 +58,7 @@ class PaymentRepository:
         result = await self.db.execute(
             select(Payment)
             .where(Payment.member_id == member_id, Payment.gym_id == gym_id)
-            .options(selectinload(Payment.member))
+            .options(selectinload(Payment.member), selectinload(Payment.sifen_document))
             .order_by(Payment.created_at.desc())
         )
         return list(result.scalars().all())

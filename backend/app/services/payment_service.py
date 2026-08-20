@@ -15,6 +15,7 @@ from app.models.payment import Invoice, Payment
 from app.repositories.member_repository import MemberRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.schemas.payment import PaymentResponse
+from app.services.invoicing_service import InvoicingService
 from app.services.notification_service import NotificationService
 from app.utils.currency import round_cash_pyg
 
@@ -69,8 +70,30 @@ class PaymentService:
         )
         created = await self.repo.create(payment)
         await self._generate_invoice_number(created)
+        sifen_document = await self._generate_sifen_document(gym_id, created.id)
+        if sifen_document:
+            # Set the in-memory relationship directly instead of letting
+            # `_to_response` below lazy-load `created.sifen_document` — that
+            # relationship isn't selectinload'd on this freshly-created
+            # instance and a lazy load would fail on an AsyncSession anyway.
+            created.sifen_document = sifen_document
         self._dispatch_payment_confirmation(gym_id, member, created)
         return await self._to_response(created)
+
+    async def _generate_sifen_document(self, gym_id: uuid.UUID, payment_id: uuid.UUID):
+        # In Sub-entrega 3a this is cheap (two SELECTs + an INSERT into
+        # pending_stamping, no network I/O — every gym is fiscally "not
+        # ready" until Sub-entrega 3b adds certificate handling) so it runs
+        # inline on the same session/transaction as the payment, same as
+        # `_generate_invoice_number` above. Once 3b wires real SIFEN
+        # transmission (a slow network call), this needs to become
+        # fire-and-forget like `_dispatch_payment_confirmation` below —
+        # a real payment must never block on SIFEN being slow or down.
+        try:
+            return await InvoicingService(self.db).generate_for_payment(gym_id, payment_id)
+        except Exception:
+            logger.exception("Failed to create SIFEN document for payment %s", payment_id)
+            return None
 
     def _dispatch_payment_confirmation(self, gym_id: uuid.UUID, member: Member, payment: Payment) -> None:
         if not settings.whatsapp_enabled:
@@ -106,8 +129,17 @@ class PaymentService:
             raise NotFoundException("Payment not found")
         if payment.status != "paid":
             raise AppException("Only paid payments can be refunded", status_code=400)
+        # repo.update()'s db.refresh() expires relationship attributes.
+        # `member` survives via SQLAlchemy's many-to-one identity-map
+        # shortcut, but `sifen_document` is a one-to-one keyed by the
+        # *other* table's FK and can't use that shortcut — it would trigger
+        # a real lazy load in _to_response below, which crashes on an
+        # AsyncSession. Snapshot it now, reattach after refresh.
+        sifen_document = payment.sifen_document
         payment.status = "refunded"
         updated = await self.repo.update(payment)
+        if sifen_document:
+            updated.sifen_document = sifen_document
         return await self._to_response(updated)
 
     async def get_invoice(self, payment_id: uuid.UUID, gym_id: uuid.UUID) -> Invoice:
@@ -154,6 +186,8 @@ class PaymentService:
         resp = PaymentResponse.model_validate(payment)
         if payment.member:
             resp.member_name = f"{payment.member.first_name} {payment.member.last_name}"
+        if payment.sifen_document:
+            resp.sifen_status = payment.sifen_document.status
         return resp
 
 
