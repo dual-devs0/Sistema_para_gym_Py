@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, LogOut, Wallet, Plus } from "lucide-react";
 import CheckInCard, { type MembershipStatus } from "../../components/feature/CheckInCard";
@@ -84,6 +85,11 @@ function CashShiftBanner() {
       setWithdrawFormOpen(false);
       setWithdrawAmount("");
       setWithdrawMotivo("");
+      setShiftError("");
+    },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setShiftError(detail || "No se pudo registrar la salida.");
     },
   });
 
@@ -92,6 +98,11 @@ function CashShiftBanner() {
     onSuccess: ({ data }) => {
       qc.invalidateQueries({ queryKey: ["cash-shift-current"] });
       setClosedShift(data);
+      setShiftError("");
+    },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setShiftError(detail || "No se pudo cerrar el turno.");
     },
   });
 
@@ -123,7 +134,7 @@ function CashShiftBanner() {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" onClick={() => setWithdrawFormOpen((v) => !v)}>
+                <Button variant="outline" size="sm" onClick={() => { setWithdrawFormOpen((v) => !v); setShiftError(""); }}>
                   Registrar salida
                 </Button>
                 <Button variant="secondary" size="sm" loading={closeMutation.isPending} onClick={() => closeMutation.mutate()}>
@@ -136,8 +147,12 @@ function CashShiftBanner() {
                 {shift.withdrawals.length} salida(s) registrada(s) en este turno.
               </p>
             )}
+            {shiftError && !withdrawFormOpen && (
+              <p className="text-xs text-error font-medium mt-2">{shiftError}</p>
+            )}
             {withdrawFormOpen && (
               <form onSubmit={handleWithdrawSubmit} className="mt-3 bg-surface-container-high rounded-lg p-3 space-y-2">
+                {shiftError && <p className="text-xs text-error font-medium">{shiftError}</p>}
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="number"
@@ -241,6 +256,7 @@ function CashShiftBanner() {
 
 export default function ReceptionPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data: members } = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
   const { data: attendance } = useQuery({ queryKey: ["attendance"], queryFn: fetchTodayAttendance });
 
@@ -248,7 +264,12 @@ export default function ReceptionPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selected, setSelected] = useState<Member | null>(null);
   const [error, setError] = useState("");
+  const [debtBlocked, setDebtBlocked] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Shared by both "Ir a Pagos" entry points below (frozen/expired membership,
+  // and the debt-block check-in error) so the navigation target lives in one place.
+  const goToPaymentsFor = (memberId: string) => navigate(`/payments?member=${memberId}`);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -282,9 +303,15 @@ export default function ReceptionPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["attendance"] });
       setError("");
+      setDebtBlocked(false);
     },
     onError: (err: unknown) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      // "Saldo deudor..." is attendance_service's specific debt-limit message
+      // (backend/app/services/attendance_service.py) — distinct from the other
+      // 409 on this same endpoint ("Member already checked in today"), which
+      // needs no "Ir a Pagos" CTA.
+      setDebtBlocked(!!detail?.startsWith("Saldo deudor"));
       setError(detail === "Member already checked in today" ? "Este miembro ya tiene una entrada activa hoy." : detail || "No se pudo registrar el ingreso.");
     },
   });
@@ -303,6 +330,7 @@ export default function ReceptionPage() {
     setSearch(`${m.first_name} ${m.last_name}`);
     setShowDropdown(false);
     setError("");
+    setDebtBlocked(false);
     checkInMutation.reset();
   };
 
@@ -369,7 +397,16 @@ export default function ReceptionPage() {
       {error && (
         <div className="flex items-center gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2 mb-4 max-w-[36rem]">
           <span className="material-symbols-outlined text-error shrink-0" style={{ fontSize: "16px" }}>error</span>
-          <p className="text-xs text-error">{error}</p>
+          <p className="text-xs text-error flex-1">{error}</p>
+          {debtBlocked && selected && (
+            <button
+              type="button"
+              onClick={() => goToPaymentsFor(selected.id)}
+              className="text-xs font-semibold text-error underline shrink-0"
+            >
+              Ir a Pagos
+            </button>
+          )}
         </div>
       )}
 
@@ -386,6 +423,7 @@ export default function ReceptionPage() {
             checkedIn={!!activeLog || checkInMutation.isSuccess}
             checkInLoading={checkInMutation.isPending}
             onCheckIn={() => checkInMutation.mutate(selected.id)}
+            onGoToPayments={() => goToPaymentsFor(selected.id)}
           />
           {activeLog && (
             <button

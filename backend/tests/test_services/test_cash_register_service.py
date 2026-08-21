@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.core.exceptions import AppException, NotFoundException
+from app.core.exceptions import AppException
 from app.models.cash_register import CashRegisterShift
 from app.services.cash_register_service import CashRegisterService
 from app.services.payment_service import PaymentService
@@ -35,7 +35,7 @@ async def test_withdrawal_requires_open_shift(db_session, gym_id):
 @pytest.mark.asyncio
 async def test_close_without_open_shift_fails(db_session, gym_id):
     service = CashRegisterService(db_session)
-    with pytest.raises(NotFoundException):
+    with pytest.raises(AppException):
         await service.close(gym_id, None)
 
 

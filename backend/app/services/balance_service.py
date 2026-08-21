@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,7 +42,10 @@ class BalanceService:
         # Cached balance updated in the same transaction as the ledger entry
         # — both commit together, so the cache can never drift from the
         # source of truth (the movement row) even if a later step fails.
-        member.balance = float(member.balance) + amount
+        # Decimal arithmetic throughout: casting to float here would round-trip
+        # the DB's exact Numeric value through binary float, which can drift
+        # by fractions of a guaraní across repeated adjustments.
+        member.balance = member.balance + Decimal(str(amount))
         await self.member_repo.update(member)
 
         return MemberBalanceMovementResponse.model_validate(created)

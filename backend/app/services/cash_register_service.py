@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import async_session_factory
-from app.core.exceptions import AppException, NotFoundException
+from app.core.exceptions import AppException
 from app.models.cash_register import CashRegisterShift, CashWithdrawal
 from app.repositories.cash_register_repository import CashRegisterShiftRepository, CashWithdrawalRepository
 from app.repositories.gym_repository import GymRepository
@@ -86,7 +86,7 @@ class CashRegisterService:
     async def close(self, gym_id: uuid.UUID, user_id: uuid.UUID | None) -> CashShiftResponse:
         shift = await self.repo.get_open_shift(gym_id)
         if not shift:
-            raise NotFoundException("No hay un turno de caja abierto")
+            raise AppException("No hay un turno de caja abierto", status_code=409)
 
         payments = await self.payment_repo.list_paid_since(gym_id, shift.opened_at)
         cash_total = card_total = transfer_total = other_total = 0.0

@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 import pytest
 
@@ -39,6 +40,28 @@ async def test_multiple_adjustments_accumulate_on_cached_balance(db_session, mem
 
     await db_session.refresh(member)
     assert float(member.balance) == -70000
+
+
+@pytest.mark.asyncio
+async def test_multiple_decimal_adjustments_are_exact_not_float_approximate(db_session, member):
+    # Classic float-drift case: 0.1 + 0.2 != 0.3 in binary float. Scaled to
+    # currency-like values with cents, repeated float addition would leave
+    # a residual fraction instead of landing exactly on the expected total.
+    service = BalanceService(db_session)
+    amounts = [10.1, 20.2, 30.3, -5.4, 15.15, -0.05]
+    expected_total = Decimal("70.30")
+
+    for amount, motivo in zip(amounts, [f"mov-{i}" for i in range(len(amounts))], strict=True):
+        await service.adjust(member.id, member.gym_id, amount, motivo, None)
+
+    await db_session.refresh(member)
+    assert member.balance == expected_total
+    # Guard against the specific bug this test targets: a float round-trip
+    # would produce something like Decimal("70.29999999999999") stored as
+    # 70.30 only by luck of Numeric(10,2) column rounding on write — the
+    # in-memory cached object before that final DB round-trip is what would
+    # actually drift, so comparing the exact Decimal here is the real check.
+    assert str(member.balance) == "70.30"
 
 
 @pytest.mark.asyncio

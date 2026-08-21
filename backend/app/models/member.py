@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy import Date, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -23,7 +24,7 @@ class Member(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="active")
     # Cached sum of MemberBalanceMovement.amount. Negative = deudor, positive = a favor.
-    balance: Mapped[float] = mapped_column(Numeric(10, 2), default=0, nullable=False)
+    balance: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0, nullable=False)
 
     gym = relationship("Gym", back_populates="members")
     memberships = relationship("MemberMembership", back_populates="member", lazy="selectin")

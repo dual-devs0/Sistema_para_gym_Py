@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, DollarSign, RotateCcw, SearchX } from "lucide-react";
 import Button from "../../components/ui/Button";
@@ -80,6 +81,7 @@ export default function PaymentsPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
   const canRefund = canRefundPayments(user?.role);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: payments, isLoading } = useQuery({ queryKey: ["payments"], queryFn: fetchPayments });
   const { data: members } = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
   const { data: products } = useQuery({ queryKey: ["products"], queryFn: fetchProducts });
@@ -199,14 +201,32 @@ export default function PaymentsPage() {
     });
   };
 
-  const openCreate = () => {
-    setForm(emptyForm);
-    setMemberSearch("");
+  const openCreate = useCallback((preselectedMember?: Member) => {
+    setForm(preselectedMember ? { ...emptyForm, member_id: preselectedMember.id } : emptyForm);
+    setMemberSearch(preselectedMember ? `${preselectedMember.first_name} ${preselectedMember.last_name}` : "");
     setFormError("");
     setCart([]);
     setProductSearch("");
     setModalOpen(true);
-  };
+  }, []);
+
+  // Entry point from Recepción's "Ir a Pagos" (frozen/expired membership, or
+  // check-in blocked by debt) — /payments?member=<id> opens straight into the
+  // register-payment modal with that member already selected.
+  useEffect(() => {
+    const memberId = searchParams.get("member");
+    if (!memberId || !members) return;
+    const member = members.find((m) => m.id === memberId);
+    if (member) openCreate(member);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("member");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [members, searchParams, openCreate, setSearchParams]);
 
   const filtered = useMemo(() => {
     if (!payments) return [];
@@ -241,7 +261,7 @@ export default function PaymentsPage() {
             {payments?.length || 0} pagos registrados
           </p>
         </div>
-        <Button variant="primary" onClick={openCreate} icon={<Plus className="w-4 h-4" />}>
+        <Button variant="primary" onClick={() => openCreate()} icon={<Plus className="w-4 h-4" />}>
           Registrar pago
         </Button>
       </div>
@@ -412,7 +432,7 @@ export default function PaymentsPage() {
               {hasActiveFilters ? "Probá con otros filtros o limpiá la búsqueda." : "Registrá el primer pago para empezar."}
             </p>
             {!hasActiveFilters && (
-              <Button variant="primary" size="sm" onClick={openCreate}>
+              <Button variant="primary" size="sm" onClick={() => openCreate()}>
                 Registrar primer pago
               </Button>
             )}
