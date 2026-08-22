@@ -2,6 +2,10 @@ export function formatCurrency(amount: number, currency = "MXN"): string {
   return new Intl.NumberFormat("es-MX", { style: "currency", currency }).format(amount);
 }
 
+export function formatPYG(amount: number): string {
+  return `₲ ${Math.round(amount).toLocaleString("es-PY")}`;
+}
+
 export function formatDate(date: string | Date, locale = "es-MX"): string {
   return new Date(date).toLocaleDateString(locale, {
     year: "numeric",

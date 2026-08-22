@@ -16,6 +16,8 @@ class GymResponse(BaseModel):
     timezone: str
     business_hours: dict | None = None
     is_active: bool
+    notifications_enabled: bool
+    debt_limit: float | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -36,3 +38,5 @@ class GymUpdate(BaseModel):
     currency: str | None = Field(None, max_length=10)
     timezone: str | None = Field(None, max_length=50)
     business_hours: dict | None = None
+    notifications_enabled: bool | None = None
+    debt_limit: float | None = Field(None, ge=0)

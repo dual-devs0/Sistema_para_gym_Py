@@ -11,9 +11,10 @@ import SettingsPage from "./pages/settings/SettingsPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import StaffPage from "./pages/staff/StaffPage";
 import ReceptionPage from "./pages/reception/ReceptionPage";
+import ProductsPage from "./pages/products/ProductsPage";
 import PageLayout from "./components/layout/PageLayout";
 import { useAuth } from "./hooks/useAuth";
-import { allowedNavPaths, canManageStaff, canViewGymSettings, defaultRouteForRole } from "./utils/roles";
+import { allowedNavPaths, canManageProducts, canManageStaff, canViewGymSettings, defaultRouteForRole } from "./utils/roles";
 
 // Roles without dashboard.view (receptionist, trainer) would otherwise land
 // on "/" and get a 403 from every dashboard endpoint. Send them to whatever
@@ -34,6 +35,15 @@ function GuardedSettings() {
     return <Navigate to={defaultRouteForRole(user.role)} replace />;
   }
   return <SettingsPage />;
+}
+
+// products.manage is owner/admin only on the backend.
+function GuardedProducts() {
+  const { user } = useAuth();
+  if (user && !canManageProducts(user.role)) {
+    return <Navigate to={defaultRouteForRole(user.role)} replace />;
+  }
+  return <ProductsPage />;
 }
 
 // users.create/users.update are owner/admin only on the backend.
@@ -96,6 +106,14 @@ export default function Router() {
           element={
             <ProtectedRoute>
               <AttendancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <ProtectedRoute>
+              <GuardedProducts />
             </ProtectedRoute>
           }
         />

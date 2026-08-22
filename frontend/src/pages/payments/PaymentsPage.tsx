@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, DollarSign, RotateCcw, SearchX } from "lucide-react";
 import Button from "../../components/ui/Button";
@@ -6,9 +7,10 @@ import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
 import Pagination from "../../components/feature/Pagination";
 import api from "../../services/api";
-import type { Payment, Member } from "../../types/api";
+import type { Payment, Member, Product } from "../../types/api";
 import { useAuth } from "../../hooks/useAuth";
 import { canRefundPayments } from "../../utils/roles";
+import { formatPYG } from "../../utils";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -19,6 +21,11 @@ async function fetchPayments(): Promise<Payment[]> {
 
 async function fetchMembers(): Promise<Member[]> {
   const { data } = await api.get("/members");
+  return data;
+}
+
+async function fetchProducts(): Promise<Product[]> {
+  const { data } = await api.get("/products");
   return data;
 }
 
@@ -41,11 +48,27 @@ const statusConfig: Record<string, { label: string; dot: string; text: string }>
   refunded: { label: "Reembolsado", dot: "bg-error", text: "text-error" },
 };
 
+const sifenStatusConfig: Record<string, { label: string; dot: string; text: string }> = {
+  pending_stamping: { label: "Pendiente", dot: "bg-tertiary", text: "text-tertiary" },
+  signed: { label: "Firmado", dot: "bg-tertiary", text: "text-tertiary" },
+  transmitted: { label: "Transmitido", dot: "bg-tertiary", text: "text-tertiary" },
+  approved: { label: "Timbrado", dot: "bg-secondary", text: "text-secondary" },
+  rejected: { label: "Error", dot: "bg-error", text: "text-error" },
+  error: { label: "Error", dot: "bg-error", text: "text-error" },
+};
+
 function dateFmt(d: string) {
   return new Date(d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
 }
 
 const emptyForm = { member_id: "", amount: "", payment_method: "efectivo", reference: "", notes: "" };
+
+interface CartItem {
+  product_id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 const methodOptions = [
   { value: "efectivo", label: "Efectivo" },
@@ -58,8 +81,10 @@ export default function PaymentsPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
   const canRefund = canRefundPayments(user?.role);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: payments, isLoading } = useQuery({ queryKey: ["payments"], queryFn: fetchPayments });
   const { data: members } = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
+  const { data: products } = useQuery({ queryKey: ["products"], queryFn: fetchProducts });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -67,6 +92,11 @@ export default function PaymentsPage() {
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [formError, setFormError] = useState("");
   const memberInputRef = useRef<HTMLDivElement>(null);
+
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
+  const productInputRef = useRef<HTMLDivElement>(null);
 
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -77,25 +107,62 @@ export default function PaymentsPage() {
       if (memberInputRef.current && !memberInputRef.current.contains(e.target as Node)) {
         setShowMemberDropdown(false);
       }
+      if (productInputRef.current && !productInputRef.current.contains(e.target as Node)) {
+        setShowProductDropdown(false);
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const createMutation = useMutation({
-    mutationFn: (body: { member_id: string; amount: number; payment_method: string; reference?: string; notes?: string }) =>
-      api.post("/payments", body),
+    mutationFn: (body: {
+      member_id: string;
+      amount: number;
+      payment_method: string;
+      reference?: string;
+      notes?: string;
+      items?: { product_id: string; quantity: number }[];
+    }) => api.post("/payments", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
       setModalOpen(false);
       setForm(emptyForm);
       setMemberSearch("");
+      setCart([]);
+      setProductSearch("");
     },
     onError: (err: unknown) => {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       setFormError(detail || "No se pudo registrar el pago. Intentá de nuevo.");
     },
   });
+
+  const cartTotal = cart.reduce((s, item) => s + item.price * item.quantity, 0);
+  const combinedTotal = (parseFloat(form.amount) || 0) + cartTotal;
+
+  const productSuggestions = useMemo(() => {
+    if (!products || !productSearch) return [];
+    const q = productSearch.toLowerCase();
+    return products
+      .filter((p) => p.is_active && p.name.toLowerCase().includes(q) && !cart.some((c) => c.product_id === p.id))
+      .slice(0, 8);
+  }, [products, productSearch, cart]);
+
+  const addToCart = (product: Product) => {
+    setCart((c) => [...c, { product_id: product.id, name: product.name, price: product.price, quantity: 1 }]);
+    setProductSearch("");
+    setShowProductDropdown(false);
+  };
+
+  const updateCartQuantity = (productId: string, quantity: number) => {
+    setCart((c) => c.map((item) => (item.product_id === productId ? { ...item, quantity: Math.max(1, quantity) } : item)));
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart((c) => c.filter((item) => item.product_id !== productId));
+  };
 
   const [refundError, setRefundError] = useState("");
 
@@ -119,25 +186,47 @@ export default function PaymentsPage() {
       setFormError("Seleccioná un miembro de la lista.");
       return;
     }
-    if (!form.amount || parseFloat(form.amount) <= 0) {
-      setFormError("Ingresá un monto válido.");
+    const baseAmount = parseFloat(form.amount) || 0;
+    if (baseAmount < 0 || baseAmount + cartTotal <= 0) {
+      setFormError("Ingresá un monto válido o agregá al menos un producto de cantina.");
       return;
     }
     createMutation.mutate({
       member_id: form.member_id,
-      amount: parseFloat(form.amount),
+      amount: baseAmount,
       payment_method: form.payment_method,
       reference: form.reference || undefined,
       notes: form.notes || undefined,
+      items: cart.length > 0 ? cart.map((c) => ({ product_id: c.product_id, quantity: c.quantity })) : undefined,
     });
   };
 
-  const openCreate = () => {
-    setForm(emptyForm);
-    setMemberSearch("");
+  const openCreate = useCallback((preselectedMember?: Member) => {
+    setForm(preselectedMember ? { ...emptyForm, member_id: preselectedMember.id } : emptyForm);
+    setMemberSearch(preselectedMember ? `${preselectedMember.first_name} ${preselectedMember.last_name}` : "");
     setFormError("");
+    setCart([]);
+    setProductSearch("");
     setModalOpen(true);
-  };
+  }, []);
+
+  // Entry point from Recepción's "Ir a Pagos" (frozen/expired membership, or
+  // check-in blocked by debt) — /payments?member=<id> opens straight into the
+  // register-payment modal with that member already selected.
+  useEffect(() => {
+    const memberId = searchParams.get("member");
+    if (!memberId || !members) return;
+    const member = members.find((m) => m.id === memberId);
+    if (member) openCreate(member);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("member");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [members, searchParams, openCreate, setSearchParams]);
 
   const filtered = useMemo(() => {
     if (!payments) return [];
@@ -172,7 +261,7 @@ export default function PaymentsPage() {
             {payments?.length || 0} pagos registrados
           </p>
         </div>
-        <Button variant="primary" onClick={openCreate} icon={<Plus className="w-4 h-4" />}>
+        <Button variant="primary" onClick={() => openCreate()} icon={<Plus className="w-4 h-4" />}>
           Registrar pago
         </Button>
       </div>
@@ -187,8 +276,8 @@ export default function PaymentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-container border border-outline-variant rounded-xl p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Ingresos totales</p>
-          <p className="text-3xl font-bold text-on-surface mt-1.5 tabular-nums">
-            ${totalRevenue.toFixed(2)}
+          <p className="text-3xl font-bold text-on-surface mt-1.5 tabular-nums font-mono">
+            {formatPYG(totalRevenue)}
           </p>
         </div>
         <div className="bg-surface-container border border-outline-variant rounded-xl p-5">
@@ -250,6 +339,7 @@ export default function PaymentsPage() {
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Método</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Referencia</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Estado</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Factura</th>
                   <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Fecha</th>
                   <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Acción</th>
                 </tr>
@@ -268,7 +358,7 @@ export default function PaymentsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-mono text-sm font-semibold text-on-surface tabular-nums">
-                        ${p.amount.toFixed(2)}
+                        {formatPYG(p.amount)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${methodColors[p.payment_method] || "bg-surface-container-higher text-on-surface-variant"}`}>
@@ -283,6 +373,18 @@ export default function PaymentsPage() {
                           <span className={`w-2 h-2 rounded-full ${sc.dot}`} />
                           <span className={`text-xs font-medium ${sc.text}`}>{sc.label}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {p.sifen_status ? (
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${sifenStatusConfig[p.sifen_status]?.dot || "bg-on-surface-variant/40"}`} />
+                            <span className={`text-xs font-medium ${sifenStatusConfig[p.sifen_status]?.text || "text-on-surface-variant"}`}>
+                              {sifenStatusConfig[p.sifen_status]?.label || p.sifen_status}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-on-surface-variant">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-on-surface-variant">
                         {p.paid_at ? dateFmt(p.paid_at) : "—"}
@@ -330,7 +432,7 @@ export default function PaymentsPage() {
               {hasActiveFilters ? "Probá con otros filtros o limpiá la búsqueda." : "Registrá el primer pago para empezar."}
             </p>
             {!hasActiveFilters && (
-              <Button variant="primary" size="sm" onClick={openCreate}>
+              <Button variant="primary" size="sm" onClick={() => openCreate()}>
                 Registrar primer pago
               </Button>
             )}
@@ -338,7 +440,12 @@ export default function PaymentsPage() {
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setMemberSearch(""); setFormError(""); }} title="Registrar pago" size="md">
+      <Modal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setMemberSearch(""); setFormError(""); setCart([]); setProductSearch(""); }}
+        title="Registrar pago"
+        size="md"
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative" ref={memberInputRef}>
             <label className="text-sm font-medium text-on-surface mb-1 block">Miembro</label>
@@ -356,7 +463,7 @@ export default function PaymentsPage() {
               required
             />
             {showMemberDropdown && memberSuggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
+              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
                 {memberSuggestions.map((m) => (
                   <li key={m.id}>
                     <button
@@ -385,7 +492,14 @@ export default function PaymentsPage() {
           {formError && (
             <p className="text-xs text-error font-medium">{formError}</p>
           )}
-          <Input label="Monto ($)" type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+          <Input
+            label="Monto base (₲)"
+            type="number"
+            step="1"
+            value={form.amount}
+            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            helperText="Cargo de membresía u otro concepto. Dejalo vacío o en 0 si la venta es solo de cantina."
+          />
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-on-surface">Método de pago</label>
             <select value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })} className="rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/50">
@@ -394,11 +508,71 @@ export default function PaymentsPage() {
               ))}
             </select>
           </div>
+
+          <div className="relative" ref={productInputRef}>
+            <label className="text-sm font-medium text-on-surface mb-1 block">Productos de cantina (opcional)</label>
+            <input
+              type="text"
+              value={productSearch}
+              onChange={(e) => { setProductSearch(e.target.value); setShowProductDropdown(true); }}
+              onFocus={() => setShowProductDropdown(true)}
+              className="w-full bg-surface border border-outline-variant rounded-lg py-2 px-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary/50 focus:outline-none transition-colors"
+              placeholder="Buscar producto..."
+            />
+            {showProductDropdown && productSuggestions.length > 0 && (
+              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
+                {productSuggestions.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => addToCart(p)}
+                      className="w-full px-3 py-2 text-sm text-left text-on-surface hover:bg-surface-container-higher flex items-center justify-between gap-3 transition-colors"
+                    >
+                      <span>{p.name}</span>
+                      <span className="text-on-surface-variant tabular-nums">{formatPYG(p.price)} · stock {p.stock}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <div className="bg-surface-container-high rounded-lg p-3 space-y-2">
+              {cart.map((item) => (
+                <div key={item.product_id} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-on-surface flex-1">{item.name}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) => updateCartQuantity(item.product_id, parseInt(e.target.value, 10) || 1)}
+                    className="w-16 bg-surface border border-outline-variant rounded-lg py-1 px-2 text-sm text-on-surface text-center"
+                  />
+                  <span className="text-on-surface-variant tabular-nums w-24 text-right">{formatPYG(item.price * item.quantity)}</span>
+                  <button type="button" onClick={() => removeFromCart(item.product_id)} className="text-on-surface-variant hover:text-error">
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>close</span>
+                  </button>
+                </div>
+              ))}
+              <div className="border-t border-outline-variant/30 pt-2 flex justify-between text-sm font-semibold">
+                <span className="text-on-surface">Total combinado</span>
+                <span className="text-on-surface tabular-nums">{formatPYG(combinedTotal)}</span>
+              </div>
+            </div>
+          )}
+
           <Input label="Referencia (opcional)" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
           <Input label="Notas (opcional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" type="button" onClick={() => { setModalOpen(false); setMemberSearch(""); setFormError(""); }}>Cancelar</Button>
-            <Button type="submit" loading={createMutation.isPending}>Registrar</Button>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => { setModalOpen(false); setMemberSearch(""); setFormError(""); setCart([]); setProductSearch(""); }}
+            >
+              Cancelar
+            </Button>
+            <Button variant="accent" type="submit" loading={createMutation.isPending}>Registrar</Button>
           </div>
         </form>
       </Modal>

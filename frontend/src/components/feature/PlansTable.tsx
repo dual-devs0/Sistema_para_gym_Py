@@ -1,4 +1,5 @@
 import type { MembershipPlan } from "../../types/api";
+import { formatPYG } from "../../utils";
 
 interface PlansTableProps {
   plans: MembershipPlan[];
@@ -55,7 +56,7 @@ export default function PlansTable({
               </span>
             </td>
             <td className="px-6 py-4 font-mono text-sm text-on-surface">
-              ${plan.price.toFixed(2)}
+              {formatPYG(plan.price)}
               <span className="text-[11px] text-on-surface-variant font-sans ml-0.5">
                 {plan.type === "anual" ? "/año" : plan.type === "trimestral" ? "/trim" : "/mes"}
               </span>

@@ -51,7 +51,7 @@ export default function Modal({ open, onClose, title, children, size = "md", clo
       aria-labelledby={title ? "modal-title" : undefined}
     >
       <div
-        className={`w-full ${sizeStyles[size]} rounded-xl bg-surface-container p-lg shadow-2xl animate-slide-up ${!closeOnOverlayClick ? "pointer-events-none" : ""}`}
+        className={`w-full ${sizeStyles[size]} rounded-xl bg-surface-container-high border border-outline-variant p-lg animate-slide-up ${!closeOnOverlayClick ? "pointer-events-none" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (

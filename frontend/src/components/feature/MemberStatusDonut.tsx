@@ -10,7 +10,7 @@ interface MemberStatusDonutProps {
 
 const segmentMeta = [
   { key: "active", label: "Activos", color: "var(--color-primary)", dotColor: "bg-primary" },
-  { key: "frozen", label: "Congelados", color: "var(--color-tertiary)", dotColor: "bg-tertiary" },
+  { key: "frozen", label: "Congelados", color: "var(--color-frozen)", dotColor: "bg-frozen" },
   { key: "cancelled", label: "Cancelados", color: "var(--color-error)", dotColor: "bg-error" },
 ];
 

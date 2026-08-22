@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMemo } from "react";
+import { formatPYG } from "../../utils";
 
 interface RevenueChartProps {
   data: { day: string; revenue: number }[];
@@ -13,7 +14,7 @@ const customTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-surface-container-highest border border-outline-variant/30 p-2 rounded text-[11px] font-mono">
         <p className="text-on-surface-variant">{label}</p>
-        <p className="text-primary font-bold">₲{Number(payload[0].value).toLocaleString()}</p>
+        <p className="text-primary font-bold">{formatPYG(Number(payload[0].value))}</p>
       </div>
     );
   }

@@ -25,6 +25,20 @@ class UserRepository:
         )
         return list(result.scalars().all())
 
+    async def get_first_active_by_role(self, gym_id: uuid.UUID, role: str) -> User | None:
+        result = await self.db.execute(
+            select(User)
+            .where(
+                User.gym_id == gym_id,
+                User.role == role,
+                User.is_active.is_(True),
+                User.deleted_at.is_(None),
+            )
+            .order_by(User.created_at.asc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def create(self, user: User) -> User:
         self.db.add(user)
         await self.db.flush()

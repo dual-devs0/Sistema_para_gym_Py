@@ -10,6 +10,7 @@ const allNavItems = [
   { to: "/memberships", label: "Membresías", icon: "card_membership" },
   { to: "/attendance", label: "Asistencia", icon: "event_available" },
   { to: "/payments", label: "Pagos", icon: "payments" },
+  { to: "/products", label: "Cantina", icon: "local_cafe" },
 ];
 
 export default function TopNav() {
@@ -107,7 +108,7 @@ export default function TopNav() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-surface-container border border-outline-variant rounded-xl shadow-xl py-1 animate-fade-in">
+              <div className="absolute right-0 mt-2 w-56 bg-surface-container-high border border-outline-variant rounded-xl shadow-xl py-1 animate-fade-in">
                 <div className="px-md py-sm border-b border-outline-variant">
                   <p className="text-sm font-medium text-on-surface">{user?.full_name}</p>
                   <p className="text-[11px] text-on-surface-variant truncate">{user?.email}</p>

@@ -26,6 +26,17 @@ class Settings(BaseSettings):
     db_pool_timeout: int = Field(default=30, alias="DB_POOL_TIMEOUT")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
+    whatsapp_api_key: str | None = Field(default=None, alias="WHATSAPP_360DIALOG_API_KEY")
+    whatsapp_base_url: str = Field(default="https://waba-v2.360dialog.io", alias="WHATSAPP_360DIALOG_BASE_URL")
+    whatsapp_sender_channel: str | None = Field(default=None, alias="WHATSAPP_360DIALOG_CHANNEL_ID")
+    whatsapp_expiry_reminder_days: int = Field(default=3, alias="WHATSAPP_EXPIRY_REMINDER_DAYS")
+
+    # SIFEN (DNIT Paraguay) — URLs confirmed against Manual Tecnico v150 sec. 7.10.
+    # sifen_environment must stay "test" until Sub-entrega 3b (real PSC certificate).
+    sifen_environment: str = Field(default="test", alias="SIFEN_ENVIRONMENT")
+    sifen_base_url_test: str = Field(default="https://sifen-test.set.gov.py", alias="SIFEN_BASE_URL_TEST")
+    sifen_base_url_prod: str = Field(default="https://sifen.set.gov.py", alias="SIFEN_BASE_URL_PROD")
+
     cors_allow_methods: str = Field(default="GET,POST,PUT,DELETE,OPTIONS,PATCH", alias="CORS_ALLOW_METHODS")
     cors_allow_headers: str = Field(
         default="Authorization,Content-Type,X-Requested-With,Accept,Origin", alias="CORS_ALLOW_HEADERS"
@@ -54,6 +65,22 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def whatsapp_enabled(self) -> bool:
+        return bool(self.whatsapp_api_key)
+
+    @property
+    def sifen_base_url(self) -> str:
+        return self.sifen_base_url_prod if self.sifen_environment == "production" else self.sifen_base_url_test
+
+    @field_validator("sifen_environment")
+    @classmethod
+    def validate_sifen_environment(cls, v: str) -> str:
+        allowed = {"test", "production"}
+        if v.lower() not in allowed:
+            raise ValueError(f"SIFEN_ENVIRONMENT must be one of: {', '.join(sorted(allowed))}")
+        return v.lower()
 
     @field_validator("secret_key")
     @classmethod

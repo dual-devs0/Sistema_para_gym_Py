@@ -22,8 +22,12 @@ class AuditService:
         "RENEW": "renew",
         "PAYMENT": "payment",
         "REFUND": "refund",
+        "ADJUST": "adjust",
         "PASSWORD_RESET": "password_reset",
         "ROLE_CHANGE": "role_change",
+        "OPEN": "open",
+        "CLOSE": "close",
+        "WITHDRAW": "withdraw",
     }
 
     def __init__(

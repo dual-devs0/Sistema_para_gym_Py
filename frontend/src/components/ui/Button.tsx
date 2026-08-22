@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline" | "accent";
 type Size = "sm" | "md" | "lg" | "small";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -17,6 +17,9 @@ const variantStyles: Record<Variant, string> = {
   ghost: "bg-transparent text-on-surface-variant hover:bg-surface-container-highest focus:ring-outline-variant",
   danger: "bg-error text-on-error hover:scale-105 active:scale-95 focus:ring-error",
   outline: "bg-transparent border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest focus:ring-outline-variant",
+  // High-contrast CTA (gold) — reserved for the small set of headline actions
+  // that move money/state forward: abrir turno, registrar ingreso, cobrar.
+  accent: "bg-tertiary text-on-tertiary hover:scale-105 active:scale-95 focus:ring-tertiary",
 };
 
 const sizeStyles: Record<Size, string> = {

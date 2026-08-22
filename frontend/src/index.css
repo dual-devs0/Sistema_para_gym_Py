@@ -1,59 +1,74 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Colors ── */
-  --color-background: #0c1017;
-  --color-surface: #13131b;
-  --color-surface-dim: #13131b;
-  --color-surface-container-lowest: #0c1017;
-  --color-surface-container-low: #13131b;
-  --color-surface-container: #161b23;
-  --color-surface-container-high: #20262f;
-  --color-surface-container-highest: #2a313b;
-  --color-surface-bright: #3a414d;
-  --color-surface-variant: #34343d;
-  --color-surface-tint: #c0c1ff;
-  --color-outline-variant: #2b323c;
-  --color-outline: #8f8ea0;
+  /* ── Colors — Paraguay visual identity (Fase 6) ── */
+  --color-background: #0b0d12;
+  --color-surface: #0b0d12;
+  --color-surface-dim: #0b0d12;
+  --color-surface-container-lowest: #0b0d12;
+  --color-surface-container-low: #0b0d12;
+  --color-surface-container: #151821;
+  --color-surface-container-high: #1c202b;
+  --color-surface-container-highest: #242a38;
+  --color-surface-bright: #2e3542;
+  --color-surface-variant: #2a2f3b;
+  --color-surface-tint: #0e9f6e;
+  --color-outline-variant: #2a2f3b;
+  --color-outline: #7c8494;
 
-  --color-primary: #c0c1ff;
-  --color-primary-container: #8083ff;
-  --color-primary-fixed: #e1e0ff;
-  --color-primary-fixed-dim: #c0c1ff;
-  --color-on-primary: #1000a9;
-  --color-on-primary-container: #0d0096;
-  --color-on-primary-fixed: #07006c;
-  --color-on-primary-fixed-variant: #2f2ebe;
+  /* Primary and secondary intentionally share the same emerald — the app's
+     "primary action" and "success/activo" semantics used to live on two
+     different accent hues (violet + mint); the new palette only defines one
+     green for both, so every existing text-secondary/bg-secondary success
+     state repaints correctly without per-component edits. */
+  --color-primary: #0e9f6e;
+  --color-primary-container: #0b7f58;
+  --color-primary-fixed: #1cb37e;
+  --color-primary-fixed-dim: #0e9f6e;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #eafbf3;
+  --color-on-primary-fixed: #05261a;
+  --color-on-primary-fixed-variant: #086b4a;
 
-  --color-secondary: #4edea3;
-  --color-secondary-container: #00a572;
-  --color-secondary-fixed: #6ffbbe;
-  --color-secondary-fixed-dim: #4edea3;
-  --color-on-secondary: #003824;
-  --color-on-secondary-container: #00311f;
-  --color-on-secondary-fixed: #002113;
-  --color-on-secondary-fixed-variant: #005236;
+  --color-secondary: #0e9f6e;
+  --color-secondary-container: #0b7f58;
+  --color-secondary-fixed: #1cb37e;
+  --color-secondary-fixed-dim: #0e9f6e;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #eafbf3;
+  --color-on-secondary-fixed: #05261a;
+  --color-on-secondary-fixed-variant: #086b4a;
 
-  --color-tertiary: #ffb95f;
-  --color-tertiary-container: #ca8100;
-  --color-tertiary-fixed: #ffddb8;
-  --color-tertiary-fixed-dim: #ffb95f;
-  --color-on-tertiary: #472a00;
-  --color-on-tertiary-container: #3e2400;
-  --color-on-tertiary-fixed: #2a1700;
-  --color-on-tertiary-fixed-variant: #653e00;
+  /* Gold/amber — high-contrast CTAs (Button variant="accent") and the
+     "por vencer" (expiring) status. */
+  --color-tertiary: #d4a64a;
+  --color-tertiary-container: #a87f32;
+  --color-tertiary-fixed: #e4c077;
+  --color-tertiary-fixed-dim: #d4a64a;
+  --color-on-tertiary: #2b2004;
+  --color-on-tertiary-container: #241a06;
+  --color-on-tertiary-fixed: #1a1302;
+  --color-on-tertiary-fixed-variant: #4a3a12;
 
-  --color-error: #ffb4ab;
-  --color-error-container: #93000a;
-  --color-on-error: #690005;
-  --color-on-error-container: #ffdad6;
+  /* Terracota — vencido/cancelado/rechazado/reembolsado/error. */
+  --color-error: #c4483a;
+  --color-error-container: #8c2e23;
+  --color-on-error: #fdedea;
+  --color-on-error-container: #fcdcd6;
 
-  --color-on-background: #e4e1ed;
-  --color-on-surface: #e4e1ed;
-  --color-on-surface-variant: #c7c4d7;
-  --color-inverse-surface: #e4e1ed;
-  --color-inverse-on-surface: #303038;
-  --color-inverse-primary: #494bd6;
+  /* Dedicated "congelado" slot — Material's 4-color system has no room for
+     it, and it used to collide with tertiary/outline in different
+     components (see CheckInCard.tsx / MembersTable.tsx). */
+  --color-frozen: #6b7a99;
+  --color-frozen-container: #4f5c77;
+  --color-on-frozen: #f2f4f8;
+
+  --color-on-background: #e7e9ee;
+  --color-on-surface: #e7e9ee;
+  --color-on-surface-variant: #a9afbd;
+  --color-inverse-surface: #e7e9ee;
+  --color-inverse-on-surface: #23262e;
+  --color-inverse-primary: #0e9f6e;
 
   /* ── Spacing ── */
   --spacing-unit: 4px;
@@ -77,8 +92,8 @@
   --container-3xl: 48rem;          /* 768px */
 
   /* ── Font Families ── */
-  --font-family-sans: "Inter", sans-serif;
-  --font-family-mono: "JetBrains Mono", monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
   /* ── Font Sizes (body-sm, body-md, headline-sm, headline-lg, display-lg, label-caps) ── */
   --font-size-body-sm: 13px;
@@ -100,8 +115,8 @@
   --animate-fade-in: fade-in 0.15s ease-out;
 
   @keyframes pulse-check {
-    0%   { box-shadow: 0 0 0 0 rgba(192, 193, 255, 0.7); }
-    100% { box-shadow: 0 0 0 20px rgba(192, 193, 255, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(14, 159, 110, 0.7); }
+    100% { box-shadow: 0 0 0 20px rgba(14, 159, 110, 0); }
   }
   @keyframes slide-in-up {
     0%   { opacity: 0; transform: translateY(12px); }
@@ -124,8 +139,8 @@ html {
 }
 
 body {
-  background-color: #0c1017;
-  color: #e4e1ed;
+  background-color: #0b0d12;
+  color: #e7e9ee;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 20px;
@@ -133,11 +148,11 @@ body {
 }
 
 * {
-  border-color: #2b323c59;
+  border-color: #2a2f3b59;
 }
 
 *:focus-visible {
-  outline: 2px solid #c0c1ff;
+  outline: 2px solid #0e9f6e;
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -148,7 +163,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #c0c1ff;
+  outline: 2px solid #0e9f6e;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -165,7 +180,7 @@ textarea:focus-visible,
 
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #34343d #0c1017;
+  scrollbar-color: #2a2f3b #0b0d12;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -174,7 +189,7 @@ textarea:focus-visible,
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #0c1017;
+  background: #0b0d12;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
@@ -198,172 +213,6 @@ textarea:focus-visible,
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #2d333b;
   border-radius: 10px;
-}
-
-.stat-card {
-  background-color: #161b23;
-  border: 1px solid #2b323c;
-  padding: 24px;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-  border-color: #c0c1ff80;
-}
-
-.stat-icon-wrapper {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-primary {
-  background-color: #c0c1ff;
-  color: #1000a9;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: transform 0.1s;
-}
-
-.btn-primary:hover {
-  transform: scale(1.05);
-}
-
-.btn-primary:active {
-  transform: scale(0.95);
-}
-
-.btn-ghost {
-  background-color: transparent;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.btn-ghost:hover {
-  background-color: #252b34;
-}
-
-.table-header {
-  padding: 12px 24px;
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #e4e1ed;
-  background-color: #252b34;
-}
-
-.table-cell {
-  padding: 12px 24px;
-}
-
-.table-row:hover {
-  background-color: #252b34;
-  transition: background-color 0.2s;
-  cursor: pointer;
-}
-
-.badge {
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.badge-primary {
-  background-color: #c0c1ff1a;
-  color: #c0c1ff;
-  border: 1px solid #c0c1ff33;
-}
-
-.badge-secondary {
-  background-color: #252b34;
-  color: #c7c4d7;
-  border: 1px solid #2d333b;
-}
-
-.badge-tertiary {
-  background-color: #ca81004d;
-  color: #ffb95f;
-  border: 1px solid #ca810033;
-}
-
-.badge-error {
-  background-color: #93000a66;
-  color: #ffb4ab;
-  border: 1px solid #ffb4ab33;
-}
-
-.input-search {
-  background-color: transparent;
-  border: none;
-  outline: none;
-  font-size: 13px;
-  width: 100%;
-  color: #e4e1ed;
-}
-
-.input-search::placeholder {
-  color: #c7c4d7;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  background-color: #8083ff;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0d0096;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid #c0c1ff33;
-  overflow: hidden;
-}
-
-.chart-bar {
-  background-color: #c0c1ff1a;
-  height: 20%;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.chart-bar:hover {
-  background-color: #c0c1ff4d;
-}
-
-.chart-tooltip {
-  position: absolute;
-  top: -24px;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.2s;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  background-color: #252b34;
-  padding: 4px;
-  border-radius: 4px;
-}
-
-.group:hover .chart-tooltip {
-  opacity: 1;
 }
 
 @keyframes spin-loader {

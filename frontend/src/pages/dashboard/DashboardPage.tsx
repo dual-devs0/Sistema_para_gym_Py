@@ -7,6 +7,7 @@ import MemberStatusDonut from "../../components/feature/MemberStatusDonut";
 import ExpiringTable from "../../components/feature/ExpiringTable";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
+import { formatPYG } from "../../utils";
 import type { DashboardSummary, DashboardRevenueResponse, DashboardExpiringItem } from "../../types/api";
 
 const DAYS_MAP: Record<string, number> = { "7d": 7, "30d": 30, "1a": 365 };
@@ -65,11 +66,11 @@ export default function DashboardPage() {
     {
       key: "revenue_today",
       label: "Ingresos de Hoy",
-      value: summary?.revenue_today ?? 0,
-      prefix: "₲",
+      value: formatPYG(summary?.revenue_today ?? 0),
       trend: { value: 12, direction: "up" as const, label: "vs. ayer" },
       icon: <DollarSign size={20} />,
       iconColor: "primary" as const,
+      mono: true,
     },
     {
       key: "active_members",
@@ -78,6 +79,7 @@ export default function DashboardPage() {
       trend: { value: 3, direction: "up" as const, label: "crecimiento este mes" },
       icon: <Users size={20} />,
       iconColor: "secondary" as const,
+      mono: false,
     },
     {
       key: "checkins_today",
@@ -86,6 +88,7 @@ export default function DashboardPage() {
       trend: { value: 2, direction: "down" as const, label: "vs. semana pasada" },
       icon: <CalendarCheck size={20} />,
       iconColor: "tertiary" as const,
+      mono: false,
     },
       {
         key: "expiring",
@@ -93,6 +96,7 @@ export default function DashboardPage() {
         value: summary?.members_expiring_soon ?? 0,
         icon: <AlertTriangle size={20} />,
         iconColor: "error" as const,
+        mono: false,
       },
   ];
 
@@ -121,10 +125,10 @@ export default function DashboardPage() {
             key={stat.key}
             label={stat.label}
             value={stat.value}
-            prefix={stat.prefix}
             trend={stat.trend}
             icon={stat.icon}
             iconColor={stat.iconColor}
+            mono={stat.mono}
           />
         ))}
       </div>

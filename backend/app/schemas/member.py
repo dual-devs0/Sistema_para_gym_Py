@@ -17,6 +17,7 @@ class MemberResponse(BaseModel):
     photo_url: str | None = None
     notes: str | None = None
     status: str
+    balance: float = 0
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

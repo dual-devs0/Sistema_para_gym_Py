@@ -186,7 +186,7 @@ export default function AttendancePage() {
               placeholder="Buscar miembro por nombre o documento..."
             />
             {showMemberDropdown && memberSuggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
+              <ul className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-lg shadow-xl py-1 z-20 max-h-48 overflow-y-auto">
                 {memberSuggestions.map((m) => (
                   <li key={m.id}>
                     <button
@@ -212,6 +212,7 @@ export default function AttendancePage() {
             )}
           </div>
           <Button
+            variant="accent"
             onClick={() => selectedMember && checkInMutation.mutate(selectedMember.id)}
             disabled={!selectedMember}
             loading={checkInMutation.isPending}

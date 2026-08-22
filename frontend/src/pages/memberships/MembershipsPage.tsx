@@ -239,7 +239,7 @@ export default function MembershipsPage() {
           <Input label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           <Input label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Precio ($)" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+            <Input label="Precio (₲)" type="number" step="1" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
             <Input label="Duración (días)" type="number" value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: e.target.value })} required />
           </div>
           <div className="grid grid-cols-2 gap-4">

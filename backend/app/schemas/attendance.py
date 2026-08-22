@@ -4,10 +4,6 @@ from uuid import UUID
 from pydantic import BaseModel, field_validator
 
 
-class CheckInRequest(BaseModel):
-    member_id: str
-
-
 class AttendanceResponse(BaseModel):
     id: str
     member_id: str

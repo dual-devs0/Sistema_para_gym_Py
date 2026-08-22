@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "motion/react";
 
 export type MembershipStatus = "active" | "expiring" | "frozen" | "expired";
 
@@ -19,7 +20,7 @@ interface CheckInCardProps {
 const statusConfig: Record<MembershipStatus, { label: string; icon: string; bg: string; text: string; border: string }> = {
   active: { label: "Activo", icon: "check_circle", bg: "bg-secondary/10", text: "text-secondary", border: "border-secondary/20" },
   expiring: { label: "Por Vencer", icon: "schedule", bg: "bg-tertiary/10", text: "text-tertiary", border: "border-tertiary/20" },
-  frozen: { label: "Congelado", icon: "pause_circle", bg: "bg-outline-variant/10", text: "text-outline", border: "border-outline/20" },
+  frozen: { label: "Congelado", icon: "pause_circle", bg: "bg-frozen/10", text: "text-frozen", border: "border-frozen/20" },
   expired: { label: "Vencido", icon: "cancel", bg: "bg-error/10", text: "text-error", border: "border-error/20" },
 };
 
@@ -50,14 +51,14 @@ export default function CheckInCard({
     onCheckIn();
   }, [canCheckIn, checkedIn, checkInLoading, onCheckIn]);
 
-  const borderColor = status === "active" ? "border-primary" : status === "expiring" ? "border-tertiary" : status === "expired" ? "border-error" : "border-outline";
+  const borderColor = status === "active" ? "border-primary" : status === "expiring" ? "border-tertiary" : status === "expired" ? "border-error" : "border-frozen";
   const opacityClass = status === "frozen" || status === "expired" ? "opacity-60" : "";
 
   return (
     <div className="bg-surface-container border border-outline-variant rounded-xl p-lg flex flex-col h-full">
       <div className={`flex items-center gap-lg border-b border-outline-variant pb-lg ${opacityClass}`}>
         <div className={`w-32 h-32 rounded-lg overflow-hidden border-2 ${borderColor} flex-shrink-0 bg-surface-container-high flex items-center justify-center`}>
-          <span className={`text-3xl font-bold ${status === "expired" ? "text-error" : status === "frozen" ? "text-outline" : "text-primary"}`}>{initials}</span>
+          <span className={`text-3xl font-bold ${status === "expired" ? "text-error" : status === "frozen" ? "text-frozen" : "text-primary"}`}>{initials}</span>
         </div>
         <div className="flex-1 flex flex-col justify-center min-w-0">
           <div className="flex items-center gap-md mb-xs flex-wrap">
@@ -71,7 +72,7 @@ export default function CheckInCard({
             <span className="material-symbols-outlined text-sm">stars</span>
             <span className="truncate">{planName}</span>
           </p>
-          <p className="font-data-mono text-data-mono text-outline mt-sm">ID: {memberId}</p>
+          <p className="font-mono text-data-mono text-outline mt-sm">ID: {memberId}</p>
         </div>
       </div>
 
@@ -98,26 +99,40 @@ export default function CheckInCard({
       )}
 
       {canCheckIn ? (
-        <button
-          onClick={handleCheckIn}
-          disabled={checkedIn || checkInLoading}
-          className={`w-full min-h-[56px] rounded-lg font-headline-sm text-headline-sm flex items-center justify-center gap-md transition-all touch-target ${
-            checkedIn
-              ? "bg-secondary text-on-secondary cursor-default"
-              : "bg-primary text-on-primary hover:opacity-90 active:scale-[0.97] disabled:opacity-60"
-          } ${animating ? "animate-pulse-check" : ""}`}
-          style={animating && !reduceMotion ? { animation: "pulse-check 0.5s ease-out" } : {}}
-          aria-label={checkedIn ? "Ya registrado" : "Registrar ingreso"}
-        >
-          <span className="material-symbols-outlined">{checkedIn ? "check" : checkInLoading ? "hourglass_top" : "login"}</span>
-          {checkedIn ? "¡Ingresado!" : checkInLoading ? "Registrando..." : "Registrar Ingreso"}
-        </button>
+        <div className="relative">
+          <button
+            onClick={handleCheckIn}
+            disabled={checkedIn || checkInLoading}
+            className={`w-full min-h-[56px] rounded-lg font-headline-sm text-headline-sm flex items-center justify-center gap-md transition-all touch-target ${
+              checkedIn
+                ? "bg-secondary text-on-secondary cursor-default"
+                : "bg-tertiary text-on-tertiary hover:opacity-90 active:scale-[0.97] disabled:opacity-60"
+            } ${animating ? "animate-pulse-check" : ""}`}
+            style={animating && !reduceMotion ? { animation: "pulse-check 0.5s ease-out" } : {}}
+            aria-label={checkedIn ? "Ya registrado" : "Registrar ingreso"}
+          >
+            <span className="material-symbols-outlined">{checkedIn ? "check" : checkInLoading ? "hourglass_top" : "login"}</span>
+            {checkedIn ? "¡Ingresado!" : checkInLoading ? "Registrando..." : "Registrar Ingreso"}
+          </button>
+          {animating && !reduceMotion && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: [0, 1, 0], scale: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-primary"
+            >
+              <span className="material-symbols-outlined text-on-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                check_circle
+              </span>
+            </motion.div>
+          )}
+        </div>
       ) : (
         <div className="flex flex-col gap-sm">
           <div className={`flex items-center gap-2 rounded-lg p-md ${
-            status === "frozen" ? "bg-outline-variant/10 border border-outline/20" : "bg-error/10 border border-error/20"
+            status === "frozen" ? "bg-frozen/10 border border-frozen/20" : "bg-error/10 border border-error/20"
           }`}>
-            <span className={`material-symbols-outlined shrink-0 ${status === "frozen" ? "text-outline" : "text-error"}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span className={`material-symbols-outlined shrink-0 ${status === "frozen" ? "text-frozen" : "text-error"}`} style={{ fontVariationSettings: "'FILL' 1" }}>
               error
             </span>
             <p className={`font-body-sm text-body-sm ${status === "frozen" ? "text-on-surface-variant" : "text-error"}`}>

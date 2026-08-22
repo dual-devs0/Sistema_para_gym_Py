@@ -40,6 +40,7 @@ async def register_payment(
         reference=body.reference,
         notes=body.notes,
         member_membership_id=membership_id,
+        items=body.items,
     )
 
 

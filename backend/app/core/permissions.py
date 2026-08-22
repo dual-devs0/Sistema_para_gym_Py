@@ -33,6 +33,20 @@ class Perm:
     GYM_SETTINGS_READ = "gym.settings.read"
     GYM_SETTINGS_UPDATE = "gym.settings.update"
 
+    INVOICING_READ = "invoicing.read"
+    INVOICING_MANAGE = "invoicing.manage"
+
+    MEMBER_BALANCE_READ = "members.balance.read"
+    MEMBER_BALANCE_ADJUST = "members.balance.adjust"
+
+    CASH_SHIFT_READ = "cash_shift.read"
+    CASH_SHIFT_OPEN = "cash_shift.open"
+    CASH_SHIFT_CLOSE = "cash_shift.close"
+    CASH_SHIFT_WITHDRAW = "cash_shift.withdraw"
+
+    PRODUCT_READ = "products.read"
+    PRODUCT_MANAGE = "products.manage"
+
     DASHBOARD_VIEW = "dashboard.view"
 
     AUDIT_VIEW = "audit.view"
@@ -73,6 +87,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.USER_DELETE,
         Perm.GYM_SETTINGS_READ,
         Perm.GYM_SETTINGS_UPDATE,
+        Perm.INVOICING_READ,
+        Perm.INVOICING_MANAGE,
+        Perm.MEMBER_BALANCE_READ,
+        Perm.MEMBER_BALANCE_ADJUST,
+        Perm.CASH_SHIFT_READ,
+        Perm.CASH_SHIFT_OPEN,
+        Perm.CASH_SHIFT_CLOSE,
+        Perm.CASH_SHIFT_WITHDRAW,
+        Perm.PRODUCT_READ,
+        Perm.PRODUCT_MANAGE,
         Perm.DASHBOARD_VIEW,
         Perm.AUDIT_VIEW,
     },
@@ -100,6 +124,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.USER_UPDATE,
         Perm.GYM_SETTINGS_READ,
         Perm.GYM_SETTINGS_UPDATE,
+        Perm.INVOICING_READ,
+        Perm.INVOICING_MANAGE,
+        Perm.MEMBER_BALANCE_READ,
+        Perm.MEMBER_BALANCE_ADJUST,
+        Perm.CASH_SHIFT_READ,
+        Perm.CASH_SHIFT_OPEN,
+        Perm.CASH_SHIFT_CLOSE,
+        Perm.CASH_SHIFT_WITHDRAW,
+        Perm.PRODUCT_READ,
+        Perm.PRODUCT_MANAGE,
         Perm.DASHBOARD_VIEW,
     },
     "trainer": {
@@ -112,6 +146,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.ATTENDANCE_CHECKIN,
         Perm.ATTENDANCE_CHECKOUT,
         Perm.USER_READ,
+        Perm.MEMBER_BALANCE_READ,
     },
     "receptionist": {
         Perm.MEMBER_READ,
@@ -127,6 +162,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         Perm.ATTENDANCE_CHECKIN,
         Perm.ATTENDANCE_CHECKOUT,
         Perm.USER_READ,
+        Perm.MEMBER_BALANCE_READ,
+        Perm.CASH_SHIFT_READ,
+        Perm.CASH_SHIFT_OPEN,
+        Perm.CASH_SHIFT_CLOSE,
+        Perm.CASH_SHIFT_WITHDRAW,
+        Perm.PRODUCT_READ,
     },
 }
 
