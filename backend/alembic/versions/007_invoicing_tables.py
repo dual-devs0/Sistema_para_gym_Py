@@ -29,7 +29,9 @@ def upgrade() -> None:
     op.create_table(
         "gymfiscalconfig",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("gym_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("gym.id"), nullable=False, unique=True, index=True),
+        sa.Column(
+            "gym_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("gym.id"), nullable=False, unique=True, index=True
+        ),
         sa.Column("ruc", sa.String(20), nullable=True),
         sa.Column("razon_social", sa.String(200), nullable=True),
         sa.Column("sifen_environment", sa.String(20), nullable=False, server_default="test"),
@@ -55,7 +57,14 @@ def upgrade() -> None:
     op.create_table(
         "sifendocument",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("payment_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("payment.id"), nullable=False, unique=True, index=True),
+        sa.Column(
+            "payment_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("payment.id"),
+            nullable=False,
+            unique=True,
+            index=True,
+        ),
         sa.Column("gym_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("gym.id"), nullable=False, index=True),
         sa.Column("cdc", sa.String(44), nullable=True),
         sa.Column("status", sa.String(20), nullable=False, server_default="pending_stamping"),
